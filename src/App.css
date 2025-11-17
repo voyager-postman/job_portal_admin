@@ -1,0 +1,507 @@
+:root {
+  --colorYellow: #ff6600;
+  --colorBlue: #2a83cc;
+  --color-e52e2e: #e52e2e;
+  --color-828599: #8a8d9e;
+  --color-3d464d: #ed464d;
+  --color-c3d4da: #ced4da;
+}
+
+/* Login page */
+
+/* Full-screen background */
+.login-container {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Card Box */
+.login-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  height: 60px;
+  margin-bottom: 8px;
+}
+
+/* Input Fields */
+.input-field {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #f0f6ff;
+  font-size: 14px;
+  outline: none;
+}
+
+.input-field:focus {
+  border-color: #42a5f5;
+  box-shadow: 0 0 4px rgba(66, 165, 245, 0.6);
+}
+
+/* Login Button */
+.login-btn {
+  width: 100%;
+  padding: 12px;
+  background: #0066cc;
+  color: #fff;
+  font-weight: bold;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.login-btn:hover {
+  background: #ff6600;
+}
+
+/* Forgot Password */
+.forgot-password {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #555;
+  cursor: pointer;
+}
+
+.forgot-password:hover {
+  text-decoration: underline;
+}
+
+th.MuiTableCell-root.MuiTableCell-head.MuiTableCell-sizeMedium.css-1orzuox-MuiTableCell-root {
+  background: #2a83cc !important;
+  color: #fff;
+}
+
+.MuiFormControl-root.MuiTextField-root {
+  background: #fff;
+  /* border: 1px solid var(--colorBlue) !important; */
+  border-radius: 5px;
+}
+
+button.MuiButtonBase-root {
+  background: var(--colorBlue) !important;
+  border: unset;
+  color: #fff !important;
+  /* margin-right: 25px; */
+}
+
+.MuiPaper-root.MuiPaper-elevation {
+  padding-bottom: 20px;
+}
+
+.css-1umw9bq-MuiSvgIcon-root {
+  font-size: 1rem !important;
+}
+/*table css start page css end here*/
+
+.top-space-search-reslute table th {
+  padding: 10px 10px;
+  /* 0 5 */
+}
+
+.top-space-search-reslute table td {
+  padding: 2px 10px;
+}
+
+.top-space-search-reslute {
+  margin-top: 30px;
+}
+.top-space-search-reslute .tab-content {
+  padding: unset !important;
+}
+.parentProduceSearch input {
+  padding: 5px 10px;
+  outline: none;
+  border: 2px solid #203764;
+  border-radius: 5px;
+}
+.parentProduceSearch {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+/* .parentProduceSearch {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+} */
+.parentProduceSearch > :nth-child(2) {
+  width: 100%;
+}
+
+.parentProduceSearch input {
+  width: 100%;
+}
+.parentProduceSearch select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 2px solid #203764;
+  margin: 3px;
+}
+/* .entries {
+  margin-left: auto;
+} */
+.information_dataTables.px-4 {
+  padding-bottom: 15px;
+  padding-left: unset !important;
+  padding-right: unset !important;
+}
+.information_dataTables div#example_length {
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.information_dataTables table tbody tr td {
+  font-size: 14px;
+  color: #000;
+  font-weight: 600;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+  background: #203764;
+  color: #fff !important;
+  border: 1px solid #203764;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  min-width: 1.5em;
+  padding: 4px 10px;
+}
+table.dataTable.stripe tbody tr.odd,
+table.dataTable.display tbody tr.odd {
+  background-color: #f0f2f5;
+}
+
+table.dataTable.hover tbody tr:hover,
+table.dataTable.display tbody tr:hover {
+  background-color: #f0f2f5;
+}
+.borderTerpProduce th {
+  color: #000;
+  font-weight: 600;
+  border: 1px solid #d2d6da;
+}
+.rowCursorPointer span.mdi.mdi-check.mr-2.text-xl {
+  display: none;
+}
+.paginationActive {
+  width: 30px !important;
+  height: 30px;
+  border-radius: 50%;
+  background: #f88239;
+  line-height: 30px;
+  text-align: center;
+}
+.paginationActive a {
+  color: #fff !important;
+  background-color: transparent;
+}
+
+/* .previousBttn:hover {
+  border: 2px solid gray;
+  padding: 5px;
+} */
+.paginationBttns {
+  width: 95%;
+  /* height: 40px; */
+  list-style: none;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+}
+
+.paginationBttns a {
+  padding: 0px;
+  margin: 10px;
+  border-radius: 20px;
+  /* border: 1px solid #2b2eff; */
+  color: #203764;
+  cursor: pointer;
+}
+
+.parentProduceSearch .table-search-box-info {
+  width: 20%;
+}
+
+tr {
+  vertical-align: middle;
+}
+
+.form-switch .form-check-input {
+  width: 50px;
+  height: 20px;
+  outline: none;
+  border: 2px solid #cdcd;
+}
+
+.form-check-input:focus {
+  box-shadow: none;
+}
+
+.add-recruiters-btn-postion {
+  position: relative;
+}
+
+.add-recruiters-btn {
+  top: 20px;
+  right: 30px;
+  position: absolute;
+}
+
+.add-recruiters-btn .default-btn {
+  padding: 5px 10px;
+}
+
+/*table end page   css end here*/
+aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
+  background: #fff !important;
+}
+/*super admin company details css start here*/
+
+.super-admin-company-img-short-detail {
+  background: #fff;
+  padding: 15px 15px;
+  margin: 0px 0px 0px 0px;
+}
+
+.super-admin-company-img img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+.super-admin-company-short-detail {
+  display: flex;
+  margin-top: 25px;
+}
+
+.super-admin-company-logo {
+  width: 150px;
+  height: 65px;
+  background: #eee;
+  padding: 0px 10px;
+  margin-right: 20px;
+}
+
+.super-admin-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.super-admin-company-about-short-info ul {
+  display: flex;
+  list-style: none;
+  margin: 10px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+}
+
+.super-admin-company-about-short-info ul li {
+  font-size: 15px;
+  margin: 0px 0px 0px 0px;
+  padding: 0px 20px 0px 0px;
+}
+
+.super-admin-company-about-short-info h4 {
+  font-size: 20px;
+}
+
+.super-admin-company-about-short-info ul li i {
+  color: #0066cc;
+  font-size: 15px;
+  margin-bottom: 10px;
+  padding-right: 5px;
+}
+
+.super-admin-company-detail-tab-info {
+  background: #fff;
+  margin-top: 30px;
+  padding: 20px 15px;
+}
+
+.super-admin-company-detail-tab-info .nav-tabs {
+  border: none;
+  justify-content: space-between;
+}
+
+.super-admin-company-detail-tab-info .nav-tabs .nav-link {
+  border: 0px;
+  color: #fff;
+  font-size: 16px;
+  border-radius: 5px;
+  padding: 10px 25px;
+  background: #0066cc;
+  letter-spacing: 0.3px;
+}
+
+.super-admin-company-detail-tab-info .nav-tabs .nav-link.active {
+  color: #fff;
+  background: #ff6600;
+}
+
+.super-admin-company-detail-tab-description {
+  margin-top: 15px;
+  background: #fff;
+  padding: 20px 15px;
+}
+
+.super-admin-company-profile-detail-info {
+  display: flex;
+  justify-content: space-between;
+}
+
+.super-admin-company-profile-detail-box h4 {
+  padding: 0px;
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.super-admin-company-profile-detail-box h4 i {
+  color: #0066cc;
+  font-size: 14px;
+  padding-right: 5px;
+}
+
+.super-admin-company-profile-detail-box {
+  width: 23%;
+  margin-top: 15px;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  background: #eeeeee82;
+}
+
+.super-admin-company-detail-card {
+  margin-top: 20px;
+  background: #fff;
+  border: 1px solid #eee;
+  padding: 10px 10px 10px 10px;
+}
+
+.super-admin-job-company-name-logo {
+  display: flex;
+  align-items: center;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eeee;
+}
+
+.super-admin-job-company-logo img {
+  width: 40px;
+  height: 30px;
+  padding: 3px 10px;
+  margin-right: 10px;
+  border-radius: 5px;
+  object-fit: contain;
+  background: #f0f5f7;
+}
+
+.super-admin-job-company-name h4 {
+  font-size: 18px;
+}
+
+.super-admin-job-detail-area h4 {
+  font-size: 18px;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.super-admin-job-detail-area ul {
+  display: flex;
+  margin: 10px 0px 0px 0px;
+  padding: 0px 0px 0px 0px;
+  border-top: 1px solid #eeee;
+}
+
+.super-admin-job-detail-area ul li {
+  width: 18%;
+  color: #666666;
+  font-size: 14px;
+  overflow: hidden;
+  font-weight: 400;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  margin: 10px 15px 0px 0px;
+}
+
+.super-admin-job-detail-area ul li i {
+  color: #0066cc;
+  font-size: 13px;
+  margin-right: 5px;
+}
+
+.super-admin-company-office-photos-box {
+  margin-top: 20px;
+}
+
+.super-admin-company-office-photos-box img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.super-admin-company-detail-official-website {
+  margin-top: 15px;
+  padding: 15px 20px;
+  background: #eeeeee82;
+}
+
+.super-admin-company-detail-official-website h4 {
+  padding: 0px;
+  font-size: 17px;
+}
+
+.super-admin-company-detail-official-website h4 i {
+  color: #0066cc;
+  font-size: 15px;
+  padding-right: 5px;
+}
+
+.super-admin-company-detail-official-website h5 {
+  font-size: 17px;
+  font-weight: 400;
+  margin-top: 10px;
+}
+
+.super-admin-company-detail-social-link {
+  display: flex;
+  margin-top: 10px;
+  justify-content: space-between;
+}
+
+.super-admin-company-detail-social-box {
+  width: 23%;
+  padding: 10px 15px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  background: #eeeeee82;
+}
+
+.super-admin-company-detail-social-box h4 {
+  padding: 0px;
+  font-size: 17px;
+  margin-bottom: 5px;
+}
+
+.super-admin-company-detail-social-box h4 i {
+  color: #0066cc;
+  padding-right: 5px;
+}
+
+.super-admin-company-detail-social-box a {
+  font-size: 15px;
+}
+
+/*super admin company details css end here*/
