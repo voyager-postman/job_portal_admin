@@ -1,0 +1,499 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+
+body {
+  color: #666666;
+  font-size: 16px;
+  font-weight: 500;
+  background: #f0f5f7;
+  font-family: "Roboto";
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0px;
+  color: #202124;
+  font-weight: 600;
+}
+
+p {
+  margin: 0px;
+  color: #666666;
+  font-size: 15px;
+}
+
+a {
+  color: #666666;
+  text-decoration: none;
+}
+
+ul {
+  padding: 0px;
+  margin: 0px;
+}
+
+li {
+  list-style: none;
+}
+
+tr {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.table-responsive {
+  display: block;
+}
+
+/*super admin dashboard css header start here*/
+.super-dashboard-logo-info {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* space between logo and toggle */
+}
+
+.sidebar-toggle-btn {
+  font-size: 22px;
+  cursor: pointer;
+  color: #333;
+}
+
+.super-dashboard-logo-info img {
+  width: 10%;
+}
+
+.super-dashboard-header-detail {
+  z-index: 9;
+  display: flex;
+  position: fixed;
+  background: #fff;
+  padding: 20px 30px;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+}
+
+.super-dashboard-user-img-name {
+  cursor: pointer;
+  margin-right: 20px;
+}
+
+.super-dashboard-user-img-name img {
+  width: 40px;
+  height: 40px;
+  margin-right: 5px;
+  border-radius: 50px;
+}
+
+.super-dashboard-user-img-name p {
+  font-size: 16px;
+}
+
+.dropdown-menu-list a {
+  display: block;
+  font-size: 15px;
+  padding: 10px 10px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.dropdown-menu-list a i {
+  color: #0066cc;
+  margin-right: 5px;
+}
+
+/*super admin dashboard header css end here*/
+
+/*super admin dashboard side menu css start here*/
+
+.side-menu-info-area {
+  left: 0;
+  top: 90px;
+  color: #fff;
+  height: 100%;
+  width: 250px;
+  overflow-y: auto;
+  position: fixed;
+  background: #fff;
+  transition: all 0.3s ease-in-out;
+}
+
+.side-menu-info-area ul {
+  padding: 15px 0px;
+  list-style: none;
+}
+
+.side-menu-info-area ul li a {
+  display: block;
+  font-size: 15px;
+  padding: 12px 25px;
+  letter-spacing: 0.4px;
+}
+
+.side-menu-info-area ul li a.active {
+  background: #f0f5f7;
+}
+
+.side-menu-info-area ul li a i {
+  color: #0066cc;
+  font-size: 16px;
+  margin-right: 5px;
+}
+
+/* Hide sidebar */
+.side-menu-info-area.hide {
+  left: -250px;
+}
+
+.super-dashboard-content-wrapper.full-width {
+  margin-left: 30px;
+}
+
+/* Sidebar toggle button */
+.sidebar-toggle-btn {
+  cursor: pointer;
+  position: relative;
+}
+
+.sidebar-toggle-btn i {
+  color: #fff;
+  font-size: 20px;
+  border-radius: 5px;
+  background: #0066cc;
+  padding: 4px 6px 3px 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .side-menu-info-area {
+    left: -250px;
+  }
+
+  .side-menu-info-area.show {
+    left: 0;
+  }
+
+  .super-dashboard-content-wrapper {
+    margin-left: 30px !important;
+  }
+
+  .sidebar-toggle-btn {
+    display: block;
+  }
+}
+
+/*super admin dashboard side menu css end here*/
+
+/*super admin dashboard detail side css start here*/
+
+.super-dashboard-common-heading {
+  background: #fff;
+  margin-top: 30px;
+  padding: 15px 15px;
+  margin-bottom: 20px;
+}
+
+.super-dashboard-content-wrapper {
+  /* margin-left: 280px; */
+  /* padding-top: 100px; */
+  padding-right: 30px;
+  transition: margin-left 0.3s ease-in-out;
+}
+
+.super-dashboard-dashboard-box {
+  display: flex;
+  background: #fff;
+  padding: 20px 15px;
+  border-radius: 5px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.super-dashboard-icon-box {
+  color: #fff;
+  width: 50px;
+  height: 50px;
+  font-size: 25px;
+  background: #0066cc;
+  text-align: center;
+  border-radius: 50px;
+  line-height: 50px;
+  margin-right: 10px;
+}
+
+.super-dashboard-box-detail h5 {
+  margin: 0px;
+  color: #0066cc;
+  font-size: 17px;
+  margin-bottom: 2px;
+}
+
+.super-dashboard-box-detail p {
+  color: #ff6600;
+  font-size: 20px;
+}
+
+.copy-right-details {
+  background: #fff;
+  margin-top: 30px;
+  text-align: center;
+  padding: 20px 20px;
+}
+
+.dropdown-menu-list.dropdown-menu {
+  width: 200px;
+  border-radius: 5px;
+  top: 15px !important;
+  left: 0px !important;
+  border: 1px solid #eeeeee;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+}
+
+.super-dashboard-breadcrumb-info h4 {
+  padding-top: 5px;
+}
+
+.super-dashboard-users-recruiters-analytics {
+  display: flex;
+  justify-content: space-between;
+}
+
+.users-recruiters-analytics-chart {
+  width: 49%;
+  background: #fff;
+  padding: 20px 20px;
+}
+
+.users-recruiters-analytics-chart h5 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.users-recruiters-analytics-table {
+  width: 49%;
+  background: #fff;
+  padding: 20px 20px;
+}
+
+.users-recruiters-analytics-table h5 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.super-dashboard-total-revenue-report {
+  display: flex;
+  justify-content: space-between;
+}
+
+.total-revenue-report-chart {
+  width: 49%;
+  background: #fff;
+  padding: 20px 20px;
+}
+
+.total-revenue-report-chart h5 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.total-revenue-report-tabel {
+  width: 49%;
+  background: #fff;
+  padding: 20px 20px;
+}
+
+.total-revenue-report-tabel h5 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+/* Table Css Start here  */
+.information_dataTables table tbody tr td {
+  font-size: 14px;
+  color: #000;
+  font-weight: 600;
+}
+.my-profile-area .profile-form-content {
+  background-color: #ffffff;
+  margin-bottom: 30px;
+  padding-top: 25px;
+}
+.my-profile-area .profile-form-content h3 {
+  font-size: 18px;
+  padding-bottom: 30px;
+  border-bottom: 1px solid #eeeeee;
+  padding-left: 30px;
+}
+.my-profile-area .profile-form-content .profile-form {
+  padding: 30px;
+  padding-top: 20px;
+}
+.my-profile-area .profile-form-content .profile-form .my-profile-img {
+  padding-top: 6px;
+}
+.my-profile-area .profile-form-content .profile-form .form-group {
+  margin-bottom: 25px;
+}
+
+.my-profile-area .profile-form-content .profile-form .form-group label {
+  color: #202124;
+  font-weight: 500;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.my-profile-area .profile-form-content .profile-form .form-group .form-control {
+  background-color: #f0f5f7;
+  border-radius: unset;
+  border: 1px solid rgba(32, 33, 34, 0.08);
+}
+.my-profile-area .profile-form-content .profile-form .default-btn::before {
+  border-radius: unset;
+}
+.my-profile-area .profile-form-content .profile-form .default-btn::after {
+  border-radius: unset;
+}
+
+.action-icon-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.action-icon-info i {
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 2px;
+  border-radius: 10px;
+  background: #ff6600;
+}
+
+.add-recruiters-btn-postion {
+  position: relative;
+}
+
+.add-recruiters-btn {
+  top: 0;
+  right: 0;
+  position: absolute;
+}
+
+.add-recruiters-btn {
+  top: 20px;
+  right: 30px;
+  position: absolute;
+}
+
+.add-recruiters-btn .default-btn {
+  padding: 5px 10px;
+}
+
+.parentProduceSearch input {
+  padding: 5px 10px;
+  outline: none;
+  border: 2px solid #203764;
+  border-radius: 5px;
+}
+.parentProduceSearch {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.paginationActive {
+  width: 30px !important;
+  height: 30px;
+  border-radius: 50%;
+  background: #f88239;
+  line-height: 30px;
+  text-align: center;
+}
+.paginationActive a {
+  color: #fff !important;
+  background-color: transparent;
+}
+.paginationBttns a {
+  padding: 0px;
+  margin: 10px;
+  border-radius: 20px;
+  color: #203764;
+  cursor: pointer;
+}
+
+.recruiter-status-info .form-switch .form-check-input {
+  width: 50px;
+  height: 20px;
+  outline: none;
+  border: 2px solid #cdcd;
+}
+/*Default-btn
+======================================================*/
+.default-btn {
+  background-color: #0066cc;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 30px;
+  border-radius: 5px;
+  position: relative;
+  text-align: center;
+  transition: all ease 0.5s;
+  display: inline-block;
+  border: unset;
+  z-index: 1;
+  overflow: hidden;
+}
+.default-btn i {
+  position: relative;
+  top: 1px;
+  padding-left: 6px;
+}
+.default-btn::before {
+  position: absolute;
+  content: "";
+  background-color: #ff6600;
+  height: 100%;
+  width: 0%;
+  border-radius: 0 5px 5px 0;
+  -webkit-clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%);
+  clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%);
+  bottom: 0;
+  right: 0;
+  transition: all ease 0.5s;
+  z-index: -1;
+}
+.default-btn::after {
+  position: absolute;
+  content: "";
+  background-color: #0066cc;
+  height: 100%;
+  width: 0%;
+  border-radius: 5px 0 0 5px;
+  -webkit-clip-path: polygon(0 0, 100% 0%, 75% 100%, 0% 100%);
+  clip-path: polygon(0 0, 100% 0%, 75% 100%, 0% 100%);
+  top: 0;
+  left: 0;
+  transition: all ease 0.5s;
+  z-index: -1;
+}
+.default-btn:hover {
+  color: #ffffff;
+  border-color: #1f86ef;
+}
+.default-btn:hover::before {
+  width: 60%;
+  height: 100%;
+}
+.default-btn:hover::after {
+  width: 60%;
+  height: 100%;
+}
+
+/*super admin dashboard detail side css end here*/
