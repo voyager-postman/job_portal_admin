@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -11,16 +11,16 @@ function AdOnPackCreateForm() {
   const addOnData = state?.addOnData;
   console.log(addOnData);
   const isEditMode = Boolean(addOnData?._id);
-
   const token = localStorage.getItem("token");
-
   const [formData, setFormData] = useState({
     name: "",
     type: "",
-    credits: "",
-    dailyLimit: "",
+    jobPostingCredits: "",
+    dailyJobPostingLimit: "",
+    profileViewingCredits: "",
+    dailyProfileViewingLimit: "",
     validityValue: "",
-    validityUnit: "",
+    validityUnit: "Month",
     price: "",
     currency: "",
     paymentMode: "",
@@ -38,19 +38,13 @@ function AdOnPackCreateForm() {
       setFormData({
         name: addOnData.name || "",
         type: addOnData.type || "",
-        credits:
-          addOnData.type === "JOB"
-            ? addOnData.jobPostingCredits
-            : addOnData.type === "PROFILE"
-            ? addOnData.profileViewingCredits
-            : addOnData.jobPostingCredits + addOnData.profileViewingCredits,
-        dailyLimit:
-          addOnData.type === "JOB"
-            ? addOnData.dailyJobPostingLimit
-            : addOnData.type === "PROFILE"
-            ? addOnData.dailyProfileViewingLimit
-            : addOnData.dailyJobPostingLimit +
-              addOnData.dailyProfileViewingLimit,
+
+        jobPostingCredits: addOnData.jobPostingCredits || "",
+        dailyJobPostingLimit: addOnData.dailyJobPostingLimit || "",
+
+        profileViewingCredits: addOnData.profileViewingCredits || "",
+        dailyProfileViewingLimit: addOnData.dailyProfileViewingLimit || "",
+
         validityValue: addOnData.validityValue || "",
         validityUnit: addOnData.validityUnit || "Month",
         price: addOnData.price || "",
@@ -59,43 +53,97 @@ function AdOnPackCreateForm() {
       });
     }
   }, [addOnData]);
-  /* =========================
-     FETCH DATA FOR UPDATE
-  ========================== */
 
-  /* =========================
-     SUBMIT FORM
-  ========================== */
+  useEffect(() => {
+    if (formData.type === "JOB") {
+      setFormData((prev) => ({
+        ...prev,
+        profileViewingCredits: "",
+        dailyProfileViewingLimit: "",
+      }));
+    }
+
+    if (formData.type === "CV") {
+      setFormData((prev) => ({
+        ...prev,
+        jobPostingCredits: "",
+        dailyJobPostingLimit: "",
+      }));
+    }
+  }, [formData.type]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔔 Frontend validation
+    // 🔴 Common validation
     if (
       !formData.name ||
       !formData.type ||
-      !formData.credits ||
-      !formData.dailyLimit ||
       !formData.validityValue ||
       !formData.validityUnit ||
       !formData.price ||
       !formData.currency ||
       !formData.paymentMode
     ) {
-      toast.error("All fields are required");
+      toast.error("All required fields must be filled");
       return;
     }
 
+    // 🔴 Job Posting validation
+    if (
+      (formData.type === "JOB" || formData.type === "BOTH") &&
+      (!formData.jobPostingCredits || !formData.dailyJobPostingLimit)
+    ) {
+      toast.error("Job Posting credits and daily limit are required");
+      return;
+    }
+
+    // 🔴 Profile Viewing validation
+    if (
+      (formData.type === "CV" || formData.type === "BOTH") &&
+      (!formData.profileViewingCredits || !formData.dailyProfileViewingLimit)
+    ) {
+      toast.error("Profile Viewing credits and daily limit are required");
+      return;
+    }
+
+    // ✅ Decide API URL (CREATE vs UPDATE)
+    const url = isEditMode
+      ? `${API_BASE_URL}updateAddOn/${addOnData._id}`
+      : `${API_BASE_URL}createAddOn`;
+
     try {
       await axios.post(
-        `${API_BASE_URL}createAddOn`,
+        url,
         {
           name: formData.name,
           type: formData.type,
-          credits: Number(formData.credits),
-          dailyLimit: Number(formData.dailyLimit),
+
+          jobPostingCredits:
+            formData.type === "JOB" || formData.type === "BOTH"
+              ? Number(formData.jobPostingCredits)
+              : 0,
+
+          dailyJobPostingLimit:
+            formData.type === "JOB" || formData.type === "BOTH"
+              ? Number(formData.dailyJobPostingLimit)
+              : 0,
+
+          profileViewingCredits:
+            formData.type === "CV" || formData.type === "BOTH"
+              ? Number(formData.profileViewingCredits)
+              : 0,
+
+          dailyProfileViewingLimit:
+            formData.type === "CV" || formData.type === "BOTH"
+              ? Number(formData.dailyProfileViewingLimit)
+              : 0,
+
           validityValue: Number(formData.validityValue),
           validityUnit: formData.validityUnit,
           price: Number(formData.price),
+
+          // keep these if backend allows
           currency: formData.currency,
           paymentMode: formData.paymentMode,
         },
@@ -106,12 +154,18 @@ function AdOnPackCreateForm() {
         }
       );
 
-      toast.success("Add-On Pack created successfully 🎉");
+      toast.success(
+        isEditMode
+          ? "Add-On Pack updated successfully ✅"
+          : "Add-On Pack created successfully 🎉"
+      );
+
       navigate("/admin/super-admin-add-on-pack-created-list");
     } catch (error) {
       console.error(error);
       toast.error(
-        error?.response?.data?.message || "Failed to create Add-On Pack"
+        error?.response?.data?.message ||
+          `Failed to ${isEditMode ? "update" : "create"} Add-On Pack`
       );
     }
   };
@@ -163,41 +217,74 @@ function AdOnPackCreateForm() {
                   >
                     <option value="">Select Type</option>
                     <option value="JOB">Job Posting Credits</option>
-                    <option value="PROFILE">Profile Viewing Credits</option>
+                    <option value="CV">Profile Viewing Credits</option>
                     <option value="BOTH">Job + Profile Credits</option>
                   </select>
                 </div>
               </div>
 
-              {/* CREDITS */}
-              <div className="col-lg-6 col-md-6">
-                <div className="form-group">
-                  <label>Credits</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="credits"
-                    value={formData.credits}
-                    onChange={handleChange}
-                    placeholder="Enter Credits"
-                  />
-                </div>
-              </div>
+              {(formData.type === "JOB" || formData.type === "BOTH") && (
+                <>
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group">
+                      <label>Job Posting Credits</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="jobPostingCredits"
+                        value={formData.jobPostingCredits}
+                        onChange={handleChange}
+                        placeholder="Enter Job Posting Credits"
+                      />
+                    </div>
+                  </div>
 
-              {/* DAILY LIMIT */}
-              <div className="col-lg-6 col-md-6">
-                <div className="form-group">
-                  <label>Daily Limit</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="dailyLimit"
-                    value={formData.dailyLimit}
-                    onChange={handleChange}
-                    placeholder="Enter Daily Limit"
-                  />
-                </div>
-              </div>
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group">
+                      <label>Daily Job Posting Limit</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="dailyJobPostingLimit"
+                        value={formData.dailyJobPostingLimit}
+                        onChange={handleChange}
+                        placeholder="Enter Daily Job Posting Limit"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+              {(formData.type === "CV" || formData.type === "BOTH") && (
+                <>
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group">
+                      <label>Profile Viewing Credits</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="profileViewingCredits"
+                        value={formData.profileViewingCredits}
+                        onChange={handleChange}
+                        placeholder="Enter Profile Viewing Credits"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group">
+                      <label>Daily Profile Viewing Limit</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        name="dailyProfileViewingLimit"
+                        value={formData.dailyProfileViewingLimit}
+                        onChange={handleChange}
+                        placeholder="Enter Daily Profile Viewing Limit"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* VALIDITY VALUE */}
               <div className="col-lg-6 col-md-6">
@@ -277,7 +364,7 @@ function AdOnPackCreateForm() {
                   >
                     <option value="">Select Payment Mode</option>
                     <option value="Online">Online</option>
-                    <option value="Offline">Offline</option>
+                    <option value="Manual">Manual</option>
                   </select>
                 </div>
               </div>

@@ -60,12 +60,12 @@ function AddOnPackCreatedList() {
             <i className="fa-solid fa-pen" />
           </Link>
 
-          <Link
+          {/* <Link
             to="/admin/super-admin-add-on-pack-details"
             state={{ addOnData: row.original }}
           >
             <i className="fa-solid fa-eye" />
-          </Link>
+          </Link> */}
 
           <a
             href="#"

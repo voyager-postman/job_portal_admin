@@ -444,7 +444,7 @@ const MainLayout = () => {
           <div className="main_section">
             <Content
               style={{
-                padding: "30px",
+                // padding: "30px",
                 background: theme.useToken().colorBgContainer,
               }}
             >
