@@ -153,11 +153,7 @@ const CompanyActiveJob = () => {
 
         <div className="super-dashboard-common-heading">
           <h5>
-<<<<<<< HEAD
             <Link to="/admin/complete-company-details" state={{ companyProfileId: companyActiveId }}>
-=======
-            <Link to="/admin/manage-recruiter">
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
               <i className="fa-solid fa-angles-left" />
             </Link>
             Active Jobs List

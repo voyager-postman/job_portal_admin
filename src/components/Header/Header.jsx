@@ -1,14 +1,8 @@
 import React from "react";
-<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
 
 const Header = ({ handleToggle }) => {
   const navigate = useNavigate();
-=======
-import { Link } from "react-router-dom";
-
-const Header = ({ handleToggle }) => {
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   const handleLogout = () => {
     localStorage.clear(); // clears EVERYTHING
     navigate("/"); // redirect to home or login

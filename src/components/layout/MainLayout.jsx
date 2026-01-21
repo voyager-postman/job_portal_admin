@@ -27,10 +27,7 @@ import AddModeratorIcon from "@mui/icons-material/AddModerator";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
-<<<<<<< HEAD
 import QuizIcon from '@mui/icons-material/Quiz';
-=======
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
@@ -90,11 +87,8 @@ const MainLayout = () => {
       "price-plan-form",
     ];
 
-<<<<<<< HEAD
     const skillsKey = ["manage-skill-categories", "manage-question-bank"];
 
-=======
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
     // const promotionKeys = [
     //   "featured-job",
     //   "highlighted-job",
@@ -110,11 +104,8 @@ const MainLayout = () => {
       setOpenKeys(["payment-gateway"]);
     } else if (packageKeys.includes(key)) {
       setOpenKeys(["manage-packages"]);
-<<<<<<< HEAD
     } else if (skillsKey.includes(key)) {
       setOpenKeys(["manage-skills"]);
-=======
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
     } else {
       setOpenKeys([]);
     }
@@ -365,7 +356,6 @@ const MainLayout = () => {
                 Price Plan Form
               </Menu.Item>
             </Menu.SubMenu>
-<<<<<<< HEAD
             <Menu.SubMenu
               key="manage-skills"
               icon={<QuizIcon className="fs-6" />}
@@ -384,8 +374,6 @@ const MainLayout = () => {
                 Mange Question Bank
               </Menu.Item>
             </Menu.SubMenu>
-=======
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -402,11 +390,7 @@ const MainLayout = () => {
               {
                 className: "trigger",
                 onClick: () => setCollapsed(!collapsed),
-<<<<<<< HEAD
               },
-=======
-              }
->>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
             )}
             <div className="d-flex gap-2 align-items-center">
               <div style={{ position: "relative", display: "inline-block" }}>
