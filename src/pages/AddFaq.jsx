@@ -1,0 +1,103 @@
+import React, { useState } from "react";
+
+import { Link } from "react-router-dom";
+const AddFaq = () => {
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    password: "",
+    image: null,
+    status: true,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked, files } = e.target;
+    setFormData({
+      ...formData,
+      [name]:
+        type === "checkbox" ? checked : type === "file" ? files[0] : value,
+    });
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Recruiter Data:", formData);
+  };
+  return (
+    <>
+      <section className="super-dashboard-content-wrapper">
+        <div className="super-dashboard-breadcrumb-info">
+          <h4>FAQ Section Content Form</h4>
+        </div>
+        <div className="super-dashboard-common-heading">
+          <h5>
+            <Link to="/admin/" >
+              <i class="fa-solid fa-angles-left"></i>
+            </Link>
+            FAQ Content Update Here
+          </h5>
+        </div>
+        <div className="super-dashboard-cms-content-form">
+          <div className="container">
+            <div className="row">
+              <div className="col-lg-12 col-md-12">
+                <div className="form-group">
+                  <label>Question</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="question"
+                    placeholder="Enter your Question here"
+                  />
+                </div>
+              </div>
+              <div className="col-lg-12 col-md-12">
+                <div className="form-group">
+                  <label>Select Category</label>
+                  <select
+                    className="form-select form-control"
+                    id="category"
+                    name="category"
+                    required
+                  >
+                    <option value>Select A Category</option>
+                    <option value="general">Job Seeker</option>
+                    <option value="billing">Employer</option>
+                  </select>
+                </div>
+              </div>
+              <div className="col-lg-12 col-md-12">
+                <div className="form-group">
+                  <label>Write Your Answer</label>
+                  <textarea
+                    id="review"
+                    className="form-control"
+                    rows={5}
+                    placeholder="Write your answer here..."
+                    required
+                    defaultValue={""}
+                  />
+                </div>
+              </div>
+              <div className="col-lg-12 col-md-12">
+                <div className="super-dashboard-content-btn-info">
+                  <a
+                    href="super-admin-faq-list.html"
+                    className="super-dashboard-content-btn"
+                  >
+                    Update Content
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
+};
+
+export default AddFaq;

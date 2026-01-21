@@ -1,0 +1,5 @@
+- [ ] Remove showModal state and related code
+- [ ] Remove handleCategoryChange function
+- [ ] Replace select dropdown with From Date and To Date inputs
+- [ ] Update Apply Filter button to use dateRange
+- [ ] Remove the modal JSX

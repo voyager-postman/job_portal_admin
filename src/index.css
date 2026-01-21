@@ -1,13 +1,88 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+
+/*Amarjeet responsive css start here*/
+
+
+@media only screen and (max-width: 480px) {
+
+.super-dashboard-logo-info img {
+width: 45%;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+
 }
+
+
+
+
+@media only screen and (min-width:481px) and (max-width: 568px) {
+
+.super-dashboard-logo-info img {
+width: 45%;
+}
+
+
+}
+
+
+
+@media only screen and (min-width:569px) and (max-width:766px) {
+
+
+}
+
+
+
+
+@media only screen and (min-width:767px) and (max-width:768px) {
+
+
+}
+
+
+
+
+@media only screen and (min-width:769px) and (max-width:898px) {
+
+
+}
+
+
+
+
+
+@media only screen and (min-width:899px) and (max-width:992px) {
+
+
+}
+
+
+
+
+@media only screen and (min-width:993px) and (max-width:1024px) {
+
+
+}
+
+
+
+
+
+@media only screen and (min-width:1025px) and (max-width:1199px) {
+
+
+}
+
+
+
+
+
+@media only screen and (min-width:1200px) and (max-width:1299px) { 
+
+
+}
+
+
+
+
+
+/*Amarjeet responsive css end here*/

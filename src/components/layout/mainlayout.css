@@ -1,0 +1,58 @@
+.logo {
+  padding-left: 6px;
+  padding-top: 6px;
+}
+.sm-logo {
+  display: none;
+}
+:where(.css-dev-only-do-not-override-ac2jek).ant-layout-sider {
+  background: #fff !important;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 2px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px var(--colorBlue);
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--colorBlue);
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--colorBlue);
+}
+
+/* :where(.css-1pg9a38).ant-layout .ant-layout-sider-children {
+  height: 100vh !important;
+  margin-top: -0.1px !important;
+  padding-top: 0.1px !important;
+  overflow-y: auto !important;
+} */
+
+:where(.css-dev-only-do-not-override-ac2jek).ant-layout-sider
+  .ant-layout-sider-children {
+  height: 100vh !important;
+  margin-top: -0.1px !important;
+  padding-top: 0.1px !important;
+  overflow-y: auto !important;
+}
+.main_section {
+  max-height: 90vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 20px 20px 0px 20px;
+}
+
+footer.py-4.bg-white {
+    margin-top: 20px;
+}
