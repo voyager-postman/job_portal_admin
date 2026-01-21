@@ -291,8 +291,11 @@ margin-bottom: 20px;
 
 .data-export-btn-info {
   margin-left: 20px;
+<<<<<<< HEAD
   text-align: right;
   margin-top: 30px;
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 }
 
 .data-export-btn {
@@ -301,8 +304,11 @@ margin-bottom: 20px;
   border-radius: 5px;
   padding: 6px 10px;
   background: #0066cc;
+<<<<<<< HEAD
   outline: none;
   border: none;
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 }
 
 .data-export-btn:hover {
@@ -555,7 +561,11 @@ margin-bottom: 20px;
 }
 
 .super-dashboard-common-heading h5 {
+<<<<<<< HEAD
   font-size: 15px;
+=======
+  font-size: 18px;
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 }
 
 .super-dashboard-dashboard-box {
@@ -1294,9 +1304,12 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
 }
+<<<<<<< HEAD
 .super-admin-candidate-img img {
   width: 200px;
   height: 200px;
   object-fit: cover;
   margin-right: 20px;
 }
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a

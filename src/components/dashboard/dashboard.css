@@ -198,7 +198,11 @@ tr {
 .super-dashboard-content-wrapper {
   /* margin-left: 280px; */
   /* padding-top: 100px; */
+<<<<<<< HEAD
   padding-right: 20px;
+=======
+  padding-right: 30px;
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
   transition: margin-left 0.3s ease-in-out;
 }
 

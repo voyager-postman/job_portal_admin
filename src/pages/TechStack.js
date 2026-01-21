@@ -54,7 +54,11 @@ function TechStack() {
       toast.warning("Tech Stack name is required!");
       return;
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
     try {
       if (editItem) {
         await axios.put(`${API_BASE_URL}/job-category/${editItem._id}`, {
@@ -250,4 +254,8 @@ function TechStack() {
   );
 }
 
+<<<<<<< HEAD
 export default TechStack;
+=======
+export default TechStack;
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a

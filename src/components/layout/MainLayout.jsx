@@ -8,7 +8,10 @@ import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { SiGoogleanalytics } from "react-icons/si";
+<<<<<<< HEAD
 import { LuEqualApproximately } from "react-icons/lu";
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 import CodeIcon from "@mui/icons-material/Code";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CategoryIcon from "@mui/icons-material/Category";
@@ -27,7 +30,10 @@ import AddModeratorIcon from "@mui/icons-material/AddModerator";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
+<<<<<<< HEAD
 import QuizIcon from '@mui/icons-material/Quiz';
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
@@ -66,10 +72,13 @@ const MainLayout = () => {
       "term-condition-content",
       "privacy-policy-content",
     ];
+<<<<<<< HEAD
     const packageKeys = [
       "super-admin-pack-creations",
       "super-admin-add-on-pack-created-list",
     ];
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 
     const categoryKeys = [
       "tech-stack",
@@ -87,6 +96,7 @@ const MainLayout = () => {
       "price-plan-form",
     ];
 
+<<<<<<< HEAD
     const skillsKey = ["manage-skill-categories", "manage-question-bank"];
 
     // const promotionKeys = [
@@ -95,6 +105,8 @@ const MainLayout = () => {
     //   "home-visibility",
     // ];
 
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
     // ✅ Logic to open correct submenu only
     if (cmsKeys.includes(key)) {
       setOpenKeys(["CMS-Pages-1"]);
@@ -102,11 +114,16 @@ const MainLayout = () => {
       setOpenKeys(["manage-category"]);
     } else if (paymentKeys.includes(key)) {
       setOpenKeys(["payment-gateway"]);
+<<<<<<< HEAD
     } else if (packageKeys.includes(key)) {
       setOpenKeys(["manage-packages"]);
     } else if (skillsKey.includes(key)) {
       setOpenKeys(["manage-skills"]);
     } else {
+=======
+    } else {
+      // Close all if page doesn't belong to a submenu
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
       setOpenKeys([]);
     }
   }, [location.pathname]);
@@ -169,12 +186,22 @@ const MainLayout = () => {
             <Menu.Item key="" icon={<AiOutlineDashboard className="fs-6" />}>
               Dashboard
             </Menu.Item>
+<<<<<<< HEAD
+=======
+
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
             <Menu.Item
               key="manage-recruiter"
               icon={<SiGoogleanalytics className="fs-6" />}
             >
+<<<<<<< HEAD
               Manage Company
             </Menu.Item>
+=======
+              Manage Recruiters
+            </Menu.Item>
+
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
             <Menu.Item
               key="manage-candidates"
               icon={<AiOutlineUser className="fs-6" />}
@@ -182,12 +209,15 @@ const MainLayout = () => {
               Manage Candidates
             </Menu.Item>
             <Menu.Item
+<<<<<<< HEAD
               key="job-promotions"
               icon={<LuEqualApproximately className="fs-6" />}
             >
               Job Promotions
             </Menu.Item>
             <Menu.Item
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
               key="manage-blog"
               icon={<AiOutlineRead className="fs-6" />}
             >
@@ -300,6 +330,7 @@ const MainLayout = () => {
                 Privacy And Policy
               </Menu.Item>
             </Menu.SubMenu>
+<<<<<<< HEAD
             <Menu.SubMenu
               key="manage-packages"
               icon={<AiOutlineRead className="fs-6" />}
@@ -319,6 +350,14 @@ const MainLayout = () => {
                 Add-on Packages
               </Menu.Item>
             </Menu.SubMenu>
+=======
+            <Menu.Item
+              key="super-admin-pack-creations"
+              icon={<AiOutlineRead className="fs-6" />}
+            >
+              Subscription / Pacakges
+            </Menu.Item>
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 
             <Menu.Item
               key="super-admin-plan-subscriber-list"
@@ -356,6 +395,7 @@ const MainLayout = () => {
                 Price Plan Form
               </Menu.Item>
             </Menu.SubMenu>
+<<<<<<< HEAD
             <Menu.SubMenu
               key="manage-skills"
               icon={<QuizIcon className="fs-6" />}
@@ -374,6 +414,8 @@ const MainLayout = () => {
                 Mange Question Bank
               </Menu.Item>
             </Menu.SubMenu>
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -390,7 +432,11 @@ const MainLayout = () => {
               {
                 className: "trigger",
                 onClick: () => setCollapsed(!collapsed),
+<<<<<<< HEAD
               },
+=======
+              }
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
             )}
             <div className="d-flex gap-2 align-items-center">
               <div style={{ position: "relative", display: "inline-block" }}>
@@ -467,7 +513,11 @@ const MainLayout = () => {
           <div className="main_section">
             <Content
               style={{
+<<<<<<< HEAD
                 // padding: "30px",
+=======
+                padding: "30px",
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
                 background: theme.useToken().colorBgContainer,
               }}
             >
@@ -475,7 +525,11 @@ const MainLayout = () => {
             </Content>
             <footer className="py-4 bg-white">
               <p className="text-center mb-0">
+<<<<<<< HEAD
                 Copyright © 2026 Connect Work.ma | All right reserved.
+=======
+                Copyright © 2025 Connect Work.ma | All right reserved.
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
               </p>
             </footer>
           </div>

@@ -1,4 +1,5 @@
 import React from "react";
+<<<<<<< HEAD
 import { Link, useNavigate } from "react-router-dom";
 
 const Header = ({ handleToggle }) => {
@@ -8,6 +9,11 @@ const Header = ({ handleToggle }) => {
     navigate("/"); // redirect to home or login
   };
 
+=======
+import { Link } from "react-router-dom";
+
+const Header = ({ handleToggle }) => {
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
   return (
     <section className="super-dashboard-header-info-area">
       <header className="super-dashboard-header-detail">
@@ -52,12 +58,18 @@ const Header = ({ handleToggle }) => {
                 </Link>
               </li>
               <li>
+<<<<<<< HEAD
                 <button
                   onClick={handleLogout}
                   style={{ background: "none", border: "none" }}
                 >
                   <i className="fa-solid fa-power-off"></i> Logout
                 </button>
+=======
+                <Link to="/">
+                  <i className="fa-solid fa-power-off"></i> Logout
+                </Link>
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
               </li>
             </ul>
           </div>

@@ -40,6 +40,7 @@ import AddPackCreation from "./pages/AddPackCreation";
 import PlanSubscriberList from "./pages/PlanSubscriberList";
 import PackDetails from "./pages/PackDetails";
 import AddPaymentGateway from "./pages/AddPaymentGateway";
+<<<<<<< HEAD
 import FeaturedJob from "./pages/jobPromotion/FeaturedJob";
 import HighlightedJob from "./pages/jobPromotion/HighlightedJob";
 import HomeVisibility from "./pages/jobPromotion/HomeVisibility";
@@ -54,6 +55,8 @@ import AddOnPackDetails from "./pages/AddOnPackDetails";
 import AdOnPackCreateForm from "./pages/AdOnPackCreateForm";
 import ManageSkillCategory from "./pages/ManageSkillCategory";
 import ManageQuestionBank from "./pages/ManageQuestionBank";
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 function App() {
   return (
     <div className="App">
@@ -69,6 +72,7 @@ function App() {
           <Route path="manage-recruiter" element={<ManageUsers />} />
           <Route path="add-employer" element={<AddEmployer />} />
           <Route path="manage-candidates" element={<ManageCandidates />} />
+<<<<<<< HEAD
           <Route path="recruiter-list" element={<RecruiterList />} />
           <Route path="company-active-job" element={<CompanyActiveJob />} />
           <Route
@@ -80,6 +84,9 @@ function App() {
             path="complete-company-details"
             element={<CompanyCompleteDetails />}
           />
+=======
+          <Route path="manage-blog" element={<ManageBlog />} />
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
           <Route path="manage-faq" element={<ManageFaq />} />
           <Route path="add-blog" element={<AddBlog />} />
           <Route path="add-faq" element={<AddFaq />} />
@@ -90,13 +97,17 @@ function App() {
           <Route path="tech-stack" element={<TechStack />} />
           <Route path="job-type" element={<JobType />} />
           <Route path="salary-range" element={<SalaryRange />} />
+<<<<<<< HEAD
           <Route path="manage-skill-categories" element={<ManageSkillCategory/>}/>
           <Route path="manage-question-bank" element={<ManageQuestionBank/>}/>
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
           <Route
             path="super-admin-pack-creations"
             element={<PackCreationList />}
           />
           <Route
+<<<<<<< HEAD
             path="super-admin-add-on-pack-created-list"
             element={<AddOnPackCreatedList />}
           />
@@ -109,14 +120,19 @@ function App() {
             element={<AddOnPackDetails />}
           />
           <Route
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
             path="super-admin-pack-creations-form"
             element={<AddPackCreation />}
           />
           <Route
+<<<<<<< HEAD
             path="/admin/super-admin-pack-creations-form/:packId?"
             element={<AddPackCreation />}
           />
           <Route
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
             path="super-admin-plan-subscriber-list"
             element={<PlanSubscriberList />}
           />
@@ -146,11 +162,14 @@ function App() {
             path="pricing-plan-management"
             element={<PricingPlanManagement />}
           />
+<<<<<<< HEAD
           <Route path="user-wallet" element={<UserWallet />} />
           <Route path="featured-job" element={<FeaturedJob />} />
           <Route path="highlighted-job" element={<HighlightedJob />} />
           <Route path="home-visibility" element={<HomeVisibility />} />
           <Route path="job-promotions" element={<JobPromotions />} />
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
           {/* /admin/manage-users */}
         </Route>
       </Routes>

@@ -8,7 +8,10 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.4",
     "@mui/material": "^7.3.2",
+<<<<<<< HEAD
     "@mui/x-date-pickers": "^8.25.0",
+=======
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
     "@tanstack/react-table": "^8.21.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.8.0",
@@ -16,20 +19,30 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.27.6",
     "axios": "^1.13.2",
+<<<<<<< HEAD
     "chart.js": "^4.5.1",
     "dayjs": "^1.11.19",
     "react": "^19.1.1",
     "react-chartjs-2": "^5.3.0",
     "react-datepicker": "^9.1.0",
+=======
+    "chart.js": "^4.5.0",
+    "react": "^19.1.1",
+    "react-chartjs-2": "^5.3.0",
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
     "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
     "react-paginate": "^8.3.0",
     "react-router-dom": "^7.8.2",
     "react-scripts": "5.0.1",
     "react-toastify": "^11.0.5",
+<<<<<<< HEAD
     "sweetalert2": "^11.26.3",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"
+=======
+    "web-vitals": "^2.1.4"
+>>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
   },
   "scripts": {
     "start": "react-scripts start",
