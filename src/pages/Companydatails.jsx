@@ -79,7 +79,11 @@ const Companydatails = () => {
           </div>
           <div className="super-dashboard-common-heading">
             <h5>
+<<<<<<< HEAD
               <Link to="/admin/complete-company-details" state={{ companyProfileId }}>
+=======
+              <Link to="/admin/manage-recruiter">
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
                 <i className="fa-solid fa-angles-left" />
               </Link>
               Manage Company Details
@@ -482,4 +486,8 @@ const Companydatails = () => {
   );
 };
 
+<<<<<<< HEAD
 export default Companydatails;
+=======
+export default Companydatails;
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2

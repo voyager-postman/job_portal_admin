@@ -43,6 +43,10 @@ export const TableView = ({
             </select>{" "}
             <small>entries</small>
           </div>
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
           <div className="table-search-box-info">
             <input
               onChange={(e) => setGlobalFilter(e.target.value)}

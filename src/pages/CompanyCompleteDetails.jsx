@@ -6,11 +6,16 @@ import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
 import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
+<<<<<<< HEAD
 import "react-toastify/dist/ReactToastify.css";
 import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+=======
+
+import "react-toastify/dist/ReactToastify.css";
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
 const CompanyCompleteDetails = () => {
   const location = useLocation();
   const companyProfileId = location?.state?.companyProfileId;
@@ -22,7 +27,12 @@ const CompanyCompleteDetails = () => {
   console.log(companyDataId);
   console.log(companyDetailsData?.companyId?.logo);
   console.log(companyActiveId);
+<<<<<<< HEAD
   console.log(companyDetailsData);
+=======
+
+  const [showModal, setShowModal] = useState(false);
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [loadingWelcome, setLoadingWelcome] = useState(false);
   const [welcomePack, setWelcomePack] = useState({
@@ -31,16 +41,32 @@ const CompanyCompleteDetails = () => {
     expiresAt: "",
     resetDailyUsage: true,
   });
+<<<<<<< HEAD
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const barCanvasRef = useRef(null);
   const barChartRef = useRef(null);
+=======
+
+  const [dateRange, setDateRange] = useState({
+    from: "",
+    to: "",
+  });
+  const barCanvasRef = useRef(null);
+  const barChartRef = useRef(null);
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   const lineCanvasRef = useRef(null);
   const lineChartRef = useRef(null);
   const creditCanvasRef = useRef(null);
   const creditChartRef = useRef(null);
+<<<<<<< HEAD
   const [activeTab, setActiveTab] = useState("daily");
 
+=======
+
+  const [activeTab, setActiveTab] = useState("daily");
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   useEffect(() => {
     if (!barCanvasRef.current) return;
 
@@ -92,7 +118,10 @@ const CompanyCompleteDetails = () => {
       data: [400, 520, 480, 600, 750, 900],
     },
   };
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   useEffect(() => {
     if (!lineCanvasRef.current) return;
 
@@ -128,13 +157,20 @@ const CompanyCompleteDetails = () => {
       lineChartRef.current = null;
     };
   }, [activeTab]);
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   useEffect(() => {
     if (!creditCanvasRef.current) return;
 
     if (creditChartRef.current) {
       creditChartRef.current.destroy();
     }
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
     creditChartRef.current = new Chart(creditCanvasRef.current, {
       type: "line",
       data: {
@@ -170,19 +206,39 @@ const CompanyCompleteDetails = () => {
       creditChartRef.current = null;
     };
   }, []);
+<<<<<<< HEAD
 
   const openWelcomePackModal = async () => {
     try {
       const companyId = location?.state?.companyProfileId;
+=======
+  const handleCategoryChange = (e) => {
+    if (e.target.value === "custom") {
+      setShowModal(true);
+    }
+  };
+  const openWelcomePackModal = async () => {
+    try {
+      const companyId = location?.state?.companyProfileId;
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
       const res = await axios.get(
         `${API_BASE_URL}credit-status?companyId=${companyId}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
+<<<<<<< HEAD
         },
       );
       const d = res.data.data;
+=======
+        }
+      );
+
+      const d = res.data.data;
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
       setWelcomePack({
         jobPosting: d.totalJobPostingCredits,
         profileViewing: d.totalProfileViewingCredits,
@@ -200,6 +256,10 @@ const CompanyCompleteDetails = () => {
   const submitWelcomePack = async () => {
     try {
       setLoadingWelcome(true);
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
       const companyId =
         companyProfileId ||
         companyActiveId ||
@@ -218,7 +278,11 @@ const CompanyCompleteDetails = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
+<<<<<<< HEAD
         },
+=======
+        }
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
       );
 
       setShowWelcomeModal(false);
@@ -230,8 +294,13 @@ const CompanyCompleteDetails = () => {
       setLoadingWelcome(false);
     }
   };
+<<<<<<< HEAD
 
   const DEFAULT_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+=======
+  const DEFAULT_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
   const cleanImageUrl = (url) => {
     // ✅ If no logo → show default image
     if (!url) return DEFAULT_IMAGE;
@@ -275,6 +344,7 @@ const CompanyCompleteDetails = () => {
               </h5>
             </div>
             <div className="company-button-info-area">
+<<<<<<< HEAD
               {companyDetailsData?.companyId?.welcomePackGranted && (
                 <a
                   href="#"
@@ -286,12 +356,26 @@ const CompanyCompleteDetails = () => {
                   Welcome Pack
                 </a>
               )}
+=======
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault(); // stop page reload
+                  openWelcomePackModal();
+                }}
+              >
+                Welcome Pack
+              </a>
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
 
               <Link
                 to="/admin/company-details"
                 state={{
                   companyProfileId: companyProfileId,
+<<<<<<< HEAD
                   companyActiveId: companyActiveId,
+=======
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
                 }}
               >
                 Company Details
@@ -352,6 +436,7 @@ const CompanyCompleteDetails = () => {
                 <a href="#">Last 30 Days</a>
                 <a href="#">This Month</a>
                 <span>
+<<<<<<< HEAD
                   <DatePicker
                     selectsRange
                     startDate={startDate}
@@ -362,6 +447,17 @@ const CompanyCompleteDetails = () => {
                     placeholderText="dd-mm-yyyy to dd-mm-yyyy"
                     className="form-control Date_Input"
                   />
+=======
+                  <select
+                    className="form-select form-control"
+                    onChange={handleCategoryChange}
+                  >
+                    <option value="">Select Range</option>
+                    <option value="custom">Custom Range</option>
+                    <option value="general">Job Seeker</option>
+                    <option value="billing">Employer</option>
+                  </select>
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
                 </span>
               </div>
             </div>
@@ -370,7 +466,10 @@ const CompanyCompleteDetails = () => {
               <a href="#">Reset</a>
             </div>
           </div>
+<<<<<<< HEAD
 
+=======
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
           <div className="job-stat-card-area">
             <div className="job-card-box-area">
               <h4>Total Job Offers Created</h4>
@@ -637,7 +736,71 @@ const CompanyCompleteDetails = () => {
           </div>
         </div>
       </section>
+<<<<<<< HEAD
 
+=======
+      {showModal && (
+        <div className="modal fade show d-block" tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Select Date Range</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowModal(false)}
+                />
+              </div>
+
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label>From Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={dateRange.from}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, from: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="mb-3">
+                  <label>To Date</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={dateRange.to}
+                    onChange={(e) =>
+                      setDateRange({ ...dateRange, to: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    console.log("Selected Range:", dateRange);
+                    setShowModal(false);
+                    // 👉 Call API / filter chart here
+                  }}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> 0eda273c58eb23b9d12b2d6e941153b83eb4c5f2
       {showWelcomeModal && (
         <div className="modal fade show d-block" tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
