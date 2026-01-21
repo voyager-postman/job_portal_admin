@@ -121,24 +121,6 @@ button.MuiButtonBase-root {
 .top-space-search-reslute {
   margin-top: 30px;
 }
-<<<<<<< HEAD
-
-=======
-.top-space-search-reslute .tab-content {
-  padding: unset !important;
-}
-.parentProduceSearch input {
-  padding: 5px 10px;
-  outline: none;
-  border: 2px solid #203764;
-  border-radius: 5px;
-}
-.parentProduceSearch {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
->>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
 /* .parentProduceSearch {
   flex-direction: column;
   align-items: center;
@@ -509,7 +491,6 @@ aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
 }
 
 /*super admin company details css end here*/
-<<<<<<< HEAD
 Completer Company Details
  
 /*complete company details page css start here*/
@@ -764,5 +745,3 @@ Completer Company Details
   height: 30px;
   object-fit: cover;
 }
-=======
->>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a

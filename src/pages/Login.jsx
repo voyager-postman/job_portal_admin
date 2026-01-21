@@ -37,13 +37,8 @@ export default function Login() {
       });
 
       if (response.data.success) {
-<<<<<<< HEAD
         localStorage.setItem("token", response.data.token);
         toast.success("Login successful!");
-=======
-        toast.success("Login successful!");
-        localStorage.setItem("adminToken", response.data.token);
->>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
         navigate("/admin");
       } else {
         // ✅ Handle specific message from backend

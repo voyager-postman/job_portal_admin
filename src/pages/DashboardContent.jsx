@@ -131,11 +131,7 @@ const DashboardContent = ({ isSidebarHidden }) => {
 
       <div className="copy-right-area-info">
         <div className="copy-right-details">
-<<<<<<< HEAD
           <p>Copyright © 2026 Connect Work.ma | All right reserved.</p>
-=======
-          <p>Copyright © 2025 Connect Work.ma | All right reserved.</p>
->>>>>>> d73511ce1449d187265f08e2d9bf191ee25d479a
         </div>
       </div>
     </section>
