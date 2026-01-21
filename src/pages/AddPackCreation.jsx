@@ -26,9 +26,7 @@ function AddPackCreation() {
     paymentMode: "",
   });
 
-  /* =========================
-     HANDLE INPUT CHANGE
-  ========================== */
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -90,7 +88,6 @@ function AddPackCreation() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 🔴 Common validation
     if (
       !formData.name ||
       !formData.type ||
@@ -103,7 +100,6 @@ function AddPackCreation() {
       return;
     }
 
-    // 🔴 Job Posting validation
     if (
       (formData.type === "JOB" || formData.type === "BOTH") &&
       (!formData.jobPostingCredits || !formData.dailyJobPostingLimit)
@@ -112,7 +108,6 @@ function AddPackCreation() {
       return;
     }
 
-    // 🔴 Profile Viewing validation
     if (
       (formData.type === "CV" || formData.type === "BOTH") &&
       (!formData.profileViewingCredits || !formData.dailyProfileViewingLimit)

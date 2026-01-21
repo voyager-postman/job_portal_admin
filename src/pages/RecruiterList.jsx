@@ -20,7 +20,6 @@ const RecruiterList = () => {
     }
   }, [companyDataId]);
 
-
   // Fetch Recruiter Data
   const fetchCandidates = async (companyId) => {
     try {
@@ -98,12 +97,20 @@ const RecruiterList = () => {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
-        const isStatus = row.status === "Active" || row.status === "Active";
+        const status = row.original.status;
+
+        // ❌ Don't render anything for other statuses
+        if (status !== "Active" && status !== "Inactive") {
+          return null;
+        }
+
+        const isActive = status === "Active";
+
         return (
           <span
             style={{
-              color: isStatus ? "#16a34a" : "#dc2626",
-              backgroundColor: isStatus ? "#dcfce7" : "#fee2e2",
+              color: isActive ? "#16a34a" : "#dc2626",
+              backgroundColor: isActive ? "#dcfce7" : "#fee2e2",
               padding: "4px 10px",
               borderRadius: "6px",
               fontSize: "13px",
@@ -111,11 +118,11 @@ const RecruiterList = () => {
               display: "inline-block",
             }}
           >
-            {isStatus ? "Active" : "Not Active"}
+            {isActive ? "Active" : "Inactive"}
           </span>
         );
       },
-    }
+    },
   ];
 
   return (

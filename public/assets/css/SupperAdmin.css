@@ -1300,3 +1300,6 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   object-fit: cover;
   margin-right: 20px;
 }
+.main-dashboard-content {
+  padding: 0px 20px 0px 20px;
+}

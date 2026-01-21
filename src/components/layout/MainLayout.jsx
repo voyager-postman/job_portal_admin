@@ -452,7 +452,7 @@ const MainLayout = () => {
             </Content>
             <footer className="py-4 bg-white">
               <p className="text-center mb-0">
-                Copyright © 2025 Connect Work.ma | All right reserved.
+                Copyright © 2026 Connect Work.ma | All right reserved.
               </p>
             </footer>
           </div>
