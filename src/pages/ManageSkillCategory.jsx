@@ -4,7 +4,8 @@ import { TableView } from "../components/DataTable";
 import { API_BASE_URL } from "../Url/Url";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import Swal from "sweetalert2";
+import { Link } from "react-router-dom";
 const ManageSkillCategory = () => {
   const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -16,14 +17,16 @@ const ManageSkillCategory = () => {
   const fetchTechStacks = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/getAllJobCategoriess`);
+
+      const response = await axios.get(`${API_BASE_URL}/skill-categories`);
+
       if (response.data?.success) {
-        setData(response.data.jobCategories || []);
+        setData(response.data.data || []); // ✅ FIXED
       } else {
         setData([]);
       }
     } catch (error) {
-      console.error("Error fetching Skills Name:", error);
+      console.error("Error fetching Categories Name:", error);
       // toast.error("Failed to load Skills Name");
     } finally {
       setLoading(false);
@@ -51,43 +54,58 @@ const ManageSkillCategory = () => {
   // ✅ Add or Update Tech Stack
   const handleSave = async () => {
     if (!techName.trim()) {
-      toast.warning("Skills name is required!");
+      toast.warning("Categories name is required!");
       return;
     }
+
     try {
       if (editItem) {
-        await axios.put(`${API_BASE_URL}/job-category/${editItem._id}`, {
+        // UPDATE
+        await axios.post(`${API_BASE_URL}/skill-category/${editItem._id}`, {
           name: techName,
         });
-        toast.success("Skills updated successfully!");
+        toast.success("Categories updated successfully!");
       } else {
-        await axios.post(`${API_BASE_URL}/addJobCategory`, {
-          name: techName,
-        });
-        toast.success("Skills added successfully!");
+        // ADD
+        await axios.post(`${API_BASE_URL}/skill-category`, { name: techName });
+        toast.success("Categories added successfully!");
       }
 
       setShowModal(false);
       fetchTechStacks();
     } catch (error) {
-      console.error("Error saving Skills Name:", error);
-      toast.error("Failed to save Skills Name");
+      console.error("Error saving Categories Name:", error);
+
+      // ✅ Show backend message if exists
+      const message =
+        error.response?.data?.message || "Failed to save Categories Name";
+
+      toast.error(message);
     }
   };
 
   // ✅ Delete Tech Stack
   const handleDelete = async (id) => {
-    if (
-      window.confirm("Are you sure you want to delete this Skills Deleted?")
-    ) {
-      try {
-        await axios.delete(`${API_BASE_URL}/job-category/${id}`);
-        toast.success("Skills Name deleted successfully!");
-        fetchTechStacks();
-      } catch (error) {
-        console.error("Error deleting Skills Name:", error);
-        toast.error("Failed to delete Skills Name:");
-      }
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This category will be permanently deleted!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await axios.delete(`${API_BASE_URL}/skill-category/${id}`);
+      Swal.fire("Deleted!", "Category deleted successfully.", "success");
+      fetchTechStacks();
+    } catch (error) {
+      console.error("Error deleting category:", error);
+      Swal.fire("Error!", "Failed to delete category.", "error");
     }
   };
 
@@ -95,17 +113,18 @@ const ManageSkillCategory = () => {
   const handleStatusChange = async (id, currentStatus) => {
     try {
       const newStatus = !currentStatus;
-      await axios.put(`${API_BASE_URL}/job-category/status/${id}`, {
-        is_Active: newStatus,
+
+      await axios.post(`${API_BASE_URL}/skill-category/${id}/status`, {
+        isActive: newStatus,
       });
+
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item,
+          item._id === id ? { ...item, isActive: newStatus } : item,
         ),
       );
-      toast.info(
-        `Skills Name marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
-      );
+
+      toast.info(`Category marked as ${newStatus ? "Active" : "Inactive"}`);
     } catch (error) {
       console.error("Error updating status:", error);
       toast.error("Failed to update status");
@@ -120,19 +139,22 @@ const ManageSkillCategory = () => {
     },
     {
       accessorKey: "name",
-      header: "Skills Name",
+      header: "Categories",
     },
     {
-      accessorKey: "is_Active",
+      accessorKey: "isActive", // ✅ fixed
       header: "Status",
       cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
               type="checkbox"
-              checked={row.original.is_Active}
+              checked={row.original.isActive} // ✅ fixed
               onChange={() =>
-                handleStatusChange(row.original._id, row.original.is_Active)
+                handleStatusChange(
+                  row.original._id,
+                  row.original.isActive, // ✅ fixed
+                )
               }
             />
             <span className="slider round"></span>
@@ -141,7 +163,6 @@ const ManageSkillCategory = () => {
       ),
     },
     {
-      accessorKey: "action",
       header: "Action",
       cell: ({ row }) => (
         <div className="super-admin-action-icons">
@@ -164,16 +185,27 @@ const ManageSkillCategory = () => {
     <div>
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
+        <div className="super-dashboard-breadcrumb-info">
+          <h4>Categories List </h4>
+        </div>
+        <div className="super-dashboard-common-heading">
+          <h5>
+            <Link to="/admin/">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            Categories Management
+          </h5>
+        </div>
         <div className="responsive-content">
           <div className="my-profile-area">
             <div className="profile-form-content add-recruiters-btn-postion">
-              <h3>Skills Name List</h3>
+              <h3>Categories List</h3>
               <div className="add-recruiters-btn">
                 <button
                   onClick={handleAddClick}
                   className="default-btn btn btn-primary"
                 >
-                  Add Skills Name
+                  Add Categories
                 </button>
               </div>
 
@@ -202,7 +234,7 @@ const ManageSkillCategory = () => {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">
-                    {editItem ? "Edit Skills Name" : "Add Skills Name"}
+                    {editItem ? "Edit Categories Name" : "Add Categories Name"}
                   </h5>
                   <button
                     type="button"
@@ -213,13 +245,13 @@ const ManageSkillCategory = () => {
 
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Manage Skills Name</label>
+                    <label className="form-label">Categories Name</label>
                     <input
                       type="text"
                       className="form-control"
                       value={techName}
                       onChange={(e) => setTechName(e.target.value)}
-                      placeholder="Enter Skills name"
+                      placeholder="Enter Categories name"
                     />
                   </div>
                 </div>

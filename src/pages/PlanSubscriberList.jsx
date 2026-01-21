@@ -191,7 +191,6 @@ const PlanSubscriberList = () => {
             </a>
             Plan Subscriber Management
           </h5>
-          {/* <a href="super-admin-price-plan-form.html" class="super-dashboard-common-add-btn">Add Price Plan</a> */}
         </div>
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
           <div className="common-fillter-select-area">

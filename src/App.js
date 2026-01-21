@@ -54,6 +54,7 @@ import AddOnPackDetails from "./pages/AddOnPackDetails";
 import AdOnPackCreateForm from "./pages/AdOnPackCreateForm";
 import ManageSkillCategory from "./pages/ManageSkillCategory";
 import ManageQuestionBank from "./pages/ManageQuestionBank";
+import AddQuestion from "./pages/AddQuestion";
 function App() {
   return (
     <div className="App">
@@ -90,8 +91,12 @@ function App() {
           <Route path="tech-stack" element={<TechStack />} />
           <Route path="job-type" element={<JobType />} />
           <Route path="salary-range" element={<SalaryRange />} />
-          <Route path="manage-skill-categories" element={<ManageSkillCategory/>}/>
-          <Route path="manage-question-bank" element={<ManageQuestionBank/>}/>
+          <Route
+            path="manage-skill-categories"
+            element={<ManageSkillCategory />}
+          />
+          <Route path="manage-question-bank" element={<ManageQuestionBank />} />
+          <Route path="add-question" element={<AddQuestion />} />
           <Route
             path="super-admin-pack-creations"
             element={<PackCreationList />}
