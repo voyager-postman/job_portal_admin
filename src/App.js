@@ -55,6 +55,8 @@ import AdOnPackCreateForm from "./pages/AdOnPackCreateForm";
 import ManageSkillCategory from "./pages/ManageSkillCategory";
 import ManageQuestionBank from "./pages/ManageQuestionBank";
 import AddQuestion from "./pages/AddQuestion";
+import ManageAssementList from "./pages/ManageAssementList";
+import CreateAssement from "./pages/CreateAssement";
 function App() {
   return (
     <div className="App">
@@ -96,6 +98,8 @@ function App() {
             element={<ManageSkillCategory />}
           />
           <Route path="manage-question-bank" element={<ManageQuestionBank />} />
+          <Route path="assessment-list" element={<ManageAssementList />} />
+          <Route path="create-assessment" element={<CreateAssement />} />
           <Route path="add-question" element={<AddQuestion />} />
           <Route
             path="super-admin-pack-creations"

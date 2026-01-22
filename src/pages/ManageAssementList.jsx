@@ -5,8 +5,10 @@ import { API_BASE_URL } from "../Url/Url";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
-import { Link } from "react-router-dom";
-const ManageSkillCategory = () => {
+import { Link, useNavigate } from "react-router-dom";
+
+const ManageAssementList = () => {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -18,7 +20,7 @@ const ManageSkillCategory = () => {
     try {
       setLoading(true);
 
-      const response = await axios.get(`${API_BASE_URL}/all-skillCategories`);
+      const response = await axios.get(`${API_BASE_URL}/getAllQuestions`);
 
       if (response.data?.success) {
         setData(response.data.data || []); // ✅ FIXED
@@ -38,18 +40,6 @@ const ManageSkillCategory = () => {
   }, []);
 
   // ✅ Open Add Modal
-  const handleAddClick = () => {
-    setEditItem(null);
-    setTechName("");
-    setShowModal(true);
-  };
-
-  // ✅ Open Edit Modal
-  const handleEditClick = (row) => {
-    setEditItem(row.original);
-    setTechName(row.original.name);
-    setShowModal(true);
-  };
 
   // ✅ Add or Update Tech Stack
   const handleSave = async () => {
@@ -88,24 +78,26 @@ const ManageSkillCategory = () => {
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: "This category will be permanently deleted!",
+      text: "This question will be permanently deleted!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
       cancelButtonColor: "#3085d6",
       confirmButtonText: "Yes, delete it!",
-      cancelButtonText: "Cancel",
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      await axios.delete(`${API_BASE_URL}/skill-category/${id}`);
-      Swal.fire("Deleted!", "Category deleted successfully.", "success");
-      fetchTechStacks();
+      await axios.delete(`${API_BASE_URL}/delete-question/${id}`);
+
+      Swal.fire("Deleted!", "Question deleted successfully.", "success");
+
+      // Remove from UI
+      setData((prev) => prev.filter((item) => item._id !== id));
     } catch (error) {
-      console.error("Error deleting category:", error);
-      Swal.fire("Error!", "Failed to delete category.", "error");
+      console.error("Delete error:", error);
+      Swal.fire("Error!", "Failed to delete question.", "error");
     }
   };
 
@@ -114,47 +106,66 @@ const ManageSkillCategory = () => {
     try {
       const newStatus = !currentStatus;
 
-      await axios.post(`${API_BASE_URL}/skill-category/${id}/status`, {
+      await axios.post(`${API_BASE_URL}/question-status/${id}`, {
         isActive: newStatus,
       });
 
+      // Update UI instantly
       setData((prev) =>
         prev.map((item) =>
           item._id === id ? { ...item, isActive: newStatus } : item,
         ),
       );
 
-      toast.success(`Category marked as ${newStatus ? "Active" : "Inactive"}`);
+      toast.success(`Question marked as ${newStatus ? "Active" : "Inactive"}`);
     } catch (error) {
-      console.error("Error updating status:", error);
-      toast.error("Failed to update status");
+      console.error("Status update error:", error);
+      toast.error("Failed to update question status");
     }
   };
 
   const columns = [
     {
-      accessorKey: "_id",
       header: "S.No",
       cell: ({ row }) => row.index + 1,
     },
     {
-      accessorKey: "name",
-      header: "Categories",
+      header: "Skill Category",
+      cell: ({ row }) => row.original.skillCategory?.name || "-",
     },
     {
-      accessorKey: "isActive", // ✅ fixed
+      accessorKey: "question",
+      header: "Question",
+    },
+    {
+      accessorKey: "level",
+      header: "Question Level",
+    },
+    {
+      header: "Correct Answer",
+      cell: ({ row }) =>
+        row.original.options?.[row.original.correctAnswer] || "-",
+    },
+    {
+      header: "Created Date",
+      cell: ({ row }) =>
+        new Date(row.original.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        }),
+    },
+    {
+      accessorKey: "isActive",
       header: "Status",
       cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
               type="checkbox"
-              checked={row.original.isActive} // ✅ fixed
+              checked={row.original.isActive}
               onChange={() =>
-                handleStatusChange(
-                  row.original._id,
-                  row.original.isActive, // ✅ fixed
-                )
+                handleStatusChange(row.original._id, row.original.isActive)
               }
             />
             <span className="slider round"></span>
@@ -162,14 +173,19 @@ const ManageSkillCategory = () => {
         </div>
       ),
     },
+
     {
-      header: "Action",
+      header: "Actions",
       cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <i
             className="fa-solid fa-pencil"
             title="Edit"
-            onClick={() => handleEditClick(row)}
+            onClick={() =>
+              navigate("/admin/add-question", {
+                state: { addOnData: row.original },
+              })
+            }
           />
           <i
             className="fa-solid fa-trash"
@@ -186,27 +202,27 @@ const ManageSkillCategory = () => {
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Categories List </h4>
+          <h4>Question List </h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5>
             <Link to="/admin/">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Categories Management
+            Question Management
           </h5>
         </div>
         <div className="responsive-content">
           <div className="my-profile-area">
             <div className="profile-form-content add-recruiters-btn-postion">
-              <h3>Categories List</h3>
+              <h3>Assessments Question List</h3>
               <div className="add-recruiters-btn">
-                <button
-                  onClick={handleAddClick}
-                  className="default-btn btn btn-primary"
+                <Link
+                  to="/admin/create-assessment"
+                  className="super-dashboard-common-add-btn"
                 >
-                  Add Categories
-                </button>
+                  Add Assessment
+                </Link>
               </div>
 
               <div className="profile-form mt-3">
@@ -284,4 +300,4 @@ const ManageSkillCategory = () => {
   );
 };
 
-export default ManageSkillCategory;
+export default ManageAssementList;

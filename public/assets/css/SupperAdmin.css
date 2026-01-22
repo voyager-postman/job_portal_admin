@@ -297,7 +297,6 @@ margin-bottom: 20px;
 
   text-align: right;
   margin-top: 30px;
-
 }
 
 .data-export-btn {
@@ -310,10 +309,8 @@ margin-bottom: 20px;
   outline: none;
   border: none;
 
-
   outline: none;
   border: none;
-
 }
 
 .data-export-btn:hover {
@@ -566,7 +563,6 @@ margin-bottom: 20px;
 }
 
 .super-dashboard-common-heading h5 {
-
   font-size: 15px;
   font-size: 18px;
 
@@ -1317,16 +1313,135 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   margin-right: 20px;
 }
 
-
-
-
 .main-dashboard-content {
   padding: 0px 20px 0px 20px;
 }
 /*skill assessment test questions list page css start here*/
- 
+
 .form-group.option-sapce-area .form-control {
-margin-bottom:15px;  
+  margin-bottom: 15px;
 }
- 
+
 /*skill assessment test questions list page css end here*/
+/*Skill Assessment Form css start here*/
+
+.skill-assessments-from-main-area .form-control {
+  height: 40px;
+}
+
+.questions-category-main .dropdown-content.show {
+  display: block;
+}
+
+.questions-category-main .dropdown {
+  position: relative;
+  border-radius: unset;
+  background-color: #f0f5f7;
+}
+
+.questions-category-main .dropdown-btn {
+  width: 100%;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.questions-category-main .dropdown-content {
+  display: none;
+  position: absolute;
+  width: 100%;
+  border: 1px solid #ccc;
+  background: #fff;
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.questions-category-main .dropdown-content label {
+  display: block;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin: 0px !important;
+  font-size: 15px !important;
+}
+
+.questions-category-main .dropdown-content label:hover {
+  background-color: #f2f2f2;
+}
+
+.questions-category-main .dropdown-content input {
+  margin-right: 5px;
+}
+
+.manually-add-dlt-question-area {
+  display: flex;
+  justify-content: space-between;
+}
+
+.manually-add-dlt-question-area .form-group {
+  width: 95%;
+}
+
+.manually-add-dlt-Icon i {
+  color: #fff;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 12px 12px;
+  background: #f65e00;
+  border-radius: 5px;
+}
+
+.number-questions-category .form-control {
+  margin-bottom: 15px;
+}
+
+.question-bank-question-area {
+  margin-bottom: 20px;
+}
+
+.question-bank-question-list {
+  display: flex;
+  margin-bottom: 10px;
+  justify-content: space-between;
+}
+
+.question-bank-question {
+  width: 95%;
+}
+
+.question-bank-question h5 {
+  width: 100%;
+  font-size: 16px;
+  padding: 7px 5px;
+  background: #f0f5f7;
+  display: inline-block;
+}
+
+.question-bank-question h5 span {
+  color: #f65e00;
+  font-size: 18px;
+  font-weight: 800;
+  margin-right: 10px;
+}
+
+.question-bank-question-dltIcon i {
+  color: #fff;
+  cursor: pointer;
+  background: #f65e00;
+  padding: 10px 10px;
+  border-radius: 5px;
+}
+
+.manually-add-mcq-filed .form-group {
+  margin-bottom: 15px;
+}
+
+.skill-assessment-btn-area {
+  text-align: center;
+  padding: 30px 0px;
+}
+
+.skill-assessments-test-btn .default-btn {
+  padding: 5px 10px;
+}
+
+/*Skill Assessment Form css end here*/

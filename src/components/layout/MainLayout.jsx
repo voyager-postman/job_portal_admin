@@ -27,7 +27,7 @@ import AddModeratorIcon from "@mui/icons-material/AddModerator";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
-import QuizIcon from '@mui/icons-material/Quiz';
+import QuizIcon from "@mui/icons-material/Quiz";
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
@@ -87,7 +87,11 @@ const MainLayout = () => {
       "price-plan-form",
     ];
 
-    const skillsKey = ["manage-skill-categories", "manage-question-bank"];
+    const skillsKey = [
+      "manage-skill-categories",
+      "manage-question-bank",
+      "assessment-list",
+    ];
 
     // const promotionKeys = [
     //   "featured-job",
@@ -363,7 +367,7 @@ const MainLayout = () => {
             >
               <Menu.Item
                 key="manage-skill-categories"
-                icon={<CategoryIcon  className="fs-6" />}
+                icon={<CategoryIcon className="fs-6" />}
               >
                 Mange Categories
               </Menu.Item>
@@ -372,6 +376,12 @@ const MainLayout = () => {
                 icon={<QuestionAnswerIcon className="fs-6" />}
               >
                 Mange Question Bank
+              </Menu.Item>
+               <Menu.Item
+                key="assessment-list"
+                icon={<QuestionAnswerIcon className="fs-6" />}
+              >
+                Mange Assessment
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>
