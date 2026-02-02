@@ -291,10 +291,6 @@ margin-bottom: 20px;
 
 .data-export-btn-info {
   margin-left: 20px;
-
-  text-align: right;
-  margin-top: 30px;
-
   text-align: right;
   margin-top: 30px;
 }
@@ -305,10 +301,6 @@ margin-bottom: 20px;
   border-radius: 5px;
   padding: 6px 10px;
   background: #0066cc;
-
-  outline: none;
-  border: none;
-
   outline: none;
   border: none;
 }
@@ -563,10 +555,7 @@ margin-bottom: 20px;
 }
 
 .super-dashboard-common-heading h5 {
-  font-size: 15px;
   font-size: 18px;
-
-  font-size: 15px;
 }
 
 .super-dashboard-dashboard-box {
@@ -632,6 +621,15 @@ margin-bottom: 20px;
 .super-dashboard-users-recruiters-analytics {
   display: flex;
   justify-content: space-between;
+}
+.employer-dashboard-common-heading {
+  margin-bottom: 15px;
+}
+.employer-dashboard-common-heading h2 {
+    font-size: 20px;
+    background: #fff;
+    padding: 20px 20px;
+    margin-bottom: 10px;
 }
 
 .users-recruiters-analytics-chart {
@@ -1305,7 +1303,6 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
 }
-
 .super-admin-candidate-img img {
   width: 200px;
   height: 200px;
