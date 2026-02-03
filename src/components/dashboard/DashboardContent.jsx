@@ -1,6 +1,7 @@
 import React, { use } from "react";
 import AnalyticsChart from "./AnalyticsChart";
 import RevenueChart from "./RevenueChart";
+import { Link } from "react-router-dom";
 import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url.js";
 import axios from "axios";
 import { useEffect, useState } from "react";
@@ -228,26 +229,36 @@ const DashboardContent = ({ isSidebarHidden }) => {
       <div className="super-dashboard-detail-info my-4">
         <div className="row">
           <div className="col-lg-3 col-md-6 col-sm-12">
-            <div className="super-dashboard-dashboard-box">
-              <div className="super-dashboard-icon-box">
-                <i className="fa-solid fa-users"></i>
+            <Link
+              to="/admin/manage-recruiter"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="super-dashboard-dashboard-box">
+                <div className="super-dashboard-icon-box">
+                  <i className="fa-solid fa-users"></i>
+                </div>
+                <div className="super-dashboard-box-detail">
+                  <h5>Total Company</h5>
+                  <p>{stats.totalCompany || 0}</p>
+                </div>
               </div>
-              <div className="super-dashboard-box-detail">
-                <h5>Total Users</h5>
-                <p>{stats.totalUsers || 0}</p>
-              </div>
-            </div>
+            </Link>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
-            <div className="super-dashboard-dashboard-box">
-              <div className="super-dashboard-icon-box">
-                <i className="fa-solid fa-briefcase"></i>
+            <Link
+              to="/admin/manage-candidates"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="super-dashboard-dashboard-box">
+                <div className="super-dashboard-icon-box">
+                  <i className="fa-solid fa-briefcase"></i>
+                </div>
+                <div className="super-dashboard-box-detail">
+                  <h5>Total Job Seekers</h5>
+                  <p>{stats.totalJobSeekers || 0}</p>
+                </div>
               </div>
-              <div className="super-dashboard-box-detail">
-                <h5>Total Job Seekers</h5>
-                <p>{stats.totalJobSeekers || 0}</p>
-              </div>
-            </div>
+            </Link>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="super-dashboard-dashboard-box">

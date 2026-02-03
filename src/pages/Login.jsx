@@ -4,9 +4,13 @@ import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 import { API_BASE_URL } from "../Url/Url";
 export default function Login() {
   const navigate = useNavigate();
+  const { loginAdmin } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
     email: "",
@@ -37,7 +41,7 @@ export default function Login() {
       });
 
       if (response.data.success) {
-        localStorage.setItem("token", response.data.token);
+        loginAdmin(response.data.data, response.data.token);
         toast.success("Login successful!");
         navigate("/admin");
       } else {
@@ -52,7 +56,7 @@ export default function Login() {
       console.error(error);
       toast.error(
         error.response?.data?.message ||
-          "Something went wrong. Please try again."
+          "Something went wrong. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -98,7 +102,9 @@ export default function Login() {
         </form>
 
         {/* Forgot Password */}
-        <p className="forgot-password">Forgot password?</p>
+        <Link to="/forgot-password">
+          <p className="forgot-password">Forgot password?</p>
+        </Link>
       </div>
     </div>
   );

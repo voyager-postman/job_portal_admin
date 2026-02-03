@@ -57,12 +57,14 @@ import ManageQuestionBank from "./pages/ManageQuestionBank";
 import AddQuestion from "./pages/AddQuestion";
 import ManageAssementList from "./pages/ManageAssementList";
 import CreateAssement from "./pages/CreateAssement";
+import ForgotPassword from "./pages/ForgotPassword";
 function App() {
   return (
     <div className="App">
       <Routes>
         {/* Login page */}
         <Route path="/" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Admin Layout (with Header + Sidebar) */}
         <Route path="/admin" element={<MainLayout />}>

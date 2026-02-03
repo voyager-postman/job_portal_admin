@@ -14,22 +14,39 @@ const ManageAssementList = () => {
   const [editItem, setEditItem] = useState(null);
   const [techName, setTechName] = useState("");
   const [loading, setLoading] = useState(false);
+  const token = localStorage.getItem("token");
+  const mapAssessments = (assessments = []) => {
+    return assessments.map((assessment) => ({
+      _id: assessment._id,
+      assessmentName: assessment.assessmentName,
+      totalQuestions: assessment.totalQuestions,
+      totalDuration: assessment.totalDuration,
+      passingPercentage: assessment.passingPercentage,
+      questionLevel: assessment.questionLevel,
+      questionSource: assessment.questionSource,
+      isActive: assessment.isActive,
+      createdAt: assessment.createdAt,
+    }));
+  };
 
-  // ✅ Fetch all Tech Stacks
   const fetchTechStacks = async () => {
     try {
       setLoading(true);
 
-      const response = await axios.get(`${API_BASE_URL}/getAllQuestions`);
+      const response = await axios.get(`${API_BASE_URL}/getSkillAssessments`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.data?.success) {
-        setData(response.data.data || []); // ✅ FIXED
+        const formattedData = mapAssessments(response.data.data);
+        setData(formattedData);
       } else {
         setData([]);
       }
     } catch (error) {
-      console.error("Error fetching Categories Name:", error);
-      // toast.error("Failed to load Skills Name");
+      console.error("Error fetching Skill Assessments:", error);
     } finally {
       setLoading(false);
     }
@@ -38,6 +55,25 @@ const ManageAssementList = () => {
   useEffect(() => {
     fetchTechStacks();
   }, []);
+  const columns = [
+    {
+      header: "Assessment Name",
+      accessorKey: "assessmentName",
+    },
+    {
+      header: "Total Questions",
+      accessorKey: "totalQuestions",
+    },
+    {
+      header: "Total Duration (mins)",
+      accessorKey: "totalDuration",
+    },
+    {
+      header: "Passing %",
+      accessorKey: "passingPercentage",
+      cell: ({ row }) => `${row.original.passingPercentage}%`,
+    },
+  ];
 
   // ✅ Open Add Modal
 
@@ -123,79 +159,6 @@ const ManageAssementList = () => {
       toast.error("Failed to update question status");
     }
   };
-
-  const columns = [
-    {
-      header: "S.No",
-      cell: ({ row }) => row.index + 1,
-    },
-    {
-      header: "Skill Category",
-      cell: ({ row }) => row.original.skillCategory?.name || "-",
-    },
-    {
-      accessorKey: "question",
-      header: "Question",
-    },
-    {
-      accessorKey: "level",
-      header: "Question Level",
-    },
-    {
-      header: "Correct Answer",
-      cell: ({ row }) =>
-        row.original.options?.[row.original.correctAnswer] || "-",
-    },
-    {
-      header: "Created Date",
-      cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-          day: "2-digit",
-        }),
-    },
-    {
-      accessorKey: "isActive",
-      header: "Status",
-      cell: ({ row }) => (
-        <div className="super-admin-toggle-switch">
-          <label className="switch">
-            <input
-              type="checkbox"
-              checked={row.original.isActive}
-              onChange={() =>
-                handleStatusChange(row.original._id, row.original.isActive)
-              }
-            />
-            <span className="slider round"></span>
-          </label>
-        </div>
-      ),
-    },
-
-    {
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="super-admin-action-icons">
-          <i
-            className="fa-solid fa-pencil"
-            title="Edit"
-            onClick={() =>
-              navigate("/admin/add-question", {
-                state: { addOnData: row.original },
-              })
-            }
-          />
-          <i
-            className="fa-solid fa-trash"
-            title="Delete"
-            onClick={() => handleDelete(row.original._id)}
-          />
-        </div>
-      ),
-    },
-  ];
 
   return (
     <div>

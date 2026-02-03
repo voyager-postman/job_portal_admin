@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./mainlayout.css";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { AiOutlineDashboard, AiOutlineUser } from "react-icons/ai";
 import { NavLink, useLocation } from "react-router-dom";
+import { AuthContext } from "../../context/AuthContext";
+import { API_IMAGE_URL } from "../../Url/Url";
 import { Outlet } from "react-router-dom";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -31,6 +33,8 @@ import QuizIcon from "@mui/icons-material/Quiz";
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
+  const { admin, logout } = useContext(AuthContext);
+
   const [openKeys, setOpenKeys] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const [selectedKey, setSelectedKey] = useState("");
@@ -377,7 +381,7 @@ const MainLayout = () => {
               >
                 Mange Question Bank
               </Menu.Item>
-               <Menu.Item
+              <Menu.Item
                 key="assessment-list"
                 icon={<QuestionAnswerIcon className="fs-6" />}
               >
@@ -415,12 +419,27 @@ const MainLayout = () => {
                     aria-expanded="false"
                   >
                     <img
-                      style={{ borderRadius: "50%", objectFit: "cover" }}
-                      width={40}
-                      height={40}
-                      src={`${process.env.PUBLIC_URL}/assets/images/userImg/candidate1.jpg`}
-                      alt="loading"
+                      src={
+                        admin?.profileImage
+                          ? `${API_IMAGE_URL}/${admin.profileImage}`
+                          : `${process.env.PUBLIC_URL}/assets/images/userImg/candidate1.jpg`
+                      }
+                      crossorigin="anonymous"
+                      alt="User"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "50%",
+                        objectFit: "cover",
+                        marginRight: "8px",
+                      }}
                     />
+
+                    <span>
+                      {admin
+                        ? `${admin.first_name || ""} ${admin.last_name || ""}`
+                        : "Super Admin"}
+                    </span>
                   </div>
                   <div
                     className="dropdown-menu"
