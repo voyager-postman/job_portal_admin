@@ -1,23 +1,40 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { API_BASE_URL } from "../Url/Url";
-import { useLocation } from "react-router-dom";
 function CreateAssement() {
   const categoryRef = useRef(null);
+  const [showManualQuestions, setShowManualQuestions] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [questionLevel, setQuestionLevel] = useState("");
+  const [bankQuestions, setBankQuestions] = useState([]);
+  const [assessmentName, setAssessmentName] = useState("");
   const [questionSource, setQuestionSource] = useState("");
+  const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [formData, setFormData] = useState({
+    totalDuration: "",
+    totalQuestions: "",
+    passingPercentage: "",
+  });
 
-  const categories = ["JAVA", "React.js", "Node.js", "PHP", "QA", "Wordpress"];
-  const questionBank = [
-    { id: 1, text: "What is JVM?" },
-    { id: 2, text: "Explain OOP principles" },
-    { id: 3, text: "What is ArrayList?" },
-    { id: 4, text: "What is React?" },
-    { id: 5, text: "Explain Node.js" },
-  ];
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}/skill-categories`);
+      if (res.data?.success) {
+        setCategories(res.data.data);
+      }
+    } catch {
+      toast.error("Failed to load skill categories");
+    }
+  };
+
+  /* ================= EDIT MODE PREFILL ================= */
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   const [selectedBankQuestions, setSelectedBankQuestions] = useState([]);
   const [showQuestionOptions, setShowQuestionOptions] = useState(false);
   const [questionSearchTerm, setQuestionSearchTerm] = useState("");
@@ -33,27 +50,25 @@ function CreateAssement() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [categorySearchTerm, setCategorySearchTerm] = useState("");
   const [showCategoryOptions, setShowCategoryOptions] = useState(false);
-  const [questions, setQuestions] = useState([
-    {
-      id: Date.now(),
-      question: "",
-      options: ["", "", "", ""],
-      correctAnswer: "",
-    },
-  ]);
+  const [questions, setQuestions] = useState([]);
+
   // Add / remove question
   const toggleBankQuestion = (question) => {
-    if (selectedBankQuestions.find((q) => q.id === question.id)) {
-      setSelectedBankQuestions(
-        selectedBankQuestions.filter((q) => q.id !== question.id),
-      );
-    } else {
-      setSelectedBankQuestions([...selectedBankQuestions, question]);
-    }
+    setSelectedBankQuestions((prev) =>
+      prev.some((q) => q._id === question._id)
+        ? prev.filter((q) => q._id !== question._id)
+        : [...prev, question],
+    );
   };
 
   // Delete from selected list
@@ -62,9 +77,14 @@ function CreateAssement() {
   };
 
   // Search filter
-  const filteredQuestions = questionBank.filter((q) =>
-    q.text.toLowerCase().includes(questionSearchTerm.toLowerCase()),
-  );
+  const filteredQuestions = bankQuestions
+    .map((group) => ({
+      ...group,
+      questions: group.questions.filter((q) =>
+        q.question?.toLowerCase().includes(questionSearchTerm.toLowerCase()),
+      ),
+    }))
+    .filter((group) => group.questions.length > 0);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -82,69 +102,228 @@ function CreateAssement() {
 
   // Add new question
   const addQuestion = () => {
-    setQuestions([
-      ...questions,
+    setQuestions((prev) => [
+      ...prev,
       {
         id: Date.now(),
+        skillCategory: "",
         question: "",
-        options: ["", "", "", ""],
+        options: { A: "", B: "", C: "", D: "" },
         correctAnswer: "",
       },
     ]);
   };
+
+  const handleCategoryChange = (id, value) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, skillCategory: value } : q)),
+    );
+  };
+
   // Add / Remove category
   const toggleCategory = (category) => {
-    if (selectedCategories.includes(category)) {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category));
-    } else {
-      setSelectedCategories([...selectedCategories, category]);
-    }
+    setSelectedCategories((prev) =>
+      prev.some((c) => c._id === category._id)
+        ? prev.filter((c) => c._id !== category._id)
+        : [...prev, category],
+    );
   };
 
   // Remove by cross icon
-  const handleRemoveCategory = (category) => {
-    setSelectedCategories(selectedCategories.filter((c) => c !== category));
+  const handleRemoveCategory = (id) => {
+    setSelectedCategories((prev) => prev.filter((c) => c._id !== id));
   };
 
   // Filter categories
   const filteredCategories = categories.filter((cat) =>
-    cat.toLowerCase().includes(categorySearchTerm.toLowerCase()),
+    cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase()),
   );
 
   // Delete question
   const deleteQuestion = (id) => {
-    setQuestions(questions.filter((q) => q.id !== id));
+    setQuestions((prev) => prev.filter((q) => q.id !== id));
   };
 
   // Update question text
   const handleQuestionChange = (id, value) => {
-    setQuestions(
-      questions.map((q) => (q.id === id ? { ...q, question: value } : q)),
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, question: value } : q)),
     );
   };
 
   // Update option text
-  const handleOptionChange = (qId, index, value) => {
-    setQuestions(
-      questions.map((q) => {
-        if (q.id === qId) {
-          const updatedOptions = [...q.options];
-          updatedOptions[index] = value;
-          return { ...q, options: updatedOptions };
-        }
-        return q;
-      }),
+  const handleOptionChange = (id, optionKey, value) => {
+    setQuestions((prev) =>
+      prev.map((q) =>
+        q.id === id
+          ? {
+              ...q,
+              options: { ...q.options, [optionKey]: value },
+            }
+          : q,
+      ),
     );
   };
 
   // Update correct answer
-  const handleCorrectAnswer = (qId, value) => {
-    setQuestions(
-      questions.map((q) => (q.id === qId ? { ...q, correctAnswer: value } : q)),
+  const handleCorrectAnswer = (id, value) => {
+    setQuestions((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, correctAnswer: value } : q)),
     );
   };
 
   console.log("MCQ DATA 👉", questions);
+  const fetchQuestionsFromBank = async () => {
+    if (!selectedCategories.length || !questionLevel) {
+      setBankQuestions([]);
+      return;
+    }
+
+    try {
+      setLoadingQuestions(true);
+
+      const categoryIds = selectedCategories.map((c) => c._id).join(",");
+
+      const res = await axios.get(`${API_BASE_URL}/getQuestionsByCategories`, {
+        params: {
+          categoryIds,
+          level: questionLevel,
+        },
+      });
+
+      if (res.data?.success) {
+        setBankQuestions(res.data.data || []);
+      } else {
+        setBankQuestions([]);
+      }
+    } catch (err) {
+      toast.error("Failed to load questions");
+      setBankQuestions([]);
+    } finally {
+      setLoadingQuestions(false);
+    }
+  };
+  useEffect(() => {
+    fetchQuestionsFromBank();
+    setSelectedBankQuestions([]); // reset selection
+  }, [selectedCategories, questionLevel]);
+  const mapManualQuestionsForApi = () =>
+    questions.map((q) => ({
+      category: q.skillCategory,
+      questionText: q.question,
+      optionA: q.options.A,
+      optionB: q.options.B,
+      optionC: q.options.C,
+      optionD: q.options.D,
+      correctAnswer: q.correctAnswer,
+    }));
+  const mapBankQuestionsForApi = () => selectedBankQuestions.map((q) => q._id);
+  const buildPayload = () => ({
+    assessmentName,
+    categories: selectedCategories.map((c) => c._id),
+    questionLevel,
+    questionSource,
+    bankQuestions: questionSource !== "MANUAL" ? mapBankQuestionsForApi() : [],
+    manualQuestions:
+      questionSource !== "BANK" ? mapManualQuestionsForApi() : [],
+    totalDuration: Number(formData.totalDuration),
+    passingPercentage: Number(formData.passingPercentage),
+  });
+  const validateForm = () => {
+    if (!assessmentName.trim()) {
+      toast.error("Assessment name is required");
+      return false;
+    }
+
+    if (!selectedCategories.length) {
+      toast.error("Please select at least one category");
+      return false;
+    }
+
+    if (!questionLevel) {
+      toast.error("Please select question level");
+      return false;
+    }
+
+    if (!questionSource) {
+      toast.error("Please select question source");
+      return false;
+    }
+
+    if (!formData.totalDuration || Number(formData.totalDuration) <= 0) {
+      toast.error("Total duration must be greater than 0");
+      return false;
+    }
+
+    if (
+      !formData.passingPercentage ||
+      Number(formData.passingPercentage) <= 0 ||
+      Number(formData.passingPercentage) > 100
+    ) {
+      toast.error("Passing percentage must be between 1 and 100");
+      return false;
+    }
+
+    // BANK validation
+    if (questionSource === "BANK") {
+      if (!selectedBankQuestions.length) {
+        toast.error("Please select at least one question from question bank");
+        return false;
+      }
+    }
+
+    // MANUAL validation
+    if (questionSource === "MANUAL") {
+      if (!questions.length) {
+        toast.error("Please add at least one manual question");
+        return false;
+      }
+
+      for (let i = 0; i < questions.length; i++) {
+        const q = questions[i];
+
+        if (!q.skillCategory) {
+          toast.error(`Select category for question ${i + 1}`);
+          return false;
+        }
+
+        if (!q.question.trim()) {
+          toast.error(`Question text is required for question ${i + 1}`);
+          return false;
+        }
+
+        if (!q.options.A || !q.options.B || !q.options.C || !q.options.D) {
+          toast.error(`All options are required for question ${i + 1}`);
+          return false;
+        }
+
+        if (!q.correctAnswer) {
+          toast.error(`Select correct answer for question ${i + 1}`);
+          return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmitAssessment = async () => {
+    if (!validateForm()) return;
+
+    try {
+      const payload = buildPayload();
+
+      await axios.post(`${API_BASE_URL}/createSkillAssessment`, payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      toast.success("Skill Assessment created successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to create assessment");
+    }
+  };
 
   return (
     <>
@@ -174,6 +353,8 @@ function CreateAssement() {
                         className="form-control"
                         type="text"
                         placeholder="Skill assessment name"
+                        value={assessmentName}
+                        onChange={(e) => setAssessmentName(e.target.value)}
                       />
                     </div>
                   </div>
@@ -186,6 +367,7 @@ function CreateAssement() {
                         ref={categoryRef}
                         style={{ position: "relative" }}
                       >
+                        {/* Selected chips */}
                         <div
                           className="selected-items"
                           onClick={() => setShowCategoryOptions(true)}
@@ -200,7 +382,7 @@ function CreateAssement() {
                         >
                           {selectedCategories.map((cat) => (
                             <span
-                              key={cat}
+                              key={cat._id}
                               style={{
                                 background: "#007bff",
                                 color: "white",
@@ -211,11 +393,11 @@ function CreateAssement() {
                                 alignItems: "center",
                               }}
                             >
-                              {cat}
+                              {cat.name}
                               <i
                                 className="fa-solid fa-xmark"
                                 style={{ cursor: "pointer", marginLeft: "6px" }}
-                                onClick={() => handleRemoveCategory(cat)}
+                                onClick={() => handleRemoveCategory(cat._id)}
                               />
                             </span>
                           ))}
@@ -237,6 +419,7 @@ function CreateAssement() {
                           />
                         </div>
 
+                        {/* Dropdown */}
                         {showCategoryOptions && (
                           <ul
                             style={{
@@ -253,27 +436,31 @@ function CreateAssement() {
                               listStyle: "none",
                             }}
                           >
-                            {filteredCategories.map((cat) => (
-                              <li
-                                key={cat}
-                                onClick={() => toggleCategory(cat)}
-                                style={{
-                                  padding: "6px 10px",
-                                  cursor: "pointer",
-                                  background: selectedCategories.includes(cat)
-                                    ? "#007bff"
-                                    : "transparent",
-                                  color: selectedCategories.includes(cat)
-                                    ? "white"
-                                    : "black",
-                                }}
-                              >
-                                {cat}
-                                {selectedCategories.includes(cat) && (
-                                  <span style={{ float: "right" }}>✔</span>
-                                )}
-                              </li>
-                            ))}
+                            {filteredCategories.map((cat) => {
+                              const isSelected = selectedCategories.some(
+                                (c) => c._id === cat._id,
+                              );
+
+                              return (
+                                <li
+                                  key={cat._id}
+                                  onClick={() => toggleCategory(cat)}
+                                  style={{
+                                    padding: "6px 10px",
+                                    cursor: "pointer",
+                                    background: isSelected
+                                      ? "#007bff"
+                                      : "transparent",
+                                    color: isSelected ? "white" : "black",
+                                  }}
+                                >
+                                  {cat.name}
+                                  {isSelected && (
+                                    <span style={{ float: "right" }}>✔</span>
+                                  )}
+                                </li>
+                              );
+                            })}
                           </ul>
                         )}
                       </div>
@@ -284,15 +471,14 @@ function CreateAssement() {
                     <div className="form-group">
                       <label>Question level</label>
                       <select
-                        name="cars"
                         className="form-select form-control"
-                        aria-label="Default2 select example"
-                        id="Industry"
+                        value={questionLevel}
+                        onChange={(e) => setQuestionLevel(e.target.value)}
                       >
-                        <option value="volvo">Select question level</option>
-                        <option value="volvo">Easy</option>
-                        <option value="saab">Medium</option>
-                        <option value="saab">Hard</option>
+                        <option value="">-- Select Level --</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
                       </select>
                     </div>
                   </div>
@@ -302,17 +488,27 @@ function CreateAssement() {
                       <select
                         className="form-select form-control"
                         value={questionSource}
-                        onChange={(e) => setQuestionSource(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setQuestionSource(value);
+
+                          // reset opposite data
+                          if (value === "BANK") {
+                            setQuestions([]);
+                            setShowManualQuestions(false);
+                          } else {
+                            setSelectedBankQuestions([]);
+                          }
+                        }}
                       >
-                        <option value="">Select question Source</option>
-                        <option value="bank">Select From Question Bank</option>
-                        <option value="manual">Manual Add (Admin only)</option>
-                        <option value="both">Bank + Manual Add</option>{" "}
+                        <option value="">-- Select Question Source --</option>
+                        <option value="BANK">Select From Question Bank</option>
+                        <option value="MANUAL">Manual Add (Admin only)</option>
                       </select>
                     </div>
                   </div>
-                  {(questionSource === "bank" || questionSource === "both") && (
-                    <div className="col-lg-12 col-md-12">
+                  <div className="col-lg-12 col-md-12">
+                    {questionSource === "BANK" && (
                       <div className="col-lg-12 col-md-12">
                         <div className="form-group questions-category-main">
                           <label>Question from bank</label>
@@ -348,7 +544,7 @@ function CreateAssement() {
                                     alignItems: "center",
                                   }}
                                 >
-                                  {q.text}
+                                  {q.question}
                                   <i
                                     className="fa-solid fa-xmark"
                                     style={{
@@ -394,44 +590,63 @@ function CreateAssement() {
                                   listStyle: "none",
                                 }}
                               >
-                                {filteredQuestions.length ? (
-                                  filteredQuestions.map((q) => {
-                                    const selected = selectedBankQuestions.some(
-                                      (sq) => sq.id === q.id,
-                                    );
-                                    return (
-                                      <li
-                                        key={q.id}
-                                        onClick={() => toggleBankQuestion(q)}
-                                        style={{
-                                          padding: "8px 10px",
-                                          cursor: "pointer",
-                                          background: selected
-                                            ? "#007bff"
-                                            : "transparent",
-                                          color: selected ? "#fff" : "#000",
-                                        }}
-                                      >
-                                        {q.text}
-                                        {selected && (
-                                          <span style={{ float: "right" }}>
-                                            ✔
-                                          </span>
-                                        )}
-                                      </li>
-                                    );
-                                  })
-                                ) : (
-                                  <li style={{ padding: "8px", color: "#888" }}>
-                                    No question found
+                                {filteredQuestions.length === 0 && (
+                                  <li
+                                    style={{ padding: "10px", color: "#999" }}
+                                  >
+                                    No questions found
                                   </li>
                                 )}
+
+                                {filteredQuestions.map((group) => (
+                                  <li key={group.categoryId}>
+                                    {/* CATEGORY NAME */}
+                                    <div
+                                      style={{
+                                        padding: "8px 10px",
+                                        fontWeight: "bold",
+                                        background: "#f5f5f5",
+                                        borderBottom: "1px solid #ddd",
+                                      }}
+                                    >
+                                      {group.categoryName}
+                                    </div>
+
+                                    {/* QUESTIONS */}
+                                    {group.questions.map((q) => {
+                                      const selected =
+                                        selectedBankQuestions.some(
+                                          (sq) => sq._id === q._id,
+                                        );
+
+                                      return (
+                                        <div
+                                          key={q._id}
+                                          onClick={() => toggleBankQuestion(q)}
+                                          style={{
+                                            padding: "8px 16px",
+                                            cursor: "pointer",
+                                            background: selected
+                                              ? "#007bff"
+                                              : "transparent",
+                                            color: selected ? "#fff" : "#000",
+                                          }}
+                                        >
+                                          {q.question}
+                                          {selected && (
+                                            <span style={{ float: "right" }}>
+                                              ✔
+                                            </span>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                  </li>
+                                ))}
                               </ul>
                             )}
                           </div>
                         </div>
-
-                        {/* SELECTED QUESTIONS LIST */}
                         <div className="question-bank-question-area mt-3">
                           {selectedBankQuestions.map((q, index) => (
                             <div
@@ -440,7 +655,7 @@ function CreateAssement() {
                             >
                               <div className="question-bank-question">
                                 <h5>
-                                  <span>Q{index + 1}.</span> {q.text}
+                                  <span>Q{index + 1}.</span> {q.question}
                                 </h5>
                               </div>
                               <div className="question-bank-question-dltIcon">
@@ -454,25 +669,41 @@ function CreateAssement() {
                           ))}
                         </div>
                       </div>
-                    </div>
-                  )}
-                  {(questionSource === "manual" ||
-                    questionSource === "both") && (
-                    <div className="col-lg-12">
-                      {questions.map((q, qIndex) => (
+                    )}
+                  </div>
+
+                  <div className="col-lg-12">
+                    {questionSource === "MANUAL" &&
+                      questions.map((q, qIndex) => (
                         <div
-                          className="manually-add-options-for-MCQ mb-4"
                           key={q.id}
+                          className="manually-add-options-for-MCQ mb-4"
                         >
-                          <div className="form-group">
-                            <h6>Question {qIndex + 1}</h6>
+                          {/* Category */}
+                          <div className="form-group mt-2">
+                            <label>Select Category</label>
+                            <select
+                              className="form-control"
+                              value={q.skillCategory}
+                              onChange={(e) =>
+                                handleCategoryChange(q.id, e.target.value)
+                              }
+                            >
+                              <option value="">Select Category</option>
+                              {categories.map((cat) => (
+                                <option key={cat._id} value={cat._id}>
+                                  {cat.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
 
+                          <h6>Manually add your Question {qIndex + 1}</h6>
+
                           {/* Question */}
-                          <div className="manually-add-dlt-question-area d-flex gap-2">
+                          <div className="d-flex gap-2 mb-2">
                             <input
                               className="form-control"
-                              type="text"
                               placeholder="Write your question"
                               value={q.question}
                               onChange={(e) =>
@@ -487,56 +718,53 @@ function CreateAssement() {
                           </div>
 
                           {/* Options */}
-                          <div className="manually-add-mcq-options mt-3">
-                            <h6>Options For MCQ</h6>
-
-                            {q.options.map((opt, i) => (
-                              <div className="form-group mb-2" key={i}>
-                                <input
-                                  type="text"
-                                  className="form-control"
-                                  placeholder={`Option ${String.fromCharCode(
-                                    65 + i,
-                                  )}`}
-                                  value={opt}
-                                  onChange={(e) =>
-                                    handleOptionChange(q.id, i, e.target.value)
-                                  }
-                                />
-                              </div>
-                            ))}
-
-                            {/* Correct Answer */}
-                            <div className="form-group mt-2">
-                              <label>Correct Answer</label>
-                              <select
-                                className="form-select"
-                                value={q.correctAnswer}
+                          {["A", "B", "C", "D"].map((opt) => (
+                            <div className="form-group mb-2" key={opt}>
+                              <input
+                                className="form-control"
+                                placeholder={`Option ${opt}`}
+                                value={q.options[opt]}
                                 onChange={(e) =>
-                                  handleCorrectAnswer(q.id, e.target.value)
+                                  handleOptionChange(q.id, opt, e.target.value)
                                 }
-                              >
-                                <option value="">Select Correct Answer</option>
-                                {q.options.map((_, i) => (
-                                  <option key={i} value={i}>
-                                    Option {String.fromCharCode(65 + i)}
-                                  </option>
-                                ))}
-                              </select>
+                              />
                             </div>
+                          ))}
+
+                          {/* Correct Answer */}
+                          <div className="form-group mt-2">
+                            <label>Correct Answer</label>
+                            <select
+                              className="form-select"
+                              value={q.correctAnswer}
+                              onChange={(e) =>
+                                handleCorrectAnswer(q.id, e.target.value)
+                              }
+                            >
+                              <option value="">Select Correct Answer</option>
+                              {["A", "B", "C", "D"].map((opt) => (
+                                <option key={opt} value={opt}>
+                                  Option {opt}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       ))}
-
+                    {questionSource === "MANUAL" && (
                       <button
                         type="button"
-                        className="btn btn-primary"
-                        onClick={addQuestion}
+                        className="default-btn btn"
+                        onClick={() => {
+                          setShowManualQuestions(true);
+                          addQuestion();
+                        }}
                       >
-                        + Add Question
+                        + Add Question Manual
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
                   <div className="col-lg-6 col-md-12">
                     <div className="form-group number-questions-category">
                       <label>Category Name</label>
@@ -549,21 +777,6 @@ function CreateAssement() {
                         className="form-control"
                         type="text"
                         placeholder="React.js"
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="QA"
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="PHP"
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="Wordpress"
                       />
                     </div>
                   </div>
@@ -580,21 +793,6 @@ function CreateAssement() {
                         type="text"
                         placeholder={4}
                       />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder={6}
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder={7}
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder={8}
-                      />
                     </div>
                   </div>
                   <div className="col-lg-4 col-md-12">
@@ -603,7 +801,10 @@ function CreateAssement() {
                       <input
                         className="form-control"
                         type="text"
+                        name="totalDuration"
                         placeholder="Total Duration"
+                        value={formData.totalDuration}
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
@@ -613,7 +814,10 @@ function CreateAssement() {
                       <input
                         className="form-control"
                         type="text"
+                        name="totalQuestions"
                         placeholder="Total Questions"
+                        value={formData.totalQuestions}
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
@@ -623,14 +827,21 @@ function CreateAssement() {
                       <input
                         className="form-control"
                         type="text"
+                        name="passingPercentage"
                         placeholder="Passing Percentage"
+                        value={formData.passingPercentage}
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
                   <div className="skill-assessment-btn-area">
-                    <a href="#" className="default-btn btn">
+                    <button
+                      type="button"
+                      className="default-btn btn"
+                      onClick={handleSubmitAssessment}
+                    >
                       Submit
-                    </a>
+                    </button>
                   </div>
                 </div>
               </form>

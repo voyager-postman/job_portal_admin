@@ -1,8 +1,220 @@
-import React from "react";
+import React, { use } from "react";
 import AnalyticsChart from "./AnalyticsChart";
 import RevenueChart from "./RevenueChart";
+import { Link } from "react-router-dom";
+import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url.js";
+import axios from "axios";
+import { useEffect, useState } from "react";
+import {
+  Chart as ChartJS,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  Title,
+} from "chart.js";
+import { Bar } from "react-chartjs-2";
+import { TableView } from "../DataTable.jsx";
+
+// Register chart.js components
+ChartJS.register(
+  BarElement,
+  CategoryScale,
+  LinearScale,
+  Tooltip,
+  Legend,
+  Title,
+);
 
 const DashboardContent = ({ isSidebarHidden }) => {
+  const [stats, setStats] = useState(false);
+  const [chartData, setChartData] = useState(null);
+  const [revenueChartData, setRevenueChartData] = useState(null);
+  const [revenueYear, setRevenueYear] = useState("");
+  const [yearData, setYearData] = useState(null);
+  const [analyticTable, setAnalyticTable] = useState([]);
+  const [revenueTable, setRevenueTable] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(5);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const options = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => `${context.dataset.label}: ${context.raw}`,
+        },
+      },
+      title: {
+        display: true,
+        text: "Job Seeker & Recruiter Analytics",
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Count",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Month",
+        },
+      },
+    },
+  };
+
+  const options2 = {
+    responsive: true,
+    plugins: {
+      tooltip: {
+        callbacks: {
+          label: (context) => `$${context.raw.toLocaleString()}`,
+        },
+      },
+      legend: {
+        display: false,
+      },
+      title: {
+        display: true,
+        text: `Total Revenue Analytics Report (${revenueYear || "—"})`,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Revenue in USD",
+        },
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Month",
+        },
+      },
+    },
+  };
+
+  const columns = [
+    {
+      accessorKey: "id",
+      header: "S.No",
+      cell: ({ row }) => (page - 1) * limit + row.index + 1,
+    },
+    {
+      accessorKey: "month",
+      header: "Month",
+      accessorFn: (row) => (row.month || "").toLowerCase(),
+      cell: ({ row }) => row.original.month || "Not Provided",
+    },
+    {
+      accessorKey: "totalJobSeekers",
+      header: "JobSeekers",
+      accessorFn: (row) => (row.totalJobSeekers || "").toLowerCase(),
+      cell: ({ row }) => row.original.totalJobSeekers || "Not Provided",
+    },
+    {
+      accessorKey: "totalRecruiters",
+      header: "Recruiters",
+      accessorFn: (row) => (row.totalRecruiters || "").toLowerCase(),
+      cell: ({ row }) => row.original.totalRecruiters || "Not Provided",
+    },
+  ];
+
+  const fetchCompanyStats = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}getDashboardStats`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      console.log("API Response:", response.data);
+      setStats(response.data.data);
+    } catch (error) {
+      console.error("Error While fetching Header Details:", error);
+    }
+  };
+
+  const fetchCompanyAnalytics = async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}getJobseekerCompanyAnalytics`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      const graphData = response.data.data.graphData;
+      const graphYear = response.data;
+      setYearData(graphYear);
+      setAnalyticTable(response.data.data.listData);
+      setChartData({
+        labels: graphData.months,
+        datasets: [
+          {
+            label: "Total Job Seekers",
+            data: graphData.jobSeekers,
+            backgroundColor: "#42a5f5",
+          },
+          {
+            label: "Total Recruiters",
+            data: graphData.recruiters,
+            backgroundColor: "#66bb6a",
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Error while fetching analytics:", error);
+    }
+  };
+
+  const fetchCompanyRevenu = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}getRevenueAnalytics`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const { graphData } = response.data.data;
+      const year = response.data.year;
+
+      setRevenueTable(response.data.data.listData);
+      setRevenueYear(year);
+
+      setRevenueChartData({
+        labels: graphData.months,
+        datasets: [
+          {
+            label: "Revenue ($)",
+            data: graphData.revenue,
+            backgroundColor: "#42a5f5",
+            borderRadius: 6,
+          },
+        ],
+      });
+    } catch (error) {
+      console.error("Error while fetching Revenue:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchCompanyStats();
+    fetchCompanyAnalytics();
+    fetchCompanyRevenu();
+  }, []);
+
   return (
     <section
       className={`main-dashboard-content ${
@@ -15,31 +227,38 @@ const DashboardContent = ({ isSidebarHidden }) => {
 
       {/* User Details */}
       <div className="super-dashboard-detail-info my-4">
-        {/* <div className="super-dashboard-common-heading">
-          <h5>User Details</h5>
-        </div> */}
         <div className="row">
           <div className="col-lg-3 col-md-6 col-sm-12">
-            <div className="super-dashboard-dashboard-box">
-              <div className="super-dashboard-icon-box">
-                <i className="fa-solid fa-users"></i>
+            <Link
+              to="/admin/manage-recruiter"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="super-dashboard-dashboard-box">
+                <div className="super-dashboard-icon-box">
+                  <i className="fa-solid fa-users"></i>
+                </div>
+                <div className="super-dashboard-box-detail">
+                  <h5>Total Company</h5>
+                  <p>{stats.totalCompany || 0}</p>
+                </div>
               </div>
-              <div className="super-dashboard-box-detail">
-                <h5>Total Users</h5>
-                <p>2143</p>
-              </div>
-            </div>
+            </Link>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
-            <div className="super-dashboard-dashboard-box">
-              <div className="super-dashboard-icon-box">
-                <i className="fa-solid fa-briefcase"></i>
+            <Link
+              to="/admin/manage-candidates"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <div className="super-dashboard-dashboard-box">
+                <div className="super-dashboard-icon-box">
+                  <i className="fa-solid fa-briefcase"></i>
+                </div>
+                <div className="super-dashboard-box-detail">
+                  <h5>Total Job Seekers</h5>
+                  <p>{stats.totalJobSeekers || 0}</p>
+                </div>
               </div>
-              <div className="super-dashboard-box-detail">
-                <h5>Total Job Seekers</h5>
-                <p>2420</p>
-              </div>
-            </div>
+            </Link>
           </div>
           <div className="col-lg-3 col-md-6 col-sm-12">
             <div className="super-dashboard-dashboard-box">
@@ -48,7 +267,7 @@ const DashboardContent = ({ isSidebarHidden }) => {
               </div>
               <div className="super-dashboard-box-detail">
                 <h5>Total Recruiters</h5>
-                <p>2487</p>
+                <p>{stats.totalRecruiters || 0}</p>
               </div>
             </div>
           </div>
@@ -59,7 +278,7 @@ const DashboardContent = ({ isSidebarHidden }) => {
               </div>
               <div className="super-dashboard-box-detail">
                 <h5>Total Revenue</h5>
-                <p>$ 1000000</p>
+                <p>$ {stats.totalRevenue || 0}</p>
               </div>
             </div>
           </div>
@@ -67,68 +286,66 @@ const DashboardContent = ({ isSidebarHidden }) => {
       </div>
 
       {/* Analytics */}
-      {/* <div className="super-dashboard-common-heading">
+      <div className="super-dashboard-common-heading">
         <h5>Total User & Recruiter Analytics</h5>
-      </div> */}
+      </div>
       <div className="super-dashboard-users-recruiters-analytics">
         <div className="users-recruiters-analytics-chart">
-          <h5>User & Recruiter Analytics (2025)</h5>
-          <AnalyticsChart />
+          <h5>Job Seeker & Recruiter Analytics {yearData?.year}</h5>
+
+          {chartData ? (
+            <Bar data={chartData} options={options} />
+          ) : (
+            <p>Loading analytics...</p>
+          )}
         </div>
+
         <div className="users-recruiters-analytics-table">
-          <h5>User & Recruiter Analytics Data</h5>
+          <h5>Job Seeker & Recruiter Analytics Data</h5>
+
+          {/* <TableView
+            columns={columns}
+            data={analyticTable}
+            limit={limit}
+            setLimit={(value) => {
+              setLimit(value);
+              setPage(1);
+            }}
+          /> */}
+
           <table className="table table-bordered">
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Total Users</th>
-                <th>Total Recruiters</th>
+                <th>Total Seeker</th>
+                <th>Total Company</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>January</td>
-                <td>1200</td>
-                <td>150</td>
-              </tr>
-              <tr>
-                <td>February</td>
-                <td>1350</td>
-                <td>180</td>
-              </tr>
-              <tr>
-                <td>March</td>
-                <td>1500</td>
-                <td>210</td>
-              </tr>
-              <tr>
-                <td>April</td>
-                <td>1650</td>
-                <td>230</td>
-              </tr>
-              <tr>
-                <td>May</td>
-                <td>1700</td>
-                <td>250</td>
-              </tr>
-              <tr>
-                <td>June</td>
-                <td>1900</td>
-                <td>270</td>
-              </tr>
+              {analyticTable.map((data, i) => (
+                <tr key={i}>
+                  <td>{data.month}</td>
+                  <td>{data.totalJobSeekers}</td>
+                  <td>{data.totalRecruiters}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </div>
 
       {/* Revenue */}
-      {/* <div className="super-dashboard-common-heading">
+      <div className="super-dashboard-common-heading">
         <h5>Total Revenue Report</h5>
-      </div> */}
+      </div>
       <div className="super-dashboard-total-revenue-report my-4">
         <div className="total-revenue-report-chart">
-          <h5>Total Revenue Analytics Report (2025)</h5>
-          <RevenueChart />
+          <h5>Total Revenue Analytics Report {revenueYear?.year}</h5>
+          {revenueChartData ? (
+            <Bar data={revenueChartData} options={options2} />
+          ) : (
+            <p>Loading revenue analytics...</p>
+          )}
         </div>
         <div className="total-revenue-report-tabel">
           <h5>Total Revenue Analytics Report Data</h5>
@@ -145,51 +362,17 @@ const DashboardContent = ({ isSidebarHidden }) => {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>2025-09-01</td>
-                <td>Alice Johnson</td>
-                <td>Job Seeker</td>
-                <td>Basic</td>
-                <td>TXN001</td>
-                <td>49.99</td>
-                <td className="status-success">Success</td>
-              </tr>
-              <tr>
-                <td>2025-09-02</td>
-                <td>XYZ Corp</td>
-                <td>Recruiter</td>
-                <td>Premium</td>
-                <td>TXN002</td>
-                <td>199.00</td>
-                <td className="status-success">Success</td>
-              </tr>
-              <tr>
-                <td>2025-09-03</td>
-                <td>Bob Smith</td>
-                <td>Job Seeker</td>
-                <td>Basic</td>
-                <td>TXN003</td>
-                <td>49.99</td>
-                <td className="status-pending">Pending</td>
-              </tr>
-              <tr>
-                <td>2025-09-03</td>
-                <td>Alpha HR</td>
-                <td>Recruiter</td>
-                <td>Standard</td>
-                <td>TXN004</td>
-                <td>149.00</td>
-                <td className="status-failed">Failed</td>
-              </tr>
-              <tr>
-                <td>2025-09-04</td>
-                <td>Emily Carter</td>
-                <td>Job Seeker</td>
-                <td>Basic</td>
-                <td>TXN005</td>
-                <td>49.99</td>
-                <td className="status-success">Success</td>
-              </tr>
+              {revenueTable.map((data, e) => (
+                <tr key={e}>
+                  <td>{data.date}</td>
+                  <td>{data.name}</td>
+                  <td>{data.userType}</td>
+                  <td>{data.subscriptionPlan}</td>
+                  <td>{data.transactionId}</td>
+                  <td>$ {data.amount}</td>
+                  <td className="status-success">{data.status}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
