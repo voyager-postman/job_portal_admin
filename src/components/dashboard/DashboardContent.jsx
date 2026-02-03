@@ -291,7 +291,6 @@ const DashboardContent = ({ isSidebarHidden }) => {
 
         <div className="users-recruiters-analytics-table">
           <h5>Job Seeker & Recruiter Analytics Data</h5>
-
           {/* <TableView
             columns={columns}
             data={analyticTable}
@@ -301,25 +300,26 @@ const DashboardContent = ({ isSidebarHidden }) => {
               setPage(1);
             }}
           /> */}
-
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Total Seeker</th>
-                <th>Total Company</th>
-              </tr>
-            </thead>
-            <tbody>
-              {analyticTable.map((data, i) => (
-                <tr key={i}>
-                  <td>{data.month}</td>
-                  <td>{data.totalJobSeekers}</td>
-                  <td>{data.totalRecruiters}</td>
+          <div className="job-seeker-recruiter-table">
+            <table className="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Month</th>
+                  <th>Total Seeker</th>
+                  <th>Total Company</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {analyticTable.map((data, i) => (
+                  <tr key={i}>
+                    <td>{data.month}</td>
+                    <td>{data.totalJobSeekers}</td>
+                    <td>{data.totalRecruiters}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -338,32 +338,34 @@ const DashboardContent = ({ isSidebarHidden }) => {
         </div>
         <div className="total-revenue-report-tabel">
           <h5>Total Revenue Analytics Report Data</h5>
-          <table className="table-responsive transaction-table table table-bordered">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Name</th>
-                <th>User Type</th>
-                <th>Subscription Plans</th>
-                <th>Transaction ID</th>
-                <th>Amount ($)</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {revenueTable.map((data, e) => (
-                <tr key={e}>
-                  <td>{data.date}</td>
-                  <td>{data.name}</td>
-                  <td>{data.userType}</td>
-                  <td>{data.subscriptionPlan}</td>
-                  <td>{data.transactionId}</td>
-                  <td>$ {data.amount}</td>
-                  <td className="status-success">{data.status}</td>
+          <div className="job-seeker-recruiter-table">
+            <table className="table-responsive transaction-table table table-bordered">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Name</th>
+                  <th>User Type</th>
+                  <th>Subscription Plans</th>
+                  <th>Transaction ID</th>
+                  <th>Amount ($)</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {revenueTable.map((data, e) => (
+                  <tr key={e}>
+                    <td>{data.date}</td>
+                    <td>{data.name}</td>
+                    <td>{data.userType}</td>
+                    <td>{data.subscriptionPlan}</td>
+                    <td>{data.transactionId}</td>
+                    <td>$ {data.amount}</td>
+                    <td className="status-success">{data.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </section>
