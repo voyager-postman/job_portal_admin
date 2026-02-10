@@ -102,12 +102,12 @@ function SalaryRange() {
 
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item
-        )
+          item._id === id ? { ...item, is_Active: newStatus } : item,
+        ),
       );
 
       toast.success(
-        `Salary Range marked as ${newStatus ? "Active" : "Inactive"} successfully!`
+        `Salary Range marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
       );
     } catch (error) {
       console.error("Error updating status:", error);
@@ -171,14 +171,20 @@ function SalaryRange() {
       <div className="responsive-content">
         <div className="my-profile-area">
           <div className="profile-form-content add-recruiters-btn-postion">
-            <h3>Salary Range List</h3>
-            <div className="add-recruiters-btn">
-              <button
-                onClick={handleAddClick}
-                className="default-btn btn btn-primary"
-              >
-                Add Salary Range
-              </button>
+            <div className="button-flex">
+              <div>
+                <h3>Salary Range List</h3>
+              </div>
+              <div className="button-flex2">
+                <div className="add-recruiters-btn">
+                  <button
+                    onClick={handleAddClick}
+                    className="default-btn btn btn-primary"
+                  >
+                    + Add Salary Range
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="profile-form mt-3">

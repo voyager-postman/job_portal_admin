@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { TableView } from "../components/DataTable";
 import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url.js";
@@ -90,8 +91,8 @@ function ManageUsers() {
         prev.map((item) =>
           item._id === companyId
             ? { ...item, verifiedByAdmin: newStatus }
-            : item
-        )
+            : item,
+        ),
       );
     } catch (error) {
       console.error("Error updating status:", error);
@@ -100,8 +101,8 @@ function ManageUsers() {
         prev.map((item) =>
           item._id === companyId
             ? { ...item, verifiedByAdmin: !newStatus }
-            : item
-        )
+            : item,
+        ),
       );
     }
   };
@@ -188,6 +189,53 @@ function ManageUsers() {
       ),
     },
     {
+      accessorKey: "enterpriseCanCreateTests",
+      header: "Assessment",
+      cell: ({ row }) => {
+        const companyId = row.original.companyId._id;
+        const apiStatus =
+          row.original.companyId.enterpriseCanCreateTests === true;
+
+        const handleStatusChange = async (e) => {
+          const newStatus = e.target.checked;
+
+          try {
+            const response = await axios.put(
+              `${API_BASE_URL}admin/company/test-access/${companyId}`,
+              { enable: newStatus },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
+            );
+
+            if (response.data.success) {
+              toast.success(response.data.message);
+              fetchEmployerList(); // refresh data
+            } else {
+              toast.error(response.data.message);
+            }
+          } catch (error) {
+            toast.error(error?.response?.data?.message || "Update failed");
+          }
+        };
+
+        return (
+          <div className="super-admin-toggle-switch">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={apiStatus}
+                onChange={handleStatusChange}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        );
+      },
+    },
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => {
@@ -205,7 +253,7 @@ function ManageUsers() {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
-              }
+              },
             );
 
             if (response.data.success) {
@@ -259,7 +307,7 @@ function ManageUsers() {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                  }
+                  },
                 );
                 if (response.data.success) {
                   toast.success("Company Deleted Successfully!");
@@ -277,7 +325,7 @@ function ManageUsers() {
               to="/admin/complete-company-details"
               state={{
                 companyProfileId: row.original?.companyId?._id,
-                companyDetails:row.original
+                companyDetails: row.original,
               }}
             >
               <i className="fa-solid fa-eye"></i>
@@ -407,7 +455,42 @@ function ManageUsers() {
             <i class="fa-solid fa-eye"></i>
           </Link>
 
-          <i className="fa-solid fa-trash" title="Delete"></i>
+          <i
+            className="fa-solid fa-trash"
+            title="Delete"
+            style={{ cursor: "pointer", marginLeft: "10px" }}
+            onClick={() => {
+              Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+              }).then(async (result) => {
+                if (result.isConfirmed) {
+                  try {
+                    const response = await axios.post(
+                      `${API_BASE_URL}delete/company`,
+                      { companyId: row.original._id },
+                      {
+                        headers: {
+                          Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        },
+                      },
+                    );
+                    if (response.data.success) {
+                      toast.success("Company Deleted Successfully!");
+                      fetchNewEmployerList();
+                    }
+                  } catch (err) {
+                    toast.error("Something went wrong!");
+                  }
+                }
+              });
+            }}
+          ></i>
         </div>
       ),
     },
@@ -462,12 +545,12 @@ function ManageUsers() {
       XLSX.utils.book_append_sheet(
         workbook,
         worksheet,
-        type === "new" ? "New Companies" : "All Companies"
+        type === "new" ? "New Companies" : "All Companies",
       );
 
       XLSX.writeFile(
         workbook,
-        type === "new" ? "new_companies.xlsx" : "all_companies.xlsx"
+        type === "new" ? "new_companies.xlsx" : "all_companies.xlsx",
       );
 
       toast.success("Export successful!");

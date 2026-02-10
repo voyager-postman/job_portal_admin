@@ -54,7 +54,7 @@ function TechStack() {
       toast.warning("Tech Stack name is required!");
       return;
     }
-    
+
     try {
       if (editItem) {
         await axios.put(`${API_BASE_URL}/job-category/${editItem._id}`, {
@@ -100,12 +100,12 @@ function TechStack() {
 
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item
-        )
+          item._id === id ? { ...item, is_Active: newStatus } : item,
+        ),
       );
 
       toast.info(
-        `Tech Stack marked as ${newStatus ? "Active" : "Inactive"} successfully!`
+        `Tech Stack marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
       );
     } catch (error) {
       console.error("Error updating status:", error);
@@ -166,14 +166,20 @@ function TechStack() {
       <div className="responsive-content">
         <div className="my-profile-area">
           <div className="profile-form-content add-recruiters-btn-postion">
-            <h3>Tech Stack List</h3>
-            <div className="add-recruiters-btn">
-              <button
-                onClick={handleAddClick}
-                className="default-btn btn btn-primary"
-              >
-                Add Tech Stack
-              </button>
+            <div className="button-flex">
+              <div>
+                <h3>Tech Stack List</h3>
+              </div>
+              <div className="button-flex2">
+                <div className="add-recruiters-btn">
+                  <button
+                    onClick={handleAddClick}
+                    className="default-btn btn btn-primary"
+                  >
+                    + Add Tech Stack
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="profile-form mt-3">

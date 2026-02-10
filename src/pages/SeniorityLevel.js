@@ -3,7 +3,6 @@ import axios from "axios";
 import { TableView } from "../components/DataTable";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
 import { API_BASE_URL } from "../Url/Url";
 
 function SeniorityLevel() {
@@ -79,7 +78,9 @@ function SeniorityLevel() {
 
   // ✅ Delete Seniority Level
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this Seniority Level?")) {
+    if (
+      window.confirm("Are you sure you want to delete this Seniority Level?")
+    ) {
       try {
         await axios.delete(`${API_BASE_URL}/seniority-level/${id}`);
         toast.success("Seniority Level deleted successfully!");
@@ -101,12 +102,12 @@ function SeniorityLevel() {
 
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item
-        )
+          item._id === id ? { ...item, is_Active: newStatus } : item,
+        ),
       );
 
       toast.success(
-        `Seniority Level marked as ${newStatus ? "Active" : "Inactive"} successfully!`
+        `Seniority Level marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
       );
     } catch (error) {
       console.error("Error updating status:", error);
@@ -170,14 +171,20 @@ function SeniorityLevel() {
       <div className="responsive-content">
         <div className="my-profile-area">
           <div className="profile-form-content add-recruiters-btn-postion">
-            <h3>Seniority Level List</h3>
-            <div className="add-recruiters-btn">
-              <button
-                onClick={handleAddClick}
-                className="default-btn btn btn-primary"
-              >
-                Add Seniority Level
-              </button>
+            <div className="button-flex">
+              <div>
+                <h3>Seniority Level List</h3>
+              </div>
+              <div className="button-flex2">
+                <div className="add-recruiters-btn">
+                  <button
+                    onClick={handleAddClick}
+                    className="default-btn btn btn-primary"
+                  >
+                    + Add Seniority Level
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="profile-form mt-3">

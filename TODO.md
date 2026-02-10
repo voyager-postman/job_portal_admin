@@ -1,5 +1,4 @@
-- [ ] Remove showModal state and related code
-- [ ] Remove handleCategoryChange function
-- [ ] Replace select dropdown with From Date and To Date inputs
-- [ ] Update Apply Filter button to use dateRange
-- [ ] Remove the modal JSX
+- [x] Add state variables: showErrorModal (boolean) and errors (array)
+- [x] Modify handleImport function: add .json file validation, handle API response to show message, set errors and show modal if errors exist, refresh list if successCount > 0, close import modal
+- [x] Add error modal component to display errors list (index, question, reason)
+- [x] Test the import functionality

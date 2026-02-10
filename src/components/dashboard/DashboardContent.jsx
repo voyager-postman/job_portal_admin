@@ -1,6 +1,4 @@
 import React, { use } from "react";
-import AnalyticsChart from "./AnalyticsChart";
-import RevenueChart from "./RevenueChart";
 import { Link } from "react-router-dom";
 import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url.js";
 import axios from "axios";
@@ -311,7 +309,7 @@ const DashboardContent = ({ isSidebarHidden }) => {
               setPage(1);
             }}
           /> */}
-          <div className="job-seeker-recruiter-table">
+          <div className="Recruiter-analytics-table">
             <table className="table table-bordered">
               <thead>
                 <tr>
@@ -349,8 +347,8 @@ const DashboardContent = ({ isSidebarHidden }) => {
         </div>
         <div className="total-revenue-report-tabel">
           <h5>Total Revenue Analytics Report Data</h5>
-          <div className="job-seeker-recruiter-table">
-            <table className="table-responsive transaction-table table table-bordered">
+          <div className="Recruiter-analytics-table">
+            <table className="transaction-table table table-bordered">
               <thead>
                 <tr>
                   <th>Date</th>

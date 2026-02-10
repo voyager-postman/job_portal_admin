@@ -140,6 +140,7 @@ th {
   border-radius: 5px;
   letter-spacing: 0.5px;
   text-transform: capitalize;
+  border: none;
 }
 
 .super-dashboard-content-btn:hover {
@@ -210,6 +211,7 @@ margin-bottom: 20px;
 
 .super-dashboard-common-add-btn:hover {
   background: #ff6600;
+  color: #fff;
 }
 
 .table-actions-info {
@@ -291,6 +293,10 @@ margin-bottom: 20px;
 
 .data-export-btn-info {
   margin-left: 20px;
+
+  text-align: right;
+  margin-top: 30px;
+
   text-align: right;
   margin-top: 30px;
 }
@@ -301,6 +307,10 @@ margin-bottom: 20px;
   border-radius: 5px;
   padding: 6px 10px;
   background: #0066cc;
+
+  outline: none;
+  border: none;
+
   outline: none;
   border: none;
 }
@@ -555,7 +565,10 @@ margin-bottom: 20px;
 }
 
 .super-dashboard-common-heading h5 {
+  font-size: 15px;
   font-size: 18px;
+
+  font-size: 15px;
 }
 
 .super-dashboard-dashboard-box {
@@ -622,21 +635,7 @@ margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
 }
-.employer-dashboard-common-heading {
-  margin-bottom: 15px;
-}
-.employer-dashboard-common-heading h2 {
-    font-size: 20px;
-    background: #fff;
-    padding: 20px 20px;
-    margin-bottom: 10px;
-}
 
-.users-recruiters-analytics-chart {
-  width: 49%;
-  background: #fff;
-  padding: 20px 20px;
-}
 
 .users-recruiters-analytics-chart h5 {
   text-align: center;
@@ -1303,6 +1302,7 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
 }
+
 .super-admin-candidate-img img {
   width: 200px;
   height: 200px;
@@ -1406,11 +1406,9 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 .question-bank-question h5 {
-  width: 100%;
-  font-size: 16px;
-  padding: 7px 5px;
-  background: #f0f5f7;
-  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  margin-right: 0px;
 }
 
 .question-bank-question h5 span {
@@ -1442,29 +1440,6 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
 /*Skill Assessment Form css end here*/
-
-.job-seeker-recruiter-table {
-    height: 300px;
-    overflow: auto;
-}
-
-/* .table-responsive:-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-	background-color: #9ec2e1
-}
-
-.table-responsive::-webkit-scrollbar
-{
-	width:5px;
-	background-color: #9ec2e1
-}
-
-.table-responsive::-webkit-scrollbar-thumb
-{
-	background-color: #000000;
-	border: 2px solid #9ec2e1;
-} */
 .otp-box {
   width: 4em; /* ⬅️ increase width (try 4em or 4.5em) */
   height: 3em;
@@ -1490,4 +1465,161 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   width: 3em !important;
   height: 3em !important;
 }
+/*create skill assessment test details page css start here*/
 
+.skill-assessment-detail-main {
+  background: #fff;
+  padding: 15px 15px;
+  margin: 0px 0px 20px 0px;
+}
+
+.skill-assessment-detail-main h5 {
+  font-size: 17px;
+}
+
+.skill-assessment-detail-main h5 span {
+  color: #6a6666;
+}
+
+.skill-assessment-question-bank-question {
+  margin-top: 15px;
+}
+
+.skill-assessment-question-bank-question h5 {
+  width: 100%;
+  font-size: 16px;
+  padding: 7px 5px;
+  background: #f0f5f7;
+  display: inline-block;
+}
+
+.skill-assessment-question-bank-question h5 span {
+  color: #f65e00;
+  font-size: 18px;
+  font-weight: 800;
+  margin-right: 5px;
+}
+
+.skill-assessment-manually-add-question h5 {
+  margin: 10px 0px;
+}
+
+.skill-assessment-manually-add-question h5 span {
+  color: #f65e00;
+  font-size: 18px;
+  font-weight: 800;
+  margin-right: 5px;
+}
+
+.skill-assessment-manually-add-question ul li {
+  color: #202124;
+
+  margin-bottom: 15px;
+  margin-left: 30px;
+  display: inline-block;
+}
+
+.skill-assessment-manually-add-question ul li span {
+  color: #6a6666;
+  font-size: 15px;
+}
+
+.skill-assessment-detail-main h4 {
+  font-size: 17px;
+}
+
+.skill-assessment-detail-main h4 span {
+  color: #f65e00;
+}
+
+.category-name-no-questions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.category-name-area {
+  width: 50%;
+}
+
+.number-questions-per-category {
+  width: 50%;
+  text-align: center;
+}
+
+.category-name-area h4 {
+  margin-top: 15px;
+}
+
+.number-questions-per-category h5 {
+  margin-top: 15px;
+}
+
+.total-Duration-Questions-passing-percentage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.total-dqpp-main-area {
+  width: 33%;
+}
+.custom-question-area {
+  width: 100%;
+  color: inherit;
+  outline: none;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 5px;
+  padding: 8px 10px;
+  letter-spacing: 0.5px;
+  border: 1px solid #cdcdcd;
+}
+
+.add-question-button {
+  outline: none;
+  border: none;
+  font-size: 30px;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 5px;
+  line-height: 20px;
+  background: #0066cc;
+  padding: 4px 10px 10px 10px;
+}
+
+.add-question-button:hover {
+  background: #ff6600;
+}
+.truncate-text {
+  max-width: 300px; /* adjust as per table width */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+/*create skill assessment test details page css end here*/
+.breadcrumb-heading {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.back-link {
+  margin-right: 8px;
+  color: #ef4444; /* same red as icon */
+}
+
+.separator {
+  opacity: 0.6;
+}
+
+.breadcrumb-heading .active {
+  font-weight: 600;
+}
+.breadcrumb-section {
+  color: #6b7280;
+  font-weight: 500;
+  cursor: default;
+}

@@ -4,8 +4,20 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { ToastContainer } from "react-toastify";
 import { API_BASE_URL } from "../Url/Url";
+import { useLocation, useParams } from "react-router-dom";
+
 function CreateAssement() {
   const categoryRef = useRef(null);
+  const answerDropdownRef = useRef(null);
+  const navigate = useNavigate();
+  const { state } = useLocation();
+  const assessmentId = state?.assessmentId || null;
+
+  const isEditMode = Boolean(assessmentId);
+
+  const [showAnswerDropdown, setShowAnswerDropdown] = useState(false);
+  const [manualQuestions, setManualQuestions] = useState([]); // saved questions
+  const [currentQuestion, setCurrentQuestion] = useState(null); // active form
   const [showManualQuestions, setShowManualQuestions] = useState(false);
   const [categories, setCategories] = useState([]);
   const [questionLevel, setQuestionLevel] = useState("");
@@ -18,6 +30,27 @@ function CreateAssement() {
     totalQuestions: "",
     passingPercentage: "",
   });
+  const handleAddManualQuestion = () => {
+    setShowManualQuestions((prev) => {
+      // CLOSE
+      if (prev) {
+        setCurrentQuestion(null);
+        return false;
+      }
+
+      // OPEN
+      setQuestionSource("MANUAL");
+      setCurrentQuestion({
+        id: Date.now(),
+        skillCategory: "",
+        questionType: "",
+        question: "",
+        options: { A: "", B: "", C: "", D: "" },
+        correctAnswer: [],
+      });
+      return true;
+    });
+  };
 
   const fetchCategories = async () => {
     try {
@@ -29,15 +62,78 @@ function CreateAssement() {
       toast.error("Failed to load skill categories");
     }
   };
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        answerDropdownRef.current &&
+        !answerDropdownRef.current.contains(e.target)
+      ) {
+        setShowAnswerDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   /* ================= EDIT MODE PREFILL ================= */
   useEffect(() => {
     fetchCategories();
   }, []);
+  const fetchAssessmentById = async (id) => {
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}/getSkillAssessmentById/${id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      const assessment = res.data?.data;
+      if (!assessment) return;
+
+      // ✅ BASIC INFO
+      setAssessmentName(assessment.assessmentName);
+
+      setFormData({
+        totalDuration: assessment.totalDuration,
+        totalQuestions: assessment.totalQuestions,
+        passingPercentage: assessment.passingPercentage,
+      });
+
+      // ✅ PREFILL BANK QUESTIONS
+      setSelectedBankQuestions(assessment.questions || []);
+
+      // ✅ PREFILL QUESTION LEVEL (from first question)
+      if (assessment.questions?.length) {
+        setQuestionLevel(assessment.questions[0].level);
+      }
+
+      // ✅ PREFILL CATEGORIES (unique)
+      const uniqueCategoryIds = [
+        ...new Set(assessment.questions.map((q) => q.skillCategory)),
+      ];
+
+      const selectedCats = categories.filter((cat) =>
+        uniqueCategoryIds.includes(cat._id),
+      );
+
+      setSelectedCategories(selectedCats);
+    } catch (err) {
+      toast.error("Failed to load assessment details");
+    }
+  };
+
+  useEffect(() => {
+    if (isEditMode && categories.length) {
+      fetchAssessmentById(assessmentId);
+    }
+  }, [assessmentId, categories]);
 
   const [selectedBankQuestions, setSelectedBankQuestions] = useState([]);
   const [showQuestionOptions, setShowQuestionOptions] = useState(false);
-  const [questionSearchTerm, setQuestionSearchTerm] = useState("");
 
   const questionRef = useRef(null);
   useEffect(() => {
@@ -71,21 +167,6 @@ function CreateAssement() {
     );
   };
 
-  // Delete from selected list
-  const removeBankQuestion = (id) => {
-    setSelectedBankQuestions(selectedBankQuestions.filter((q) => q.id !== id));
-  };
-
-  // Search filter
-  const filteredQuestions = bankQuestions
-    .map((group) => ({
-      ...group,
-      questions: group.questions.filter((q) =>
-        q.question?.toLowerCase().includes(questionSearchTerm.toLowerCase()),
-      ),
-    }))
-    .filter((group) => group.questions.length > 0);
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (categoryRef.current && !categoryRef.current.contains(event.target)) {
@@ -101,37 +182,26 @@ function CreateAssement() {
   }, []);
 
   // Add new question
-  const addQuestion = () => {
-    setQuestions((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        skillCategory: "",
-        question: "",
-        options: { A: "", B: "", C: "", D: "" },
-        correctAnswer: "",
-      },
-    ]);
-  };
 
-  const handleCategoryChange = (id, value) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, skillCategory: value } : q)),
-    );
-  };
-
-  // Add / Remove category
   const toggleCategory = (category) => {
-    setSelectedCategories((prev) =>
-      prev.some((c) => c._id === category._id)
+    setSelectedCategories((prev) => {
+      const exists = prev.some((c) => c._id === category._id);
+
+      return exists
         ? prev.filter((c) => c._id !== category._id)
-        : [...prev, category],
-    );
+        : [...prev, category];
+    });
   };
 
   // Remove by cross icon
-  const handleRemoveCategory = (id) => {
-    setSelectedCategories((prev) => prev.filter((c) => c._id !== id));
+  const handleRemoveCategory = (categoryId) => {
+    // 1️⃣ Remove category
+    setSelectedCategories((prev) => prev.filter((c) => c._id !== categoryId));
+
+    // 2️⃣ Remove related questions
+    setSelectedBankQuestions((prev) =>
+      prev.filter((q) => q.skillCategory !== categoryId),
+    );
   };
 
   // Filter categories
@@ -139,38 +209,7 @@ function CreateAssement() {
     cat.name.toLowerCase().includes(categorySearchTerm.toLowerCase()),
   );
 
-  // Delete question
-  const deleteQuestion = (id) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== id));
-  };
-
-  // Update question text
-  const handleQuestionChange = (id, value) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, question: value } : q)),
-    );
-  };
-
   // Update option text
-  const handleOptionChange = (id, optionKey, value) => {
-    setQuestions((prev) =>
-      prev.map((q) =>
-        q.id === id
-          ? {
-              ...q,
-              options: { ...q.options, [optionKey]: value },
-            }
-          : q,
-      ),
-    );
-  };
-
-  // Update correct answer
-  const handleCorrectAnswer = (id, value) => {
-    setQuestions((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, correctAnswer: value } : q)),
-    );
-  };
 
   console.log("MCQ DATA 👉", questions);
   const fetchQuestionsFromBank = async () => {
@@ -191,10 +230,11 @@ function CreateAssement() {
         },
       });
 
-      if (res.data?.success) {
-        setBankQuestions(res.data.data || []);
+      if (res.data?.success && res.data.data?.length > 0) {
+        setBankQuestions(res.data.data);
       } else {
         setBankQuestions([]);
+        toast.info("No questions found");
       }
     } catch (err) {
       toast.error("Failed to load questions");
@@ -203,50 +243,65 @@ function CreateAssement() {
       setLoadingQuestions(false);
     }
   };
+
+  //   if (!selectedCategories.length || !questionLevel) {
+  //     setBankQuestions([]);
+  //     return;
+  //   }
+
+  //   try {
+  //     setLoadingQuestions(true);
+
+  //     const categoryIds = selectedCategories.map((c) => c._id).join(",");
+
+  //     const res = await axios.get(`${API_BASE_URL}/getQuestionsByCategories`, {
+  //       params: {
+  //         categoryIds,
+  //         level: questionLevel,
+  //       },
+  //     });
+
+  //     if (res.data?.success) {
+  //       setBankQuestions(res.data.data || []);
+  //     } else {
+  //       setBankQuestions([]);
+
+  //     }
+  //   } catch (err) {
+  //     toast.error("Failed to load questions");
+  //     setBankQuestions([]);
+  //   } finally {
+  //     setLoadingQuestions(false);
+  //   }
+  // };
+  useEffect(() => {
+    const total = selectedBankQuestions.length + manualQuestions.length;
+
+    setFormData((prev) => ({
+      ...prev,
+      totalQuestions: total,
+    }));
+  }, [selectedBankQuestions, manualQuestions]);
+
   useEffect(() => {
     fetchQuestionsFromBank();
-    setSelectedBankQuestions([]); // reset selection
   }, [selectedCategories, questionLevel]);
-  const mapManualQuestionsForApi = () =>
-    questions.map((q) => ({
-      category: q.skillCategory,
-      questionText: q.question,
-      optionA: q.options.A,
-      optionB: q.options.B,
-      optionC: q.options.C,
-      optionD: q.options.D,
-      correctAnswer: q.correctAnswer,
-    }));
-  const mapBankQuestionsForApi = () => selectedBankQuestions.map((q) => q._id);
-  const buildPayload = () => ({
-    assessmentName,
-    categories: selectedCategories.map((c) => c._id),
-    questionLevel,
-    questionSource,
-    bankQuestions: questionSource !== "MANUAL" ? mapBankQuestionsForApi() : [],
-    manualQuestions:
-      questionSource !== "BANK" ? mapManualQuestionsForApi() : [],
-    totalDuration: Number(formData.totalDuration),
-    passingPercentage: Number(formData.passingPercentage),
-  });
+
+  const buildPayload = () => {
+    const bankQuestionIds = selectedBankQuestions.map((q) => q._id);
+
+    return {
+      assessmentName,
+      bankQuestionIds,
+      totalQuestions: Number(formData.totalQuestions),
+      totalDuration: Number(formData.totalDuration),
+      passingPercentage: Number(formData.passingPercentage),
+    };
+  };
+
   const validateForm = () => {
     if (!assessmentName.trim()) {
       toast.error("Assessment name is required");
-      return false;
-    }
-
-    if (!selectedCategories.length) {
-      toast.error("Please select at least one category");
-      return false;
-    }
-
-    if (!questionLevel) {
-      toast.error("Please select question level");
-      return false;
-    }
-
-    if (!questionSource) {
-      toast.error("Please select question source");
       return false;
     }
 
@@ -264,44 +319,16 @@ function CreateAssement() {
       return false;
     }
 
-    // BANK validation
-    if (questionSource === "BANK") {
-      if (!selectedBankQuestions.length) {
-        toast.error("Please select at least one question from question bank");
-        return false;
-      }
+    const totalSelected = selectedBankQuestions.length + manualQuestions.length;
+
+    if (!totalSelected) {
+      toast.error("Please add at least one question");
+      return false;
     }
 
-    // MANUAL validation
-    if (questionSource === "MANUAL") {
-      if (!questions.length) {
-        toast.error("Please add at least one manual question");
-        return false;
-      }
-
-      for (let i = 0; i < questions.length; i++) {
-        const q = questions[i];
-
-        if (!q.skillCategory) {
-          toast.error(`Select category for question ${i + 1}`);
-          return false;
-        }
-
-        if (!q.question.trim()) {
-          toast.error(`Question text is required for question ${i + 1}`);
-          return false;
-        }
-
-        if (!q.options.A || !q.options.B || !q.options.C || !q.options.D) {
-          toast.error(`All options are required for question ${i + 1}`);
-          return false;
-        }
-
-        if (!q.correctAnswer) {
-          toast.error(`Select correct answer for question ${i + 1}`);
-          return false;
-        }
-      }
+    if (!totalSelected) {
+      toast.error("Please add at least one question");
+      return false;
     }
 
     return true;
@@ -313,15 +340,27 @@ function CreateAssement() {
     try {
       const payload = buildPayload();
 
-      await axios.post(`${API_BASE_URL}/createSkillAssessment`, payload, {
+      const url = isEditMode
+        ? `${API_BASE_URL}/updateSkillAssessment/${assessmentId}`
+        : `${API_BASE_URL}/createSkillAssessment`;
+
+      await axios.post(url, payload, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
 
-      toast.success("Skill Assessment created successfully");
+      toast.success(
+        isEditMode
+          ? "Skill Assessment updated successfully"
+          : "Skill Assessment created successfully",
+      );
+
+      setTimeout(() => {
+        navigate("/admin/assessment-list");
+      }, 1200);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create assessment");
+      toast.error(err.response?.data?.message || "Failed to save assessment");
     }
   };
 
@@ -329,26 +368,42 @@ function CreateAssement() {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <section className="super-dashboard-content-wrapper">
-        <div className="super-dashboard-breadcrumb-info">
-          <h4>Skill Assessment Question</h4>
-        </div>
+        <div className="super-dashboard-breadcrumb-info"></div>
         <div className="super-dashboard-common-heading">
-          <h5>
-            <Link to="/admin/manage-question-bank">
+          <h5 className="breadcrumb-heading">
+            {/* Back icon → parent page */}
+            <Link to="/admin/assessment-list" className="back-link">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Create Skill Assessment Here
+
+            {/* Breadcrumb links */}
+            <Link to="/admin" className="breadcrumb-link">
+              Dashboard
+            </Link>
+
+            <span className="separator"> › </span>
+
+            <Link to="/admin/assessment-list" className="breadcrumb-link">
+              Assessments
+            </Link>
+
+            <span className="separator"> › </span>
+
+            {/* Active page */}
+            <span className="active">
+              {isEditMode ? "Update Assessment" : "Create Assessment"}
+            </span>
           </h5>
         </div>
+
         <div className="my-profile-area">
           <div className="profile-form-content">
-            <h3>Skill Assessment Form</h3>
             <div className="profile-form">
               <form className="skill-assessments-from-main-area">
                 <div className="row">
                   <div className="col-lg-12 col-md-12">
                     <div className="form-group">
-                      <label>Skill assessment name</label>
+                      <label>Assessment name</label>
                       <input
                         className="form-control"
                         type="text"
@@ -358,6 +413,35 @@ function CreateAssement() {
                       />
                     </div>
                   </div>
+                  <div className="col-lg-12 col-md-12">
+                    <div className="form-group">
+                      <label>Question level</label>
+                      <select
+                        className="form-select form-control"
+                        value={questionLevel}
+                        onChange={(e) => {
+                          const level = e.target.value;
+
+                          setQuestionLevel(level);
+
+                          // If creating (not editing), reset all dependent data when level changes
+                          if (!isEditMode) {
+                            setSelectedCategories([]);
+                            setSelectedBankQuestions([]);
+                            setManualQuestions([]);
+                            setCurrentQuestion(null);
+                          }
+                        }}
+                        disabled={isEditMode} // Disable in edit mode
+                      >
+                        <option value="">-- Select Level --</option>
+                        <option value="Easy">Easy</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Hard">Hard</option>
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="col-lg-12 col-md-12">
                     <div className="form-group questions-category-main">
                       <label>Select Category</label>
@@ -432,7 +516,7 @@ function CreateAssement() {
                               width: "100%",
                               zIndex: 1000,
                               marginTop: "4px",
-                              padding: 0,
+                              padding: "6px",
                               listStyle: "none",
                             }}
                           >
@@ -444,20 +528,21 @@ function CreateAssement() {
                               return (
                                 <li
                                   key={cat._id}
-                                  onClick={() => toggleCategory(cat)}
                                   style={{
+                                    display: "flex",
+                                    alignItems: "center",
                                     padding: "6px 10px",
                                     cursor: "pointer",
-                                    background: isSelected
-                                      ? "#007bff"
-                                      : "transparent",
-                                    color: isSelected ? "white" : "black",
                                   }}
+                                  onClick={() => toggleCategory(cat)}
                                 >
-                                  {cat.name}
-                                  {isSelected && (
-                                    <span style={{ float: "right" }}>✔</span>
-                                  )}
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    readOnly
+                                    style={{ marginRight: "8px" }}
+                                  />
+                                  <span>{cat.name}</span>
                                 </li>
                               );
                             })}
@@ -467,337 +552,369 @@ function CreateAssement() {
                     </div>
                   </div>
 
-                  <div className="col-lg-6 col-md-12">
-                    <div className="form-group">
-                      <label>Question level</label>
-                      <select
-                        className="form-select form-control"
-                        value={questionLevel}
-                        onChange={(e) => setQuestionLevel(e.target.value)}
+                  <div className="question-bank-question-area ">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h5 className="mb-0">Questions</h5>
+                      <button
+                        type="button"
+                        className="add-question-button"
+                        onClick={handleAddManualQuestion}
                       >
-                        <option value="">-- Select Level --</option>
-                        <option value="Easy">Easy</option>
-                        <option value="Medium">Medium</option>
-                        <option value="Hard">Hard</option>
-                      </select>
+                        {showManualQuestions ? "−" : "+"}
+                      </button>
                     </div>
-                  </div>
-                  <div className="col-lg-6 col-md-12">
-                    <div className="form-group">
-                      <label>Question Source</label>
-                      <select
-                        className="form-select form-control"
-                        value={questionSource}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setQuestionSource(value);
+                    {showManualQuestions && currentQuestion && (
+                      <div className="manual-question-form ">
+                        <div className="form-group">
+                          <label>Skill Category</label>
+                          <select
+                            className="form-control"
+                            value={currentQuestion.skillCategory}
+                            onChange={(e) => {
+                              const selectedCatId = e.target.value;
 
-                          // reset opposite data
-                          if (value === "BANK") {
-                            setQuestions([]);
-                            setShowManualQuestions(false);
-                          } else {
-                            setSelectedBankQuestions([]);
-                          }
-                        }}
-                      >
-                        <option value="">-- Select Question Source --</option>
-                        <option value="BANK">Select From Question Bank</option>
-                        <option value="MANUAL">Manual Add (Admin only)</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-lg-12 col-md-12">
-                    {questionSource === "BANK" && (
-                      <div className="col-lg-12 col-md-12">
-                        <div className="form-group questions-category-main">
-                          <label>Question from bank</label>
+                              // Update the current question's category
+                              setCurrentQuestion((prev) => ({
+                                ...prev,
+                                skillCategory: selectedCatId,
+                              }));
 
-                          <div
-                            className="multi-select-container"
-                            ref={questionRef}
-                            style={{ position: "relative" }}
-                          >
-                            {/* Selected + Search */}
-                            <div
-                              className="selected-items"
-                              onClick={() => setShowQuestionOptions(true)}
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                border: "1px solid #ccc",
-                                borderRadius: "6px",
-                                padding: "6px",
-                                cursor: "text",
-                              }}
-                            >
-                              {selectedBankQuestions.map((q) => (
-                                <span
-                                  key={q.id}
-                                  style={{
-                                    background: "#007bff",
-                                    color: "#fff",
-                                    borderRadius: "4px",
-                                    padding: "3px 6px",
-                                    margin: "2px",
-                                    display: "flex",
-                                    alignItems: "center",
-                                  }}
-                                >
-                                  {q.question}
-                                  <i
-                                    className="fa-solid fa-xmark"
-                                    style={{
-                                      marginLeft: "6px",
-                                      cursor: "pointer",
-                                    }}
-                                    onClick={() => removeBankQuestion(q.id)}
-                                  />
-                                </span>
-                              ))}
-
-                              <input
-                                type="text"
-                                placeholder="Search question..."
-                                value={questionSearchTerm}
-                                onChange={(e) =>
-                                  setQuestionSearchTerm(e.target.value)
+                              // Add the category to selectedCategories if not already there
+                              setSelectedCategories((prev) => {
+                                if (
+                                  !prev.some((c) => c._id === selectedCatId)
+                                ) {
+                                  const catObj = categories.find(
+                                    (c) => c._id === selectedCatId,
+                                  );
+                                  return catObj ? [...prev, catObj] : prev;
                                 }
-                                onFocus={() => setShowQuestionOptions(true)}
-                                style={{
-                                  flex: 1,
-                                  border: "none",
-                                  outline: "none",
-                                  minWidth: "200px",
-                                }}
+                                return prev;
+                              });
+                            }}
+                          >
+                            <option value="">
+                              -- Select Skill Category --
+                            </option>
+                            {categories.map((cat) => (
+                              <option key={cat._id} value={cat._id}>
+                                {cat.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Question Type */}
+                        <div className="form-group">
+                          <label>Question Type</label>
+                          <select
+                            className="form-control"
+                            value={currentQuestion.questionType}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setCurrentQuestion({
+                                ...currentQuestion,
+                                questionType: value,
+                                options:
+                                  value === "boolean"
+                                    ? { A: "True", B: "False", C: "", D: "" }
+                                    : { A: "", B: "", C: "", D: "" },
+                                correctAnswer: [],
+                              });
+                            }}
+                          >
+                            <option value="">-- Select Question Type --</option>
+                            <option value="single">Single Choice</option>
+                            <option value="multiple">Multiple Choice</option>
+                            <option value="boolean">True / False</option>
+                          </select>
+                        </div>
+
+                        {/* Question */}
+                        <div className="form-group">
+                          <label>Question</label>
+                          <textarea
+                            className="custom-question-area"
+                            rows={2} // 👈 adjust height as needed
+                            placeholder="Enter question here..."
+                            value={currentQuestion.question}
+                            onChange={(e) =>
+                              setCurrentQuestion({
+                                ...currentQuestion,
+                                question: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        {/* Options */}
+                        {["A", "B"].map((opt) => (
+                          <div className="form-group" key={opt}>
+                            <label>
+                              Option {opt}
+                              {currentQuestion.questionType === "boolean" &&
+                                ` (${opt === "A" ? "True" : "False"})`}
+                            </label>
+                            <input
+                              className="form-control"
+                              placeholder={`Option (${opt})`}
+                              value={currentQuestion.options[opt]}
+                              disabled={
+                                currentQuestion.questionType === "boolean"
+                              }
+                              onChange={(e) =>
+                                setCurrentQuestion({
+                                  ...currentQuestion,
+                                  options: {
+                                    ...currentQuestion.options,
+                                    [opt]: e.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </div>
+                        ))}
+
+                        {currentQuestion.questionType !== "boolean" &&
+                          ["C", "D"].map((opt) => (
+                            <div className="form-group" key={opt}>
+                              <label>Option {opt}</label>
+                              <input
+                                className="form-control"
+                                placeholder={`Option (${opt})`}
+                                value={currentQuestion.options[opt]}
+                                onChange={(e) =>
+                                  setCurrentQuestion({
+                                    ...currentQuestion,
+                                    options: {
+                                      ...currentQuestion.options,
+                                      [opt]: e.target.value,
+                                    },
+                                  })
+                                }
                               />
                             </div>
-
-                            {/* Dropdown */}
-                            {showQuestionOptions && (
-                              <ul
-                                style={{
-                                  border: "1px solid #ccc",
-                                  borderRadius: "6px",
-                                  maxHeight: "220px",
-                                  overflowY: "auto",
-                                  background: "#fff",
-                                  position: "absolute",
-                                  width: "100%",
-                                  zIndex: 1000,
-                                  marginTop: "4px",
-                                  padding: 0,
-                                  listStyle: "none",
-                                }}
-                              >
-                                {filteredQuestions.length === 0 && (
-                                  <li
-                                    style={{ padding: "10px", color: "#999" }}
-                                  >
-                                    No questions found
-                                  </li>
-                                )}
-
-                                {filteredQuestions.map((group) => (
-                                  <li key={group.categoryId}>
-                                    {/* CATEGORY NAME */}
-                                    <div
-                                      style={{
-                                        padding: "8px 10px",
-                                        fontWeight: "bold",
-                                        background: "#f5f5f5",
-                                        borderBottom: "1px solid #ddd",
-                                      }}
-                                    >
-                                      {group.categoryName}
-                                    </div>
-
-                                    {/* QUESTIONS */}
-                                    {group.questions.map((q) => {
-                                      const selected =
-                                        selectedBankQuestions.some(
-                                          (sq) => sq._id === q._id,
-                                        );
-
-                                      return (
-                                        <div
-                                          key={q._id}
-                                          onClick={() => toggleBankQuestion(q)}
-                                          style={{
-                                            padding: "8px 16px",
-                                            cursor: "pointer",
-                                            background: selected
-                                              ? "#007bff"
-                                              : "transparent",
-                                            color: selected ? "#fff" : "#000",
-                                          }}
-                                        >
-                                          {q.question}
-                                          {selected && (
-                                            <span style={{ float: "right" }}>
-                                              ✔
-                                            </span>
-                                          )}
-                                        </div>
-                                      );
-                                    })}
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                          </div>
-                        </div>
-                        <div className="question-bank-question-area mt-3">
-                          {selectedBankQuestions.map((q, index) => (
-                            <div
-                              className="question-bank-question-list"
-                              key={q.id}
-                            >
-                              <div className="question-bank-question">
-                                <h5>
-                                  <span>Q{index + 1}.</span> {q.question}
-                                </h5>
-                              </div>
-                              <div className="question-bank-question-dltIcon">
-                                <i
-                                  className="fa-solid fa-trash"
-                                  style={{ cursor: "pointer" }}
-                                  onClick={() => removeBankQuestion(q.id)}
-                                />
-                              </div>
-                            </div>
                           ))}
+
+                        {/* Correct Answer */}
+                        <div
+                          ref={answerDropdownRef}
+                          className="form-group position-relative"
+                        >
+                          <label>Correct Answer</label>
+
+                          <div
+                            className="form-control d-flex justify-content-between align-items-center"
+                            style={{ cursor: "pointer" }}
+                            onClick={() =>
+                              setShowAnswerDropdown((prev) => !prev)
+                            }
+                          >
+                            <span>
+                              {currentQuestion.correctAnswer.length > 0
+                                ? `Selected: ${currentQuestion.correctAnswer.join(", ")}`
+                                : "Select Correct Answer"}
+                            </span>
+                            <i className="fa fa-caret-down" />
+                          </div>
+
+                          {showAnswerDropdown && (
+                            <div
+                              className="border mt-1 p-2 bg-white position-absolute w-100"
+                              style={{ zIndex: 1000 }}
+                            >
+                              {(currentQuestion.questionType === "boolean"
+                                ? ["A", "B"]
+                                : ["A", "B", "C", "D"]
+                              ).map((opt) => (
+                                <div className="form-check" key={opt}>
+                                  <input
+                                    type={
+                                      currentQuestion.questionType ===
+                                      "multiple"
+                                        ? "checkbox"
+                                        : "radio"
+                                    }
+                                    className="form-check-input"
+                                    checked={currentQuestion.correctAnswer.includes(
+                                      opt,
+                                    )}
+                                    onChange={() => {
+                                      setCurrentQuestion((prev) => {
+                                        if (
+                                          prev.questionType === "single" ||
+                                          prev.questionType === "boolean"
+                                        ) {
+                                          return {
+                                            ...prev,
+                                            correctAnswer: [opt],
+                                          };
+                                        }
+
+                                        const exists =
+                                          prev.correctAnswer.includes(opt);
+                                        return {
+                                          ...prev,
+                                          correctAnswer: exists
+                                            ? prev.correctAnswer.filter(
+                                                (a) => a !== opt,
+                                              )
+                                            : [...prev.correctAnswer, opt],
+                                        };
+                                      });
+                                    }}
+                                  />
+                                  <label className="form-check-label">
+                                    {currentQuestion.questionType === "boolean"
+                                      ? opt === "A"
+                                        ? "True"
+                                        : "False"
+                                      : `Option ${opt}`}
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Save / Close */}
+                        <div className="mt-3 d-flex justify-content-center gap-2">
+                          <button
+                            type="button"
+                            className="default-btn btn"
+                            onClick={async () => {
+                              const q = currentQuestion;
+
+                              // ✅ validations
+                              if (!q.skillCategory) {
+                                toast.error("Skill Category is required");
+                                return;
+                              }
+                              if (!q.questionType) {
+                                toast.error("Question Type is required");
+                                return;
+                              }
+                              if (!q.question.trim()) {
+                                toast.error("Question is required");
+                                return;
+                              }
+                              if (!q.correctAnswer.length) {
+                                toast.error("Select correct answer");
+                                return;
+                              }
+
+                              try {
+                                const formattedOptions = Object.entries(
+                                  q.options,
+                                )
+                                  .filter(([_, text]) => text && text.trim())
+                                  .map(([key, text]) => ({ key, text }));
+
+                                const payload = {
+                                  skillCategory: q.skillCategory,
+                                  level: questionLevel,
+                                  questionType: q.questionType,
+                                  question: q.question,
+                                  options: formattedOptions,
+                                  correctAnswers: q.correctAnswer,
+                                };
+
+                                // 🔥 CREATE QUESTION
+                                const res = await axios.post(
+                                  `${API_BASE_URL}/add-question`,
+                                  payload,
+                                  {
+                                    headers: {
+                                      Authorization: `Bearer ${localStorage.getItem("token")}`,
+                                    },
+                                  },
+                                );
+
+                                const newQuestion = res.data?.data;
+
+                                toast.success(
+                                  "Question added to Question Bank",
+                                );
+
+                                // 🔄 REFRESH BANK QUESTIONS
+                                await fetchQuestionsFromBank();
+
+                                // ✅ AUTO-CHECK NEW QUESTION
+                                if (newQuestion?._id) {
+                                  setSelectedBankQuestions((prev) => [
+                                    ...prev,
+                                    newQuestion,
+                                  ]);
+                                }
+
+                                setCurrentQuestion(null);
+                                setShowManualQuestions(false);
+                              } catch (err) {
+                                toast.error(
+                                  err.response?.data?.message ||
+                                    "Failed to save question",
+                                );
+                              }
+                            }}
+                          >
+                            Save Question
+                          </button>
+
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => {
+                              setCurrentQuestion(null);
+                              setShowManualQuestions(false);
+                            }}
+                          >
+                            Close
+                          </button>
                         </div>
                       </div>
                     )}
-                  </div>
+                    <div className="question-bank-question-area mt-3">
+                      {bankQuestions.map((group) => (
+                        <div key={group.categoryId} className="mb-4">
+                          {/* CATEGORY + LEVEL */}
+                          <h6 className="mb-2">
+                            {group.categoryName} ({questionLevel})
+                          </h6>
 
-                  <div className="col-lg-12">
-                    {questionSource === "MANUAL" &&
-                      questions.map((q, qIndex) => (
-                        <div
-                          key={q.id}
-                          className="manually-add-options-for-MCQ mb-4"
-                        >
-                          {/* Category */}
-                          <div className="form-group mt-2">
-                            <label>Select Category</label>
-                            <select
-                              className="form-control"
-                              value={q.skillCategory}
-                              onChange={(e) =>
-                                handleCategoryChange(q.id, e.target.value)
-                              }
-                            >
-                              <option value="">Select Category</option>
-                              {categories.map((cat) => (
-                                <option key={cat._id} value={cat._id}>
-                                  {cat.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                          {group.questions.map((q, index) => {
+                            const isChecked = selectedBankQuestions.some(
+                              (sq) => sq._id === q._id,
+                            );
 
-                          <h6>Manually add your Question {qIndex + 1}</h6>
+                            return (
+                              <div
+                                className="question-bank-question-list"
+                                key={q._id}
+                              >
+                                {/* LEFT SIDE */}
+                                <div className="question-bank-question d-flex align-items-center gap-2">
+                                  {/* CHECKBOX */}
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => toggleBankQuestion(q)}
+                                  />
 
-                          {/* Question */}
-                          <div className="d-flex gap-2 mb-2">
-                            <input
-                              className="form-control"
-                              placeholder="Write your question"
-                              value={q.question}
-                              onChange={(e) =>
-                                handleQuestionChange(q.id, e.target.value)
-                              }
-                            />
-                            <i
-                              className="fa-solid fa-trash text-danger"
-                              style={{ cursor: "pointer", marginTop: "10px" }}
-                              onClick={() => deleteQuestion(q.id)}
-                            />
-                          </div>
-
-                          {/* Options */}
-                          {["A", "B", "C", "D"].map((opt) => (
-                            <div className="form-group mb-2" key={opt}>
-                              <input
-                                className="form-control"
-                                placeholder={`Option ${opt}`}
-                                value={q.options[opt]}
-                                onChange={(e) =>
-                                  handleOptionChange(q.id, opt, e.target.value)
-                                }
-                              />
-                            </div>
-                          ))}
-
-                          {/* Correct Answer */}
-                          <div className="form-group mt-2">
-                            <label>Correct Answer</label>
-                            <select
-                              className="form-select"
-                              value={q.correctAnswer}
-                              onChange={(e) =>
-                                handleCorrectAnswer(q.id, e.target.value)
-                              }
-                            >
-                              <option value="">Select Correct Answer</option>
-                              {["A", "B", "C", "D"].map((opt) => (
-                                <option key={opt} value={opt}>
-                                  Option {opt}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                                  <h5 className="mb-0">
+                                    <span>Q{index + 1}.</span> {q.question}
+                                  </h5>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       ))}
-                    {questionSource === "MANUAL" && (
-                      <button
-                        type="button"
-                        className="default-btn btn"
-                        onClick={() => {
-                          setShowManualQuestions(true);
-                          addQuestion();
-                        }}
-                      >
-                        + Add Question Manual
-                      </button>
-                    )}
+                    </div>
                   </div>
 
-                  <div className="col-lg-6 col-md-12">
-                    <div className="form-group number-questions-category">
-                      <label>Category Name</label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="JAVA"
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder="React.js"
-                      />
-                    </div>
-                  </div>
-                  <div className="col-lg-6 col-md-12">
-                    <div className="form-group number-questions-category">
-                      <label>No. of Questions</label>
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder={5}
-                      />
-                      <input
-                        className="form-control"
-                        type="text"
-                        placeholder={4}
-                      />
-                    </div>
-                  </div>
                   <div className="col-lg-4 col-md-12">
                     <div className="form-group">
-                      <label>Total Duration</label>
+                      <label>Total Duration (Minutes)</label>
                       <input
                         className="form-control"
                         type="text"
@@ -815,15 +932,14 @@ function CreateAssement() {
                         className="form-control"
                         type="text"
                         name="totalQuestions"
-                        placeholder="Total Questions"
                         value={formData.totalQuestions}
-                        onChange={handleChange}
+                        readOnly
                       />
                     </div>
                   </div>
                   <div className="col-lg-4 col-md-12">
                     <div className="form-group">
-                      <label>Passing Percentage</label>
+                      <label>Passing Percentage (%)</label>
                       <input
                         className="form-control"
                         type="text"
@@ -840,7 +956,7 @@ function CreateAssement() {
                       className="default-btn btn"
                       onClick={handleSubmitAssessment}
                     >
-                      Submit
+                      {isEditMode ? "Update Assessment" : "Submit"}
                     </button>
                   </div>
                 </div>

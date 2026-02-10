@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 import { API_BASE_URL } from "../Url/Url";
+import { Link } from "react-router-dom";
 
 function JobType() {
   const [data, setData] = useState([]);
@@ -102,12 +103,12 @@ function JobType() {
       // update UI instantly
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item
-        )
+          item._id === id ? { ...item, is_Active: newStatus } : item,
+        ),
       );
 
       toast.success(
-        `Job Type marked as ${newStatus ? "Active" : "Inactive"} successfully!`
+        `Job Type marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
       );
     } catch (error) {
       console.error("Error updating job type status:", error);
@@ -167,18 +168,23 @@ function JobType() {
   return (
     <div className="main-dashboard-content d-flex flex-column">
       <ToastContainer position="top-right" autoClose={2000} theme="colored" />
-
       <div className="responsive-content">
         <div className="my-profile-area">
           <div className="profile-form-content add-recruiters-btn-postion">
-            <h3>Job Type List</h3>
-            <div className="add-recruiters-btn">
-              <button
-                onClick={handleAddClick}
-                className="default-btn btn btn-primary"
-              >
-                Add Job Type
-              </button>
+            <div className="button-flex">
+              <div>
+                <h3>Job Type List</h3>
+              </div>
+              <div className="button-flex2">
+                <div className="add-recruiters-btn">
+                  <button
+                    onClick={handleAddClick}
+                    className="default-btn btn btn-primary"
+                  >
+                    + Add Job Type
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="profile-form mt-3">

@@ -134,18 +134,36 @@ const ManageQuestionBank = () => {
       cell: ({ row }) => row.original.skillCategory?.name || "-",
     },
     {
-      accessorKey: "question",
       header: "Question",
+      cell: ({ row }) => {
+        const question = row.original.question;
+
+        return (
+          <div
+            className="truncate-text"
+            title={question} // ✅ browser tooltip
+          >
+            {question}
+          </div>
+        );
+      },
     },
+
     {
       accessorKey: "level",
       header: "Question Level",
     },
     {
       header: "Correct Answer",
-      cell: ({ row }) =>
-        row.original.options?.[row.original.correctAnswer] || "-",
+      cell: ({ row }) => {
+        const correctKeys = row.original.correctAnswers || [];
+        if (!correctKeys.length) return "-";
+
+        // Join all correct option keys
+        return correctKeys.join(", ");
+      },
     },
+
     {
       header: "Created Date",
       cell: ({ row }) =>
@@ -202,27 +220,37 @@ const ManageQuestionBank = () => {
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Question List </h4>
+          <h4>Assessment Questions</h4>
         </div>
         <div className="super-dashboard-common-heading">
-          <h5>
-            <Link to="/admin/">
+          <h5 className="breadcrumb-heading">
+            {/* Back icon */}
+            <Link to="/admin" className="back-link">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Question Management
+
+            {/* Active page */}
+            <span className="active">Assessment Questions</span>
           </h5>
         </div>
+
         <div className="responsive-content">
           <div className="my-profile-area">
             <div className="profile-form-content add-recruiters-btn-postion">
-              <h3>Assessments Question List</h3>
-              <div className="add-recruiters-btn">
-                <Link
-                  to="/admin/add-question"
-                  className="super-dashboard-common-add-btn"
-                >
-                  Add Question
-                </Link>
+              <div className="button-flex">
+                <div>
+                  <h3>Question Bank</h3>
+                </div>
+                <div className="button-flex2">
+                  <div className="add-recruiters-btn">
+                    <Link
+                      to="/admin/add-question"
+                      className="default-btn btn btn-primary"
+                    >
+                      + Add Question
+                    </Link>
+                  </div>
+                </div>
               </div>
 
               <div className="profile-form mt-3">

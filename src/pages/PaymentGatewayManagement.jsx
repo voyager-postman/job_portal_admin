@@ -17,10 +17,10 @@ const PaymentGatewayManagement = () => {
           </h5>
           <Link
             to="/admin/add-gateway-setup"
-            className="super-dashboard-common-add-btn"
+           className="default-btn btn btn-primary"
           >
             {" "}
-            Add Payment Gateway
+           + Add Payment Gateway
           </Link>
         </div>
         <div className="super-admin-manage-candidate-list super-admin-white-bg">

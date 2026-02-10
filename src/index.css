@@ -1,88 +1,36 @@
-
 /*Amarjeet responsive css start here*/
 
-
 @media only screen and (max-width: 480px) {
-
-.super-dashboard-logo-info img {
-width: 45%;
+  .super-dashboard-logo-info img {
+    width: 45%;
+  }
 }
 
-
+@media only screen and (min-width: 481px) and (max-width: 568px) {
+  .super-dashboard-logo-info img {
+    width: 45%;
+  }
 }
 
-
-
-
-@media only screen and (min-width:481px) and (max-width: 568px) {
-
-.super-dashboard-logo-info img {
-width: 45%;
+@media only screen and (min-width: 569px) and (max-width: 766px) {
 }
 
-
+@media only screen and (min-width: 767px) and (max-width: 768px) {
 }
 
-
-
-@media only screen and (min-width:569px) and (max-width:766px) {
-
-
+@media only screen and (min-width: 769px) and (max-width: 898px) {
 }
 
-
-
-
-@media only screen and (min-width:767px) and (max-width:768px) {
-
-
+@media only screen and (min-width: 899px) and (max-width: 992px) {
 }
 
-
-
-
-@media only screen and (min-width:769px) and (max-width:898px) {
-
-
+@media only screen and (min-width: 993px) and (max-width: 1024px) {
 }
 
-
-
-
-
-@media only screen and (min-width:899px) and (max-width:992px) {
-
-
+@media only screen and (min-width: 1025px) and (max-width: 1199px) {
 }
 
-
-
-
-@media only screen and (min-width:993px) and (max-width:1024px) {
-
-
+@media only screen and (min-width: 1200px) and (max-width: 1299px) {
 }
-
-
-
-
-
-@media only screen and (min-width:1025px) and (max-width:1199px) {
-
-
-}
-
-
-
-
-
-@media only screen and (min-width:1200px) and (max-width:1299px) { 
-
-
-}
-
-
-
-
 
 /*Amarjeet responsive css end here*/

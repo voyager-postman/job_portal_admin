@@ -54,7 +54,7 @@ const ManageSkillCategory = () => {
   // ✅ Add or Update Tech Stack
   const handleSave = async () => {
     if (!techName.trim()) {
-      toast.warning("Categories name is required!");
+      toast.error("Categories name is required!");
       return;
     }
 
@@ -105,7 +105,11 @@ const ManageSkillCategory = () => {
       fetchTechStacks();
     } catch (error) {
       console.error("Error deleting category:", error);
-      Swal.fire("Error!", "Failed to delete category.", "error");
+
+      // Show server message if available
+      const message =
+        error.response?.data?.message || "Failed to delete category.";
+      Swal.fire("Error!", message, "error");
     }
   };
 
@@ -186,27 +190,36 @@ const ManageSkillCategory = () => {
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Categories List </h4>
+          <h4>Skill Categories</h4>
         </div>
         <div className="super-dashboard-common-heading">
-          <h5>
-            <Link to="/admin/">
+          <h5 className="breadcrumb-heading">
+            {/* Back icon */}
+            <Link to="/admin" className="back-link" title="Back">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Categories Management
+            {/* Active page */}
+            <span className="active">Skill Categories</span>
           </h5>
         </div>
+
         <div className="responsive-content">
           <div className="my-profile-area">
             <div className="profile-form-content add-recruiters-btn-postion">
-              <h3>Categories List</h3>
-              <div className="add-recruiters-btn">
-                <button
-                  onClick={handleAddClick}
-                  className="default-btn btn btn-primary"
-                >
-                  Add Categories
-                </button>
+              <div className="button-flex">
+                <div>
+                  <h3>Categories</h3>
+                </div>
+                <div className="button-flex2">
+                  <div className="add-recruiters-btn">
+                    <button
+                      onClick={handleAddClick}
+                      className="default-btn btn btn-primary"
+                    >
+                      + Add Categories
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="profile-form mt-3">

@@ -237,20 +237,6 @@ tr {
   box-shadow: none;
 }
 
-.add-recruiters-btn-postion {
-  position: relative;
-}
-
-.add-recruiters-btn {
-  top: 20px;
-  right: 30px;
-  position: absolute;
-}
-
-.add-recruiters-btn .default-btn {
-  padding: 5px 10px;
-}
-
 /*table end page   css end here*/
 aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
   background: #fff !important;
@@ -712,7 +698,6 @@ Completer Company Details
   margin-bottom: 15px;
   text-align: center;
 }
-
 /*complete company details page css end here*/
 
 /* Scrollbar size */
@@ -744,4 +729,27 @@ Completer Company Details
   width: 30px;
   height: 30px;
   object-fit: cover;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  height:6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 5px var(--colorBlue);
+  border-radius: 10px;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #0066cc;
+  border-radius: 10px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #0066cc;
 }

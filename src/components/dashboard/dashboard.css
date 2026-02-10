@@ -272,6 +272,11 @@ tr {
   font-size: 18px;
 }
 
+.Recruiter-analytics-table {
+  height: 50vh;
+  overflow: auto;
+}
+
 .users-recruiters-analytics-table {
   width: 49%;
   background: #fff;
@@ -327,7 +332,6 @@ tr {
 .my-profile-area .profile-form-content h3 {
   font-size: 18px;
   padding-bottom: 30px;
-  border-bottom: 1px solid #eeeeee;
   padding-left: 30px;
 }
 .my-profile-area .profile-form-content .profile-form {
@@ -348,11 +352,6 @@ tr {
   margin-bottom: 10px;
 }
 
-.my-profile-area .profile-form-content .profile-form .form-group .form-control {
-  background-color: #f0f5f7;
-  border-radius: unset;
-  border: 1px solid rgba(32, 33, 34, 0.08);
-}
 .my-profile-area .profile-form-content .profile-form .default-btn::before {
   border-radius: unset;
 }
@@ -374,26 +373,22 @@ tr {
   border-radius: 10px;
   background: #ff6600;
 }
-
-.add-recruiters-btn-postion {
-  position: relative;
+.button-flex {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eeeeee;
 }
 
-.add-recruiters-btn {
-  top: 0;
-  right: 0;
-  position: absolute;
+.button-flex2 {
+  display: flex;
+  justify-content: space-around;
+  width: 20%;
+  /* margin-right: 20px; */
 }
 
-.add-recruiters-btn {
-  top: 20px;
-  right: 30px;
-  position: absolute;
-}
-
-.add-recruiters-btn .default-btn {
+/* .add-recruiters-btn .default-btn {
   padding: 5px 10px;
-}
+} */
 
 .parentProduceSearch input {
   padding: 5px 10px;
@@ -438,9 +433,9 @@ tr {
 .default-btn {
   background-color: #0066cc;
   color: #ffffff;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 12px 30px;
+  padding: 10px 10px;
   border-radius: 5px;
   position: relative;
   text-align: center;

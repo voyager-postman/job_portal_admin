@@ -58,6 +58,7 @@ import AddQuestion from "./pages/AddQuestion";
 import ManageAssementList from "./pages/ManageAssementList";
 import CreateAssement from "./pages/CreateAssement";
 import ForgotPassword from "./pages/ForgotPassword";
+import ViewAssement from "./pages/ViewAssement";
 function App() {
   return (
     <div className="App">
@@ -102,6 +103,7 @@ function App() {
           <Route path="manage-question-bank" element={<ManageQuestionBank />} />
           <Route path="assessment-list" element={<ManageAssementList />} />
           <Route path="create-assessment" element={<CreateAssement />} />
+          <Route path="view-assessment" element={<ViewAssement />} />
           <Route path="add-question" element={<AddQuestion />} />
           <Route
             path="super-admin-pack-creations"

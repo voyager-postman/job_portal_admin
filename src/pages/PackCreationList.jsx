@@ -167,9 +167,9 @@ function PackCreationList() {
 
         <Link
           to="/admin/super-admin-pack-creations-form"
-          className="super-dashboard-common-add-btn"
+          className="default-btn btn btn-primary"
         >
-          Add Pack
+         + Add Pack
         </Link>
       </div>
       <div className="super-admin-manage-candidate-list super-admin-white-bg">

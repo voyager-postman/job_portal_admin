@@ -44,7 +44,7 @@ const ChangePassword = () => {
       setLoading(true);
 
       const res = await axios.put(
-        `${API_BASE_URL}changePassword`,
+        `${API_BASE_URL}change-password`,
         { oldPassword, newPassword, confirmPassword },
         {
           headers: {

@@ -78,7 +78,9 @@ function IndustrySector() {
 
   // ✅ Delete Industry
   const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this Industry Sector?")) {
+    if (
+      window.confirm("Are you sure you want to delete this Industry Sector?")
+    ) {
       try {
         await axios.delete(`${API_BASE_URL}/industry/${id}`);
         toast.success("Industry sector deleted successfully!");
@@ -101,12 +103,12 @@ function IndustrySector() {
 
       setData((prev) =>
         prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item
-        )
+          item._id === id ? { ...item, is_Active: newStatus } : item,
+        ),
       );
 
       toast.success(
-        `Industry marked as ${newStatus ? "Active" : "Inactive"} successfully!`
+        `Industry marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
       );
     } catch (error) {
       console.error("Error updating status:", error);
@@ -170,14 +172,20 @@ function IndustrySector() {
       <div className="responsive-content">
         <div className="my-profile-area">
           <div className="profile-form-content add-recruiters-btn-postion">
-            <h3>Industry Sector List</h3>
-            <div className="add-recruiters-btn">
-              <button
-                onClick={handleAddClick}
-                className="default-btn btn btn-primary"
-              >
-                Add Industry Sector
-              </button>
+            <div className="button-flex">
+              <div>
+                <h3>Industry Sector List</h3>
+              </div>
+              <div className="button-flex2">
+                <div className="add-recruiters-btn">
+                  <button
+                    onClick={handleAddClick}
+                    className="default-btn btn btn-primary"
+                  >
+                  + Add Industry Sector
+                  </button>
+                </div>
+              </div>
             </div>
 
             <div className="profile-form mt-3">

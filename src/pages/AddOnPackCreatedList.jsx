@@ -180,9 +180,9 @@ function AddOnPackCreatedList() {
           </h5>
           <Link
             to="/admin/super-admin-add-on-pack-create-form"
-            className="super-dashboard-common-add-btn"
+            className="default-btn btn btn-primary"
           >
-            Create Add On Pack
+            + Create Add On Pack
           </Link>
         </div>
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
