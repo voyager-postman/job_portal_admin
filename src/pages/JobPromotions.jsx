@@ -75,7 +75,7 @@ const JobPromotions = () => {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
-              }
+              },
             );
 
             if (response.data?.success) {
@@ -150,7 +150,7 @@ const JobPromotions = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         toast.success("Promotion data edit Successfully!");
       }
@@ -164,7 +164,7 @@ const JobPromotions = () => {
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={2000}/>
+      <ToastContainer position="top-right" autoClose={2000} />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
           <h4>Manage Job Promotions</h4>
@@ -175,7 +175,7 @@ const JobPromotions = () => {
             <Link to="/admin/">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Candidate List
+            Job Promotions
           </h5>
         </div>
 
