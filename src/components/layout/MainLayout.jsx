@@ -345,12 +345,7 @@ const MainLayout = () => {
               >
                 Payment Gateway Management
               </Menu.Item>
-              <Menu.Item
-                key="payment-gateway-setup-form"
-                icon={<AttachMoneyIcon className="fs-6" />}
-              >
-                Payment Gateway Setup Form
-              </Menu.Item>
+             
               <Menu.Item
                 key="pricing-plan-management"
                 icon={<AccountBalanceIcon className="fs-6" />}
