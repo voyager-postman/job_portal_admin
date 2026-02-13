@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const FooterPageContent = () => {
   return (
@@ -9,7 +10,13 @@ const FooterPageContent = () => {
         </div>
 
         <div className="super-dashboard-common-heading">
-          <h5>First Section Content Update Here</h5>
+          <h5>
+            {" "}
+            <Link to="/admin/">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            First Section Content Update Here
+          </h5>
         </div>
 
         <div className="super-dashboard-cms-content-form">

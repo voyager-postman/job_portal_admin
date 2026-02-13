@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const PricingPlanManagement = () => {
   return (
@@ -9,7 +10,12 @@ const PricingPlanManagement = () => {
         </div>
 
         <div class="super-dashboard-common-heading">
-          <h5>Price Plan Management List</h5>
+          <h5>
+            <Link to="/admin/">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            Price Plan Management List
+          </h5>
         </div>
         <div class="super-admin-manage-candidate-list super-admin-white-bg">
           <table class="table table-bordered">

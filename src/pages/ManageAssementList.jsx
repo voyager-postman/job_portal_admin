@@ -274,7 +274,7 @@ const ManageAssementList = () => {
                       to="/admin/create-assessment"
                       className="default-btn btn btn-primary"
                     >
-                      + Add
+                      + Add Assessment
                     </Link>
                   </div>
                   <div className="add-recruiters-btn">

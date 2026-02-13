@@ -1,13 +1,15 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import { API_BASE_URL } from "../Url/Url";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
 
-const AddBlog = () => {
+const UpdateBlog = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [fetchingBlog, setFetchingBlog] = useState(true);
   const [imagePreview, setImagePreview] = useState(
     `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
   );
@@ -18,6 +20,103 @@ const AddBlog = () => {
     content: "",
     bannerImage: null,
   });
+
+  // Fetch blog data on component mount
+  useEffect(() => {
+    const fetchBlogData = async () => {
+      setFetchingBlog(true);
+      try {
+        let blogData = null;
+
+        // Attempt 1: Fetch single blog by ID
+        console.log("Fetch blog attempt 1: ID", id);
+        try {
+          const response = await axios.get(`${API_BASE_URL}blog/${id}`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          if (response.data.success) {
+            console.log("Single fetch success:", response.data);
+            const rawData = response.data.data;
+            if (Array.isArray(rawData) && rawData.length > 0) {
+              blogData = rawData[0];
+            } else if (rawData && !Array.isArray(rawData)) {
+              blogData = rawData;
+            }
+          }
+        } catch (singleFetchError) {
+          console.warn(
+            "Single blog fetch failed, trying fallback...",
+            singleFetchError,
+          );
+        }
+
+        // Attempt 2: Fallback to fetching all blogs if single fetch failed or returned no data
+        if (!blogData) {
+          console.log("Using fallback: fetching all blogs to find ID:", id);
+          try {
+            const allDocsResponse = await axios.get(`${API_BASE_URL}allBlog`, {
+              params: { limit: 1000 },
+            });
+
+            if (allDocsResponse.data?.data) {
+              const allBlogs = allDocsResponse.data.data;
+              // Ensure type safety during comparison (ids can be strings or numbers)
+              blogData = allBlogs.find((b) => String(b._id) === String(id));
+            }
+          } catch (fallbackError) {
+            console.error("Fallback fetch also failed:", fallbackError);
+          }
+        }
+
+        if (blogData) {
+          console.log("Blog Data Found & Loading:", blogData);
+          let formattedDate = "";
+          if (blogData.publishDate) {
+            const dateObj = new Date(blogData.publishDate);
+            if (!isNaN(dateObj.getTime())) {
+              formattedDate = dateObj.toISOString().split("T")[0];
+            }
+          }
+
+          setFormData({
+            title: blogData.title || "",
+            authorName: blogData.authorName || "",
+            publishDate: formattedDate,
+            content: blogData.content || "",
+            bannerImage: null,
+          });
+
+          // Set image preview to existing banner image
+          if (blogData.bannerImage) {
+            if (blogData.bannerImage.startsWith("http")) {
+              setImagePreview(blogData.bannerImage);
+            } else {
+              setImagePreview(`${API_IMAGE_URL}${blogData.bannerImage}`);
+            }
+          }
+        } else {
+          console.error(
+            "Could not find blog details via single fetch or fallback.",
+          );
+          toast.error(
+            "Could not load blog details. Please check the connection.",
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching blog data:", error);
+        toast.error("Failed to fetch blog data");
+      } finally {
+        setFetchingBlog(false);
+      }
+    };
+
+    if (id) {
+      fetchBlogData();
+    }
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -41,7 +140,6 @@ const AddBlog = () => {
     setLoading(true);
 
     try {
-      // Create FormData for multipart/form-data request
       const formDataToSend = new FormData();
       formDataToSend.append("title", formData.title);
       formDataToSend.append("authorName", formData.authorName);
@@ -51,8 +149,14 @@ const AddBlog = () => {
         formDataToSend.append("bannerImage", formData.bannerImage);
       }
 
-      const response = await axios.post(
-        `${API_BASE_URL}createBlog`,
+      // Log form data for debugging
+      console.log("Submitting update for Blog ID:", id);
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(`FormData ${key}:`, value);
+      }
+
+      const response = await axios.put(
+        `${API_BASE_URL}updateBlog/${id}`,
         formDataToSend,
         {
           headers: {
@@ -61,31 +165,14 @@ const AddBlog = () => {
           },
         },
       );
-
       if (response.data.success) {
-        toast.success(response.data.message || "Blog Created Successfully!");
-        // Reset form after successful submission
-        setFormData({
-          title: "",
-          authorName: "",
-          publishDate: "",
-          content: "",
-          bannerImage: null,
-        });
-        setImagePreview(
-          `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
-        );
-        // Navigate to blog list after short delay
-        setTimeout(() => {
-          navigate("/admin/manage-blog");
-        }, 1500);
-      } else {
-        toast.error(response.data.message || "Something went wrong!");
+        toast.success(response.data.message);
+        navigate("/admin/manage-blog");
       }
     } catch (error) {
-      console.error("Error While Creating the blog:", error);
+      console.error("Error While Updating the blog:", error);
       toast.error(
-        error.response?.data?.message || "Error While Creating the blog",
+        error.response?.data?.message || "Error While Updating the Blog",
       );
     } finally {
       setLoading(false);
@@ -94,17 +181,16 @@ const AddBlog = () => {
 
   return (
     <>
-      <ToastContainer />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Blog Page Content Form</h4>
+          <h4>Update Blog Page Content Form</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5>
             <Link to="/admin/manage-blog">
               <i className="fa-solid fa-angles-left"></i>
             </Link>
-            Blog Section Content Add Here
+            Blog Section Content Update Here
           </h5>
         </div>
         <div className="super-dashboard-cms-content-form">
@@ -214,7 +300,7 @@ const AddBlog = () => {
                       className="super-dashboard-content-btn"
                       disabled={loading}
                     >
-                      {loading ? "Creating..." : "Create Blog"}
+                      {loading ? "Updating..." : "Update Blog"}
                     </button>
                   </div>
                 </div>
@@ -227,4 +313,4 @@ const AddBlog = () => {
   );
 };
 
-export default AddBlog;
+export default UpdateBlog;

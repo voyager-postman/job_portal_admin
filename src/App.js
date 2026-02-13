@@ -59,6 +59,7 @@ import ManageAssementList from "./pages/ManageAssementList";
 import CreateAssement from "./pages/CreateAssement";
 import ForgotPassword from "./pages/ForgotPassword";
 import ViewAssement from "./pages/ViewAssement";
+import UpdateBlog from "./pages/UpdateBlog";
 function App() {
   return (
     <div className="App">
@@ -81,13 +82,14 @@ function App() {
             path="employer-subscription"
             element={<EmployerSubscription />}
           />
-          <Route path="manage-blog" element={<ManageBlog />} />
           <Route
             path="complete-company-details"
             element={<CompanyCompleteDetails />}
           />
+          <Route path="manage-blog" element={<ManageBlog />} />
           <Route path="manage-faq" element={<ManageFaq />} />
           <Route path="add-blog" element={<AddBlog />} />
+          <Route path="update-blog/:id" element={<UpdateBlog />} />
           <Route path="add-faq" element={<AddFaq />} />
           <Route path="super-admin-pack-details" element={<PackDetails />} />
           <Route path="manage-category" element={<ManageCategory />} />

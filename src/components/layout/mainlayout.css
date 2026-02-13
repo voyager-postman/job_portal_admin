@@ -23,6 +23,12 @@
   padding-top: 0.1px !important;
   overflow-y: auto !important;
 }
+ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.css-dev-only-do-not-override-ac2jek {
+  /* overflow-y: auto; */
+  /* height: 100vh !important; */
+  /* margin-top: -0.1px !important;
+  padding-top: 0.1px !important; */
+}
 .main_section {
   max-height: 90vh;
   overflow-x: hidden;
@@ -31,5 +37,5 @@
 }
 
 footer.py-4.bg-white {
-    margin-top: 20px;
+  margin-top: 20px;
 }

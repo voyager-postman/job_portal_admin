@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const EmployerFAQ = () => {
   return (
@@ -9,7 +10,12 @@ const EmployerFAQ = () => {
         </div>
 
         <div className="super-dashboard-common-heading">
-          <h5>FAQ Content Update Here</h5>
+          <h5>
+            <Link to="/admin/">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            FAQ Content Update Here
+          </h5>
         </div>
 
         <div className="responsive-content">

@@ -604,7 +604,7 @@ function ManageUsers() {
                 <div className="spinner-border text-primary"></div>
               </div>
             ) : (
-              <>
+              <div className="Recruiter-analytics-table2">
                 <div className="data-export-btn-info">
                   <button
                     className="data-export-btn"
@@ -654,7 +654,7 @@ function ManageUsers() {
                     Next
                   </button>
                 </div>
-              </>
+              </div>
             )}
           </div>
 

@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 const ArticlePageContent = () => {
   return (
@@ -9,7 +10,12 @@ const ArticlePageContent = () => {
         </div>
 
         <div className="super-dashboard-common-heading">
-          <h5>Article Section Content Update Here</h5>
+          <h5>
+            <Link to="/admin/">
+              <i className="fa-solid fa-angles-left" />
+            </Link>{" "}
+            Article Section Content Update Here
+          </h5>
         </div>
 
         <div className="super-dashboard-cms-content-form">

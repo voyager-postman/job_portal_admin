@@ -97,12 +97,6 @@ const MainLayout = () => {
       "assessment-list",
     ];
 
-    // const promotionKeys = [
-    //   "featured-job",
-    //   "highlighted-job",
-    //   "home-visibility",
-    // ];
-
     // ✅ Logic to open correct submenu only
     if (cmsKeys.includes(key)) {
       setOpenKeys(["CMS-Pages-1"]);

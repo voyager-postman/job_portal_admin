@@ -7,7 +7,6 @@ import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -261,6 +260,14 @@ const CompanyCompleteDetails = () => {
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
           <h4>Company Details</h4>
+        </div>
+        <div className="super-dashboard-common-heading">
+          <h5>
+            <Link to="/admin/manage-recruiter">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            Company Details
+          </h5>
         </div>
         <div className="super-dashboard-detail-info">
           <div className="super-dashboard-common-heading">
