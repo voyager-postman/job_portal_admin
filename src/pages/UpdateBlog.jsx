@@ -13,6 +13,7 @@ const UpdateBlog = () => {
   const [imagePreview, setImagePreview] = useState(
     `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
   );
+  
   const [formData, setFormData] = useState({
     title: "",
     authorName: "",
