@@ -168,7 +168,7 @@ function IndustrySector() {
 
   return (
     <>
-     <section className="super-dashboard-content-wrapper">
+      <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
           <h4>Manage Industry Sector</h4>
         </div>
