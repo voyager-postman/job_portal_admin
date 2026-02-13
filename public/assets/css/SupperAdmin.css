@@ -295,17 +295,8 @@ margin-bottom: 20px;
 
 .data-export-btn-info {
   margin-left: 20px;
-<<<<<<< HEAD
-
   text-align: right;
   margin-top: 30px;
-
-  text-align: right;
-  margin-top: 30px;
-=======
-  text-align: right;
-  margin-top: 30px;
->>>>>>> 79f5ab1609d698fe28832a45e966f3dd339168b8
 }
 
 .data-export-btn {
@@ -314,17 +305,8 @@ margin-bottom: 20px;
   border-radius: 5px;
   padding: 6px 10px;
   background: #0066cc;
-<<<<<<< HEAD
-
   outline: none;
   border: none;
-
-  outline: none;
-  border: none;
-=======
-  outline: none;
-  border: none;
->>>>>>> 79f5ab1609d698fe28832a45e966f3dd339168b8
 }
 
 .data-export-btn:hover {
@@ -577,14 +559,7 @@ margin-bottom: 20px;
 }
 
 .super-dashboard-common-heading h5 {
-<<<<<<< HEAD
-  font-size: 15px;
   font-size: 18px;
-
-  font-size: 15px;
-=======
-  font-size: 18px;
->>>>>>> 79f5ab1609d698fe28832a45e966f3dd339168b8
 }
 
 .super-dashboard-dashboard-box {
@@ -651,8 +626,6 @@ margin-bottom: 20px;
   display: flex;
   justify-content: space-between;
 }
-<<<<<<< HEAD
-=======
 .employer-dashboard-common-heading {
   margin-bottom: 15px;
 }
@@ -663,7 +636,6 @@ margin-bottom: 20px;
     margin-bottom: 10px;
 }
 
->>>>>>> 2d2a4381865cbd59017b646d76cde3e271f3eca1
 
 .users-recruiters-analytics-chart h5 {
   text-align: center;
@@ -1361,17 +1333,13 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   display: flex;
   align-items: center;
 }
-<<<<<<< HEAD
 
-=======
->>>>>>> 79f5ab1609d698fe28832a45e966f3dd339168b8
 .super-admin-candidate-img img {
   width: 200px;
   height: 200px;
   object-fit: cover;
   margin-right: 20px;
 }
-<<<<<<< HEAD
 
 .main-dashboard-content {
   /* padding: 0px 20px 0px 20px; */
@@ -1686,11 +1654,3 @@ box-shadow: 0 0 10px rgba(0,0,0,0.1);
   font-weight: 500;
   cursor: default;
 }
-<<<<<<< HEAD
-=======
-=======
-.main-dashboard-content {
-  padding: 0px 20px 0px 20px;
-}
->>>>>>> 79f5ab1609d698fe28832a45e966f3dd339168b8
->>>>>>> 2d2a4381865cbd59017b646d76cde3e271f3eca1
