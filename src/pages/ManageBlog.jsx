@@ -43,6 +43,28 @@ function ManageBlog() {
     return `${API_IMAGE_URL}${url}`;
   };
 
+   const cleanImageUrl = (url) => {
+    if (!url) return "";
+
+    // ✅ Default local dashboard image
+    if (url === "/jobPortal/assets/images/dashboard/images1.png") {
+      return url;
+    }
+
+    // ✅ Fix wrong stored URL like "/uploads/https://..."
+    if (url.includes("uploads/https")) {
+      return url.substring(url.indexOf("https"));
+    }
+
+    // ✅ External image (Google, GitHub, etc.)
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+
+    // ✅ Local uploaded image
+    return `${API_IMAGE_URL}${url}`;
+  };
+
   const columns = [
     {
       accessorKey: "id",
@@ -54,8 +76,8 @@ function ManageBlog() {
       header: "Image",
       cell: ({ row }) => (
         <img
-          // crossOrigin="anonymous"
-          src={getImageUrl(row.original.bannerImage)}
+          crossOrigin="anonymous"
+          src={cleanImageUrl(row.original.bannerImage)}
           alt="candidate"
           width={40}
           height={40}

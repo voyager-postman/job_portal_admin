@@ -13,7 +13,7 @@ const UpdateBlog = () => {
   const [imagePreview, setImagePreview] = useState(
     `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
   );
-  
+
   const [formData, setFormData] = useState({
     title: "",
     authorName: "",
@@ -21,6 +21,28 @@ const UpdateBlog = () => {
     content: "",
     bannerImage: null,
   });
+
+  const cleanImageUrl = (url) => {
+    if (!url) return "";
+
+    // ✅ Default local dashboard image
+    if (url === "/jobPortal/assets/images/dashboard/images1.png") {
+      return url;
+    }
+
+    // ✅ Fix wrong stored URL like "/uploads/https://..."
+    if (url.includes("uploads/https")) {
+      return url.substring(url.indexOf("https"));
+    }
+
+    // ✅ External image (Google, GitHub, etc.)
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      return url;
+    }
+
+    // ✅ Local uploaded image
+    return `${API_IMAGE_URL}${url}`;
+  };
 
   // Fetch blog data on component mount
   useEffect(() => {
@@ -87,7 +109,7 @@ const UpdateBlog = () => {
             authorName: blogData.authorName || "",
             publishDate: formattedDate,
             content: blogData.content || "",
-            bannerImage: null,
+            bannerImage: blogData.bannerImage || null,
           });
 
           // Set image preview to existing banner image
@@ -95,7 +117,8 @@ const UpdateBlog = () => {
             if (blogData.bannerImage.startsWith("http")) {
               setImagePreview(blogData.bannerImage);
             } else {
-              setImagePreview(`${API_IMAGE_URL}${blogData.bannerImage}`);
+              // setImagePreview(`${API_IMAGE_URL}${blogData.bannerImage}}`);
+              setImagePreview(cleanImageUrl(blogData.bannerImage));
             }
           }
         } else {
@@ -146,7 +169,7 @@ const UpdateBlog = () => {
       formDataToSend.append("authorName", formData.authorName);
       formDataToSend.append("publishDate", formData.publishDate);
       formDataToSend.append("content", formData.content);
-      if (formData.bannerImage) {
+      if (formData.bannerImage && formData.bannerImage instanceof File) {
         formDataToSend.append("bannerImage", formData.bannerImage);
       }
 
@@ -161,7 +184,6 @@ const UpdateBlog = () => {
         formDataToSend,
         {
           headers: {
-            "Content-Type": "multipart/form-data",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         },
@@ -247,6 +269,7 @@ const UpdateBlog = () => {
                   <div className="upload-company-info-area">
                     <div className="upload-company-img-preview">
                       <img
+                        crossorigin="anonymous"
                         src={imagePreview}
                         className="main-logo"
                         id="preview"
@@ -258,6 +281,7 @@ const UpdateBlog = () => {
                         type="file"
                         id="imageInput"
                         name="bannerImage"
+                        placeholder="Select image"
                         accept="image/*"
                         onChange={handleChange}
                       />
@@ -265,7 +289,11 @@ const UpdateBlog = () => {
                     <div className="upload-company-file-name">
                       <span className="file-name" id="fileName">
                         {formData.bannerImage
-                          ? formData.bannerImage.name
+                          ? formData.bannerImage instanceof File
+                            ? formData.bannerImage.name
+                            : typeof formData.bannerImage === "string"
+                              ? formData.bannerImage.split("/").pop()
+                              : "Current Image"
                           : "No file selected"}
                       </span>
                     </div>
