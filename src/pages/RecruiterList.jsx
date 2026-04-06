@@ -31,7 +31,7 @@ const RecruiterList = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log("API Response:", response.data.recruiters);
       setRecruiterList(response.data.recruiters || []);
@@ -50,18 +50,92 @@ const RecruiterList = () => {
     return `${API_IMAGE_URL}${url}`;
   };
 
+  // const columns = [
+  //   {
+  //     accessorKey: "id",
+  //     header: "S.No",
+  //     cell: ({ row }) => row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "profileImage",
+  //     header: "Img",
+  //     cell: ({ row }) => (
+  //       <img
+  //         crossorigin="anonymous"
+  //         src={getImageUrl(row.original.logo)}
+  //         alt="candidate"
+  //         width={45}
+  //         height={45}
+  //         style={{ borderRadius: "50%" }}
+  //         onError={(e) => {
+  //           e.currentTarget.src =
+  //             "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  //         }}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Recruiter Name",
+  //     accessorFn: (row) =>
+  //       `${row.first_name || ""} ${row.last_name || ""}`.toLowerCase(),
+  //     cell: ({ row }) => (
+  //       <>
+  //         {row.original.first_name || "Not Provided"}{" "}
+  //         {row.original.last_name || ""}
+  //       </>
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "email",
+  //     header: "Email ID",
+  //     accessorFn: (row) => (row.email || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.email || "Not Provided",
+  //   },
+
+  //   {
+  //     accessorKey: "status",
+  //     header: "Status",
+  //     cell: ({ row }) => {
+  //       const status = row.original.status;
+
+  //       // ❌ Don't render anything for other statuses
+  //       if (status !== "Active" && status !== "Inactive") {
+  //         return null;
+  //       }
+
+  //       const isActive = status === "Active";
+
+  //       return (
+  //         <span
+  //           style={{
+  //             color: isActive ? "#16a34a" : "#dc2626",
+  //             backgroundColor: isActive ? "#dcfce7" : "#fee2e2",
+  //             padding: "4px 10px",
+  //             borderRadius: "6px",
+  //             fontSize: "13px",
+  //             fontWeight: "600",
+  //             display: "inline-block",
+  //           }}
+  //         >
+  //           {isActive ? "Active" : "Inactive"}
+  //         </span>
+  //       );
+  //     },
+  //   },
+  // ];
   const columns = [
     {
-      accessorKey: "id",
-      header: "S.No",
-      cell: ({ row }) => row.index + 1,
+      Header: "S.No",
+      id: "sno", // computed column requires an ID
+      Cell: ({ row }) => row.index + 1,
     },
     {
-      accessorKey: "profileImage",
-      header: "Img",
-      cell: ({ row }) => (
+      Header: "Img",
+      id: "profileImage",
+      Cell: ({ row }) => (
         <img
-          crossorigin="anonymous"
+          crossOrigin="anonymous"
           src={getImageUrl(row.original.logo)}
           alt="candidate"
           width={45}
@@ -75,11 +149,9 @@ const RecruiterList = () => {
       ),
     },
     {
-      accessorKey: "name",
-      header: "Recruiter Name",
-      accessorFn: (row) =>
-        `${row.first_name || ""} ${row.last_name || ""}`.toLowerCase(),
-      cell: ({ row }) => (
+      Header: "Recruiter Name",
+      id: "name",
+      Cell: ({ row }) => (
         <>
           {row.original.first_name || "Not Provided"}{" "}
           {row.original.last_name || ""}
@@ -87,19 +159,17 @@ const RecruiterList = () => {
       ),
     },
     {
-      accessorKey: "email",
-      header: "Email ID",
-      accessorFn: (row) => (row.email || "").toLowerCase(),
-      cell: ({ row }) => row.original.email || "Not Provided",
+      Header: "Email ID",
+      id: "email",
+      Cell: ({ row }) => row.original.email || "Not Provided",
     },
-
     {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
+      Header: "Status",
+      id: "status",
+      Cell: ({ row }) => {
         const status = row.original.status;
 
-        // ❌ Don't render anything for other statuses
+        // Don't render anything for other statuses
         if (status !== "Active" && status !== "Inactive") {
           return null;
         }
@@ -124,7 +194,6 @@ const RecruiterList = () => {
       },
     },
   ];
-
   return (
     <div>
       <section className="super-dashboard-content-wrapper">
@@ -133,22 +202,27 @@ const RecruiterList = () => {
         </div>
         <div className="super-dashboard-common-heading">
           <h5>
-            <Link to="/admin/complete-company-details" state={{ companyProfileId: companyDataId }}>
+            <Link
+              to="/admin/complete-company-details"
+              state={{ companyProfileId: companyDataId }}
+            >
               <i className="fa-solid fa-angles-left" />
             </Link>
             Recruiters List
           </h5>
         </div>
 
-        <div className="table-responsive">
+        <div className="super-admin-manage-candidate-list super-admin-white-bg">
           {loading ? (
             <div className="d-flex justify-content-center py-5">
               <div className="spinner-border text-primary"></div>
             </div>
+          ) : recruiterList.length === 0 ? (
+            <div className="text-center py-5 text-muted">
+              <h6>No recruiters found</h6>
+            </div>
           ) : (
-            <>
-              <TableView columns={columns} data={recruiterList} />
-            </>
+            <TableView columns={columns} data={recruiterList} />
           )}
         </div>
       </section>

@@ -33,7 +33,7 @@ const CandinatesDetails = () => {
       setLoading(false);
     }
   };
-  
+
   const getImageUrl = (url) => {
     // Case 1: No image or invalid value
     if (!url || url === "undefined" || url === null) {
@@ -124,7 +124,7 @@ const CandinatesDetails = () => {
               <h4>Professional Summary</h4>
               <p>{candidate?.professionalSummary}</p>
             </div>
-            <div className="super-admin-candidate-profile-summary">
+            {/* <div className="super-admin-candidate-profile-summary">
               <h4>Career Goals</h4>
               <ul>
                 <li>
@@ -152,6 +152,44 @@ const CandinatesDetails = () => {
                       /^\w/,
                       (c) => c.toUpperCase()
                     ) || "Not Provided"}{" "}
+                  </p>
+                </li>
+              </ul>
+            </div> */}
+            <div className="super-admin-candidate-profile-summary">
+              <h4>Career Goals</h4>
+              <ul>
+                <li>
+                  <h5>Desired Job Title</h5>
+                  <p>
+                    {Array.isArray(candidate?.career_goals?.DesiredJobTitle)
+                      ? candidate.career_goals.DesiredJobTitle.join(", ")
+                      : candidate?.career_goals?.DesiredJobTitle ||
+                        "Not Provided"}
+                  </p>
+                </li>
+
+                <li>
+                  <h5>Desired Employment Type</h5>
+                  <p>
+                    {Array.isArray(
+                      candidate?.career_goals?.DesiredEmploymentType,
+                    )
+                      ? candidate.career_goals.DesiredEmploymentType.join(", ")
+                      : candidate?.career_goals?.DesiredEmploymentType ||
+                        "Not Provided"}
+                  </p>
+                </li>
+
+                <li>
+                  <h5>Desired Occupation Type</h5>
+                  <p>
+                    {Array.isArray(
+                      candidate?.career_goals?.DesiredOccupationType,
+                    )
+                      ? candidate.career_goals.DesiredOccupationType.join(", ")
+                      : candidate?.career_goals?.DesiredOccupationType ||
+                        "Not Provided"}
                   </p>
                 </li>
               </ul>
@@ -215,7 +253,7 @@ const CandinatesDetails = () => {
                     "default",
                     {
                       month: "short",
-                    }
+                    },
                   )} ${startDate.getFullYear()}`;
 
                   const formattedEnd = work.currentlyWorkingHere
@@ -341,7 +379,7 @@ const CandinatesDetails = () => {
 
                   const formattedUniversity = edu.University
                     ? edu.University.toLowerCase().replace(/^\w/, (c) =>
-                        c.toUpperCase()
+                        c.toUpperCase(),
                       )
                     : "Not Provided";
 
@@ -377,10 +415,10 @@ const CandinatesDetails = () => {
                             {edu.currentlyStudyingHere
                               ? "Until now"
                               : endDateObj
-                              ? `${endDateObj.toLocaleString("default", {
-                                  month: "short",
-                                })} ${endDateObj.getFullYear()}`
-                              : "Not Provided"}
+                                ? `${endDateObj.toLocaleString("default", {
+                                    month: "short",
+                                  })} ${endDateObj.getFullYear()}`
+                                : "Not Provided"}
                           </p>
                         </li>
                       </ul>

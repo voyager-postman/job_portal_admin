@@ -18,6 +18,7 @@ import ApartmentIcon from "@mui/icons-material/Apartment";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CastleIcon from "@mui/icons-material/Castle";
 import ContactMailIcon from "@mui/icons-material/ContactMail";
+import BusinessIcon from "@mui/icons-material/Business";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import QuestionAnswerIcon from "@mui/icons-material/QuestionAnswer";
 import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
@@ -52,15 +53,23 @@ const MainLayout = () => {
     if (path === "/admin" || path === "/admin/") return "";
     return path.replace("/admin/", "");
   };
+  const categoryKeys = [
+    "tech-stack",
+    "job-type",
+    "salary-range",
+    "industry-sector",
+    "company",
+    "seniority-level",
+  ];
 
   // ✅ Update selected and open submenu based on current route
   useEffect(() => {
     const key = getActiveKey();
     setSelectedKey(key);
 
-    // Define groups for easier matching
     const cmsKeys = [
       "home-page-content",
+      "employer-home-page-content",
       "employer_faq",
       "jobSeeker_faq",
       "about-page-content",
@@ -70,26 +79,25 @@ const MainLayout = () => {
       "term-condition-content",
       "privacy-policy-content",
     ];
+
+    const managementKeys = [
+      "manage-recruiter",
+      "manage-candidates",
+      "contact-messages",
+      "notification-template",
+      "notification-governance",
+    ];
+
+    const contentKeys = ["manage-blog"];
+
     const packageKeys = [
       "super-admin-pack-creations",
       "super-admin-add-on-pack-created-list",
     ];
 
-    const categoryKeys = [
-      "tech-stack",
-      "job-type",
-      "salary-range",
-      "industry-sector",
-      "company",
-      "seniority-level",
-    ];
+    const billingKeys = ["invoice-list"];
 
-    const paymentKeys = [
-      "payment-gateway-management",
-      "payment-gateway-setup-form",
-      "pricing-plan-management",
-      "price-plan-form",
-    ];
+    const paymentKeys = ["payment-gateway-management"];
 
     const skillsKey = [
       "manage-skill-categories",
@@ -97,23 +105,22 @@ const MainLayout = () => {
       "assessment-list",
     ];
 
-    // const promotionKeys = [
-    //   "featured-job",
-    //   "highlighted-job",
-    //   "home-visibility",
-    // ];
-
-    // ✅ Logic to open correct submenu only
-    if (cmsKeys.includes(key)) {
-      setOpenKeys(["CMS-Pages-1"]);
+    if (managementKeys.includes(key)) {
+      setOpenKeys(["management"]);
+    } else if (contentKeys.includes(key)) {
+      setOpenKeys(["content"]);
     } else if (categoryKeys.includes(key)) {
       setOpenKeys(["manage-category"]);
-    } else if (paymentKeys.includes(key)) {
-      setOpenKeys(["payment-gateway"]);
+    } else if (cmsKeys.includes(key)) {
+      setOpenKeys(["content", "CMS-Pages-1"]);
     } else if (packageKeys.includes(key)) {
-      setOpenKeys(["manage-packages"]);
+      setOpenKeys(["billing", "manage-packages"]);
+    } else if (billingKeys.includes(key)) {
+      setOpenKeys(["billing"]);
+    } else if (paymentKeys.includes(key)) {
+      setOpenKeys(["billing", "payment-gateway"]);
     } else if (skillsKey.includes(key)) {
-      setOpenKeys(["manage-skills"]);
+      setOpenKeys(["assessment"]);
     } else {
       setOpenKeys([]);
     }
@@ -121,8 +128,7 @@ const MainLayout = () => {
 
   // ✅ Allow only one submenu open at a time
   const handleOpenChange = (keys) => {
-    const latestOpenKey = keys.find((key) => !openKeys.includes(key));
-    setOpenKeys(latestOpenKey ? [latestOpenKey] : []);
+    setOpenKeys(keys);
   };
 
   const menuStyle = {
@@ -177,37 +183,31 @@ const MainLayout = () => {
             <Menu.Item key="" icon={<AiOutlineDashboard className="fs-6" />}>
               Dashboard
             </Menu.Item>
-            <Menu.Item
-              key="manage-recruiter"
-              icon={<SiGoogleanalytics className="fs-6" />}
-            >
-              Manage Company
-            </Menu.Item>
-            <Menu.Item
-              key="manage-candidates"
-              icon={<AiOutlineUser className="fs-6" />}
-            >
-              Manage Candidates
-            </Menu.Item>
-            <Menu.Item
-              key="job-promotions"
-              icon={<LuEqualApproximately className="fs-6" />}
-            >
-              Job Promotions
-            </Menu.Item>
-            <Menu.Item
-              key="manage-blog"
-              icon={<AiOutlineRead className="fs-6" />}
-            >
-              Manage Blog
-            </Menu.Item>
 
-            <Menu.Item
-              key="manage-faq"
-              icon={<AiOutlineQuestionCircle className="fs-6" />}
+            {/* MANAGEMENT */}
+            <Menu.SubMenu
+              key="management"
+              icon={<SiGoogleanalytics />}
+              title="Management"
             >
-              Manage FAQ
-            </Menu.Item>
+              <Menu.Item key="manage-recruiter" icon={<SiGoogleanalytics />}>
+                Company
+              </Menu.Item>
+
+              <Menu.Item key="manage-candidates" icon={<AiOutlineUser />}>
+                Candidates
+              </Menu.Item>
+              <Menu.Item key="contact-messages" icon={<ContactMailIcon />}>
+                Contact Messages
+              </Menu.Item>
+
+              <Menu.Item key="notification-template" icon={<AiOutlineRead />}>
+                Notifications Template
+              </Menu.Item>
+              <Menu.Item key="notification-governance" icon={<SecurityIcon />}>
+                Notification Governance
+              </Menu.Item>
+            </Menu.SubMenu>
             <Menu.SubMenu
               key="manage-category"
               icon={<WorkOutlineIcon className="fs-6" />}
@@ -245,142 +245,137 @@ const MainLayout = () => {
                 Seniority Level
               </Menu.Item>
             </Menu.SubMenu>
-
-            <Menu.SubMenu
-              key="CMS-Pages-1"
-              icon={<CastleIcon className="fs-6" />}
-              title="CMS Pages"
-            >
-              <Menu.Item
-                key="home-page-content"
-                icon={<ContactMailIcon className="fs-6" />}
-              >
-                Home Page
+            {/* CONTENT */}
+            <Menu.SubMenu key="content" icon={<CastleIcon />} title="Content">
+              <Menu.Item key="manage-blog" icon={<AiOutlineRead />}>
+                Blog
               </Menu.Item>
 
-              <Menu.Item
-                key="employer_faq"
-                icon={<HelpOutlineIcon className="fs-6" />}
-              >
-                Employer FAQ
-              </Menu.Item>
+              {/* <Menu.Item key="manage-faq" icon={<AiOutlineQuestionCircle />}>
+                FAQ
+              </Menu.Item> */}
 
-              <Menu.Item
-                key="jobSeeker_faq"
-                icon={<QuestionAnswerIcon className="fs-6" />}
+              {/* KEEP YOUR CMS EXACTLY SAME */}
+              <Menu.SubMenu
+                key="CMS-Pages-1"
+                icon={<CastleIcon />}
+                title="CMS Pages"
               >
-                Job Seeker FAQ
-              </Menu.Item>
-              <Menu.Item
-                key="about-page-content"
-                icon={<InfoIcon className="fs-6" />}
-              >
-                About Page
-              </Menu.Item>
-              <Menu.Item
-                key="article-page-content"
-                icon={<ImportContactsIcon className="fs-6" />}
-              >
-                Article Page
-              </Menu.Item>
-              <Menu.Item
-                key="contact-page-content"
-                icon={<ContactPhoneIcon className="fs-6" />}
-              >
-                Contact Page
-              </Menu.Item>
-              <Menu.Item
-                key="footer-page-content"
-                icon={<ContactSupportIcon className="fs-6" />}
-              >
-                Footer Content
-              </Menu.Item>
-              <Menu.Item
-                key="term-condition-content"
-                icon={<AddModeratorIcon className="fs-6" />}
-              >
-                Term And Conditions
-              </Menu.Item>
-              <Menu.Item
-                key="privacy-policy-content"
-                icon={<SecurityIcon className="fs-6" />}
-              >
-                Privacy And Policy
-              </Menu.Item>
+                <Menu.Item key="home-page-content" icon={<ContactMailIcon />}>
+                  Home Page
+                </Menu.Item>
+                <Menu.Item
+                  key="employer-home-page-content"
+                  icon={<BusinessIcon />}
+                >
+                  Employer Home Page
+                </Menu.Item>
+
+                <Menu.Item key="employer_faq" icon={<HelpOutlineIcon />}>
+                  Employer FAQ
+                </Menu.Item>
+
+                <Menu.Item key="jobSeeker_faq" icon={<QuestionAnswerIcon />}>
+                  Job Seeker FAQ
+                </Menu.Item>
+
+                <Menu.Item key="about-page-content" icon={<InfoIcon />}>
+                  About Page
+                </Menu.Item>
+
+                {/* <Menu.Item
+                  key="article-page-content"
+                  icon={<ImportContactsIcon />}
+                >
+                  Article Page
+                </Menu.Item> */}
+
+                <Menu.Item
+                  key="contact-page-content"
+                  icon={<ContactPhoneIcon />}
+                >
+                  Contact Page
+                </Menu.Item>
+
+                <Menu.Item
+                  key="footer-page-content"
+                  icon={<ContactSupportIcon />}
+                >
+                  Footer Content
+                </Menu.Item>
+
+                <Menu.Item
+                  key="term-condition-content"
+                  icon={<AddModeratorIcon />}
+                >
+                  Term And Conditions
+                </Menu.Item>
+
+                <Menu.Item key="privacy-policy-content" icon={<SecurityIcon />}>
+                  Privacy And Policy
+                </Menu.Item>
+              </Menu.SubMenu>
             </Menu.SubMenu>
+            <Menu.Item
+              key="super-admin-plan-subscriber-list"
+              icon={<AiOutlineRead className="fs-6" />}
+            >
+              Manage Subscriptions
+            </Menu.Item>
+            <Menu.Item key="credit-management" icon={<AccountBalanceIcon />}>
+              Manage Credits
+            </Menu.Item>
             <Menu.SubMenu
               key="manage-packages"
-              icon={<AiOutlineRead className="fs-6" />}
+              icon={<AiOutlineRead />}
               title="Manage Packages"
             >
               <Menu.Item
                 key="super-admin-pack-creations"
-                icon={<ContactMailIcon className="fs-6" />}
+                icon={<ContactMailIcon />}
               >
                 Subscription Packages
               </Menu.Item>
 
               <Menu.Item
                 key="super-admin-add-on-pack-created-list"
-                icon={<HelpOutlineIcon className="fs-6" />}
+                icon={<HelpOutlineIcon />}
               >
                 Add-on Packages
               </Menu.Item>
             </Menu.SubMenu>
-
-            <Menu.Item
-              key="super-admin-plan-subscriber-list"
-              icon={<AiOutlineRead className="fs-6" />}
-            >
-              Plan Subscriber List
-            </Menu.Item>
+            {/* BILLING */}
             <Menu.SubMenu
-              key="payment-gateway"
-              icon={<SiGoogleanalytics className="fs-6" />}
-              title="Payment Gateway"
+              key="billing"
+              icon={<AttachMoneyIcon />}
+              title="Billing"
             >
-              <Menu.Item
-                key="payment-gateway-management"
-                icon={<AccountBalanceIcon className="fs-6" />}
-              >
-                Payment Gateway Management
-              </Menu.Item>
-             
-              <Menu.Item
-                key="pricing-plan-management"
-                icon={<AccountBalanceIcon className="fs-6" />}
-              >
-                Price Plan Management
-              </Menu.Item>
-              <Menu.Item
-                key="price-plan-form"
-                icon={<AttachMoneyIcon className="fs-6" />}
-              >
-                Price Plan Form
+              {/* ADD THIS */}
+
+              <Menu.Item key="invoice-list" icon={<AiOutlineRead />}>
+                Invoice
               </Menu.Item>
             </Menu.SubMenu>
+
+            {/* ASSESSMENT */}
             <Menu.SubMenu
-              key="manage-skills"
-              icon={<QuizIcon className="fs-6" />}
-              title="Skills Assessment"
+              key="assessment"
+              icon={<QuizIcon />}
+              title="Assessment"
             >
-              <Menu.Item
-                key="manage-skill-categories"
-                icon={<CategoryIcon className="fs-6" />}
-              >
-                Mange Categories
+              <Menu.Item key="manage-skill-categories" icon={<CategoryIcon />}>
+                Skill Categories
               </Menu.Item>
+
               <Menu.Item
                 key="manage-question-bank"
-                icon={<QuestionAnswerIcon className="fs-6" />}
+                icon={<QuestionAnswerIcon />}
               >
-                Mange Question Bank
+                Question Bank
               </Menu.Item>
-              <Menu.Item
-                key="assessment-list"
-                icon={<QuestionAnswerIcon className="fs-6" />}
-              >
-                Mange Assessment
+
+              <Menu.Item key="assessment-list" icon={<QuestionAnswerIcon />}>
+                Assessments
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>

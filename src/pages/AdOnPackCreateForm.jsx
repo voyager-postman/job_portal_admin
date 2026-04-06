@@ -16,11 +16,7 @@ function AdOnPackCreateForm() {
     name: "",
     type: "",
     jobPostingCredits: "",
-    dailyJobPostingLimit: "",
     profileViewingCredits: "",
-    dailyProfileViewingLimit: "",
-    validityValue: "",
-    validityUnit: "Month",
     price: "",
     currency: "",
     paymentMode: "",
@@ -41,12 +37,9 @@ function AdOnPackCreateForm() {
 
         jobPostingCredits: addOnData.jobPostingCredits || "",
         dailyJobPostingLimit: addOnData.dailyJobPostingLimit || "",
-
         profileViewingCredits: addOnData.profileViewingCredits || "",
         dailyProfileViewingLimit: addOnData.dailyProfileViewingLimit || "",
 
-        validityValue: addOnData.validityValue || "",
-        validityUnit: addOnData.validityUnit || "Month",
         price: addOnData.price || "",
         currency: addOnData.currency || "",
         paymentMode: addOnData.paymentMode || "",
@@ -79,8 +72,6 @@ function AdOnPackCreateForm() {
     if (
       !formData.name ||
       !formData.type ||
-      !formData.validityValue ||
-      !formData.validityUnit ||
       !formData.price ||
       !formData.currency ||
       !formData.paymentMode
@@ -89,25 +80,7 @@ function AdOnPackCreateForm() {
       return;
     }
 
-    // 🔴 Job Posting validation
-    if (
-      (formData.type === "JOB" || formData.type === "BOTH") &&
-      (!formData.jobPostingCredits || !formData.dailyJobPostingLimit)
-    ) {
-      toast.error("Job Posting credits and daily limit are required");
-      return;
-    }
 
-    // 🔴 Profile Viewing validation
-    if (
-      (formData.type === "CV" || formData.type === "BOTH") &&
-      (!formData.profileViewingCredits || !formData.dailyProfileViewingLimit)
-    ) {
-      toast.error("Profile Viewing credits and daily limit are required");
-      return;
-    }
-
-    // ✅ Decide API URL (CREATE vs UPDATE)
     const url = isEditMode
       ? `${API_BASE_URL}updateAddOn/${addOnData._id}`
       : `${API_BASE_URL}createAddOn`;
@@ -124,19 +97,10 @@ function AdOnPackCreateForm() {
               ? Number(formData.jobPostingCredits)
               : 0,
 
-          dailyJobPostingLimit:
-            formData.type === "JOB" || formData.type === "BOTH"
-              ? Number(formData.dailyJobPostingLimit)
-              : 0,
-
+        
           profileViewingCredits:
             formData.type === "CV" || formData.type === "BOTH"
               ? Number(formData.profileViewingCredits)
-              : 0,
-
-          dailyProfileViewingLimit:
-            formData.type === "CV" || formData.type === "BOTH"
-              ? Number(formData.dailyProfileViewingLimit)
               : 0,
 
           validityValue: Number(formData.validityValue),
@@ -151,13 +115,13 @@ function AdOnPackCreateForm() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       toast.success(
         isEditMode
           ? "Add-On Pack updated successfully ✅"
-          : "Add-On Pack created successfully 🎉"
+          : "Add-On Pack created successfully 🎉",
       );
 
       navigate("/admin/super-admin-add-on-pack-created-list");
@@ -165,7 +129,7 @@ function AdOnPackCreateForm() {
       console.error(error);
       toast.error(
         error?.response?.data?.message ||
-          `Failed to ${isEditMode ? "update" : "create"} Add-On Pack`
+          `Failed to ${isEditMode ? "update" : "create"} Add-On Pack`,
       );
     }
   };
@@ -175,7 +139,7 @@ function AdOnPackCreateForm() {
       <ToastContainer position="top-right" autoClose={3000} />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Add On Pack Creation Form</h4>
+          <h4>Add-On Package</h4>
         </div>
 
         <div className="super-dashboard-common-heading">
@@ -183,7 +147,7 @@ function AdOnPackCreateForm() {
             <Link to="/admin/super-admin-add-on-pack-created-list">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            {isEditMode ? "Update Add On Pack" : "Create New Add On Pack"}
+            {isEditMode ? "Update Add-On Package" : "Create Add-On Package"}
           </h5>
         </div>
 
@@ -239,19 +203,6 @@ function AdOnPackCreateForm() {
                     </div>
                   </div>
 
-                  <div className="col-lg-6 col-md-6">
-                    <div className="form-group">
-                      <label>Daily Job Posting Limit</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        name="dailyJobPostingLimit"
-                        value={formData.dailyJobPostingLimit}
-                        onChange={handleChange}
-                        placeholder="Enter Daily Job Posting Limit"
-                      />
-                    </div>
-                  </div>
                 </>
               )}
               {(formData.type === "CV" || formData.type === "BOTH") && (
@@ -270,54 +221,11 @@ function AdOnPackCreateForm() {
                     </div>
                   </div>
 
-                  <div className="col-lg-6 col-md-6">
-                    <div className="form-group">
-                      <label>Daily Profile Viewing Limit</label>
-                      <input
-                        type="number"
-                        className="form-control"
-                        name="dailyProfileViewingLimit"
-                        value={formData.dailyProfileViewingLimit}
-                        onChange={handleChange}
-                        placeholder="Enter Daily Profile Viewing Limit"
-                      />
-                    </div>
-                  </div>
                 </>
               )}
 
-              {/* VALIDITY VALUE */}
-              <div className="col-lg-6 col-md-6">
-                <div className="form-group">
-                  <label>Validity Value</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="validityValue"
-                    value={formData.validityValue}
-                    onChange={handleChange}
-                    placeholder="Enter Validity Number"
-                  />
-                </div>
-              </div>
 
-              {/* VALIDITY UNIT */}
-              <div className="col-lg-6 col-md-6">
-                <div className="form-group">
-                  <label>Validity Unit</label>
-                  <select
-                    className="form-select form-control"
-                    name="validityUnit"
-                    value={formData.validityUnit}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select Unit</option>
-                    <option value="Day">Days</option>
-                    <option value="Month">Months</option>
-                    <option value="Year">Years</option>
-                  </select>
-                </div>
-              </div>
+             
 
               {/* CURRENCY */}
               <div className="col-lg-6 col-md-6">
@@ -330,6 +238,7 @@ function AdOnPackCreateForm() {
                     onChange={handleChange}
                   >
                     <option value="">Select Currency</option>
+                     <option value="MAD">MAD</option>
                     <option value="INR">INR</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>

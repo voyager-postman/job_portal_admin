@@ -46,8 +46,8 @@ const ManageSkillCategory = () => {
 
   // ✅ Open Edit Modal
   const handleEditClick = (row) => {
-    setEditItem(row.original);
-    setTechName(row.original.name);
+    setEditItem(row);
+    setTechName(row.name);
     setShowModal(true);
   };
 
@@ -135,30 +135,76 @@ const ManageSkillCategory = () => {
     }
   };
 
+  // const columns = [
+  //   {
+  //     accessorKey: "_id",
+  //     header: "S.No",
+  //     cell: ({ row }) => row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Categories",
+  //   },
+  //   {
+  //     accessorKey: "isActive", // ✅ fixed
+  //     header: "Status",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-toggle-switch">
+  //         <label className="switch">
+  //           <input
+  //             type="checkbox"
+  //             checked={row.original.isActive} // ✅ fixed
+  //             onChange={() =>
+  //               handleStatusChange(
+  //                 row.original._id,
+  //                 row.original.isActive, // ✅ fixed
+  //               )
+  //             }
+  //           />
+  //           <span className="slider round"></span>
+  //         </label>
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     header: "Action",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-action-icons">
+  //         <i
+  //           className="fa-solid fa-pencil"
+  //           title="Edit"
+  //           onClick={() => handleEditClick(row)}
+  //         />
+  //         <i
+  //           className="fa-solid fa-trash"
+  //           title="Delete"
+  //           onClick={() => handleDelete(row.original._id)}
+  //         />
+  //       </div>
+  //     ),
+  //   },
+  // ];
   const columns = [
     {
-      accessorKey: "_id",
-      header: "S.No",
-      cell: ({ row }) => row.index + 1,
+      Header: "S.No",
+      id: "index",
+      Cell: ({ row }) => row.index + 1,
     },
     {
-      accessorKey: "name",
-      header: "Categories",
+      Header: "Categories",
+      accessor: "name",
     },
     {
-      accessorKey: "isActive", // ✅ fixed
-      header: "Status",
-      cell: ({ row }) => (
+      Header: "Status",
+      accessor: "isActive",
+      Cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
               type="checkbox"
-              checked={row.original.isActive} // ✅ fixed
+              checked={row.original.isActive}
               onChange={() =>
-                handleStatusChange(
-                  row.original._id,
-                  row.original.isActive, // ✅ fixed
-                )
+                handleStatusChange(row.original._id, row.original.isActive)
               }
             />
             <span className="slider round"></span>
@@ -167,13 +213,13 @@ const ManageSkillCategory = () => {
       ),
     },
     {
-      header: "Action",
-      cell: ({ row }) => (
+      Header: "Action",
+      Cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <i
             className="fa-solid fa-pencil"
             title="Edit"
-            onClick={() => handleEditClick(row)}
+            onClick={() => handleEditClick(row.original)}
           />
           <i
             className="fa-solid fa-trash"
@@ -184,13 +230,12 @@ const ManageSkillCategory = () => {
       ),
     },
   ];
-
   return (
     <div>
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Skill Categories</h4>
+          <h4>Skill Category Management</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5 className="breadcrumb-heading">
@@ -198,8 +243,7 @@ const ManageSkillCategory = () => {
             <Link to="/admin" className="back-link" title="Back">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            {/* Active page */}
-            <span className="active">Skill Categories</span>
+            <span className="active">Manage Skill Categories</span>
           </h5>
         </div>
 

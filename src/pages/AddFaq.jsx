@@ -1,102 +1,211 @@
 import React, { useState } from "react";
-
 import { Link } from "react-router-dom";
+import axios from "axios";
+import { API_BASE_URL } from "../Url/Url";
+
 const AddFaq = () => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    company: "",
-    password: "",
-    image: null,
-    status: true,
+    type: "",
+    heading: "",
+    subHeading: "",
+    description: "",
+    faqs: [
+      {
+        question: "",
+        answer: "",
+      },
+    ],
   });
 
+  // handle normal inputs
   const handleChange = (e) => {
-    const { name, value, type, checked, files } = e.target;
+    const { name, value } = e.target;
+
     setFormData({
       ...formData,
-      [name]:
-        type === "checkbox" ? checked : type === "file" ? files[0] : value,
+      [name]: value,
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Recruiter Data:", formData);
+  // handle FAQ question & answer
+  const handleFaqChange = (index, e) => {
+    const { name, value } = e.target;
+
+    const updatedFaqs = [...formData.faqs];
+    updatedFaqs[index][name] = value;
+
+    setFormData({
+      ...formData,
+      faqs: updatedFaqs,
+    });
   };
+
+  // add new FAQ
+  const addFaq = () => {
+    setFormData({
+      ...formData,
+      faqs: [...formData.faqs, { question: "", answer: "" }],
+    });
+  };
+
+  // submit form
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await axios.post(`${API_BASE_URL}faq`, formData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      console.log("FAQ Created:", response.data);
+      alert("FAQ Added Successfully");
+    } catch (error) {
+      console.error("Error creating FAQ:", error);
+    }
+  };
+
   return (
-    <>
-      <section className="super-dashboard-content-wrapper">
-        <div className="super-dashboard-breadcrumb-info">
-          <h4>FAQ Section Content Form</h4>
-        </div>
-        <div className="super-dashboard-common-heading">
-          <h5>
-            <Link to="/admin/" >
-              <i class="fa-solid fa-angles-left"></i>
-            </Link>
-            FAQ Content Update Here
-          </h5>
-        </div>
-        <div className="super-dashboard-cms-content-form">
-          <div className="container">
+    <section className="super-dashboard-content-wrapper">
+      <div className="super-dashboard-breadcrumb-info">
+        <h4>New FAQ Details</h4>
+      </div>
+
+      <div className="super-dashboard-common-heading">
+        <h5>
+          <Link to="/admin/manage-faq">
+            <i className="fa-solid fa-angles-left"></i>
+          </Link>
+          Add New FAQ
+        </h5>
+      </div>
+
+      <div className="super-dashboard-cms-content-form">
+        <div className="container">
+          <form onSubmit={handleSubmit}>
             <div className="row">
-              <div className="col-lg-12 col-md-12">
-                <div className="form-group">
-                  <label>Question</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="question"
-                    placeholder="Enter your Question here"
-                  />
-                </div>
-              </div>
-              <div className="col-lg-12 col-md-12">
+              {/* TYPE */}
+              <div className="col-lg-12">
                 <div className="form-group">
                   <label>Select Category</label>
                   <select
-                    className="form-select form-control"
-                    id="category"
-                    name="category"
+                    className="form-control"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleChange}
                     required
                   >
-                    <option value>Select A Category</option>
-                    <option value="general">Job Seeker</option>
-                    <option value="billing">Employer</option>
+                    <option value="">Select Category</option>
+                    <option value="jobSeeker">Job Seeker</option>
+                    <option value="employer">Employer</option>
                   </select>
                 </div>
               </div>
-              <div className="col-lg-12 col-md-12">
+
+              {/* HEADING */}
+              <div className="col-lg-12">
                 <div className="form-group">
-                  <label>Write Your Answer</label>
-                  <textarea
-                    id="review"
+                  <label>Heading</label>
+                  <input
+                    type="text"
+                    name="heading"
                     className="form-control"
-                    rows={5}
-                    placeholder="Write your answer here..."
+                    value={formData.heading}
+                    onChange={handleChange}
+                    placeholder="Enter Heading"
                     required
-                    defaultValue={""}
                   />
                 </div>
               </div>
-              <div className="col-lg-12 col-md-12">
-                <div className="super-dashboard-content-btn-info">
-                  <a
-                    href="super-admin-faq-list.html"
-                    className="super-dashboard-content-btn"
-                  >
-                    Update Content
-                  </a>
+
+              {/* SUB HEADING */}
+              <div className="col-lg-12">
+                <div className="form-group">
+                  <label>Sub Heading</label>
+                  <input
+                    type="text"
+                    name="subHeading"
+                    className="form-control"
+                    value={formData.subHeading}
+                    onChange={handleChange}
+                    placeholder="Enter Sub Heading"
+                  />
                 </div>
               </div>
+
+              {/* DESCRIPTION */}
+              <div className="col-lg-12">
+                <div className="form-group">
+                  <label>Description</label>
+                  <textarea
+                    name="description"
+                    className="form-control"
+                    rows="4"
+                    value={formData.description}
+                    onChange={handleChange}
+                    placeholder="Enter Description"
+                  ></textarea>
+                </div>
+              </div>
+
+              {/* FAQ QUESTION + ANSWER */}
+              {formData.faqs.map((faq, index) => (
+                <React.Fragment key={index}>
+                  <div className="col-lg-12">
+                    <div className="form-group">
+                      <label>Question</label>
+                      <input
+                        type="text"
+                        name="question"
+                        className="form-control"
+                        value={faq.question}
+                        onChange={(e) => handleFaqChange(index, e)}
+                        placeholder="Enter Question"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="col-lg-12">
+                    <div className="form-group">
+                      <label>Answer</label>
+                      <textarea
+                        name="answer"
+                        className="form-control"
+                        rows="4"
+                        value={faq.answer}
+                        onChange={(e) => handleFaqChange(index, e)}
+                        placeholder="Enter Answer"
+                        required
+                      ></textarea>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+
+              {/* ADD MORE FAQ */}
+              <div className="col-lg-12 mb-3">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={addFaq}
+                >
+                  + Add More FAQ
+                </button>
+              </div>
+
+              {/* SUBMIT */}
+              <div className="col-lg-12">
+                <button type="submit" className="super-dashboard-content-btn">
+                  Submit FAQ
+                </button>
+              </div>
             </div>
-          </div>
+          </form>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 

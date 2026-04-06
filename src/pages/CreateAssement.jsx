@@ -368,7 +368,12 @@ function CreateAssement() {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
       <section className="super-dashboard-content-wrapper">
-        <div className="super-dashboard-breadcrumb-info"></div>
+        <div className="super-dashboard-breadcrumb-info">
+          {" "}
+          <div className="super-dashboard-breadcrumb-info">
+            <h4>Assessment Management</h4>
+          </div>
+        </div>
         <div className="super-dashboard-common-heading">
           <h5 className="breadcrumb-heading">
             {/* Back icon → parent page */}
@@ -376,20 +381,6 @@ function CreateAssement() {
               <i className="fa-solid fa-angles-left" />
             </Link>
 
-            {/* Breadcrumb links */}
-            <Link to="/admin" className="breadcrumb-link">
-              Dashboard
-            </Link>
-
-            <span className="separator"> › </span>
-
-            <Link to="/admin/assessment-list" className="breadcrumb-link">
-              Assessments
-            </Link>
-
-            <span className="separator"> › </span>
-
-            {/* Active page */}
             <span className="active">
               {isEditMode ? "Update Assessment" : "Create Assessment"}
             </span>
@@ -727,8 +718,54 @@ function CreateAssement() {
                                 ? ["A", "B"]
                                 : ["A", "B", "C", "D"]
                               ).map((opt) => (
+                                // <div className="form-check" key={opt}>
+                                //   <input
+                                //     type={
+                                //       currentQuestion.questionType ===
+                                //       "multiple"
+                                //         ? "checkbox"
+                                //         : "radio"
+                                //     }
+                                //     className="form-check-input"
+                                //     checked={currentQuestion.correctAnswer.includes(
+                                //       opt,
+                                //     )}
+                                //     onChange={() => {
+                                //       setCurrentQuestion((prev) => {
+                                //         if (
+                                //           prev.questionType === "single" ||
+                                //           prev.questionType === "boolean"
+                                //         ) {
+                                //           return {
+                                //             ...prev,
+                                //             correctAnswer: [opt],
+                                //           };
+                                //         }
+
+                                //         const exists =
+                                //           prev.correctAnswer.includes(opt);
+                                //         return {
+                                //           ...prev,
+                                //           correctAnswer: exists
+                                //             ? prev.correctAnswer.filter(
+                                //                 (a) => a !== opt,
+                                //               )
+                                //             : [...prev.correctAnswer, opt],
+                                //         };
+                                //       });
+                                //     }}
+                                //   />
+                                //   <label className="form-check-label">
+                                //     {currentQuestion.questionType === "boolean"
+                                //       ? opt === "A"
+                                //         ? "True"
+                                //         : "False"
+                                //       : `Option ${opt}`}
+                                //   </label>
+                                // </div>
                                 <div className="form-check" key={opt}>
                                   <input
+                                    id={`correct-${opt}`}
                                     type={
                                       currentQuestion.questionType ===
                                       "multiple"
@@ -764,7 +801,12 @@ function CreateAssement() {
                                       });
                                     }}
                                   />
-                                  <label className="form-check-label">
+
+                                  <label
+                                    htmlFor={`correct-${opt}`}
+                                    className="form-check-label"
+                                    style={{ cursor: "pointer" }}
+                                  >
                                     {currentQuestion.questionType === "boolean"
                                       ? opt === "A"
                                         ? "True"

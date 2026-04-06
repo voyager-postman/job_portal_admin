@@ -10,11 +10,14 @@ import Swal from "sweetalert2";
 
 function ManageCandidates() {
   const [jobSeeker, setJobSeeker] = useState([]);
+  const [search, setSearch] = useState("");
+
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-
+  const [total, setTotal] = useState(0);
   const getImageUrl = (url) => {
     if (!url || url === "undefined") {
       return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -24,21 +27,21 @@ function ManageCandidates() {
     }
     return `${API_IMAGE_URL}${url}`;
   };
-
   const columns = [
     {
-      accessorKey: "sno",
-      header: "S.No",
-      cell: ({ row }) => (page - 1) * limit + row.index + 1,
+      Header: "S.No",
+      id: "sno",
+      Cell: ({ row }) => (page - 1) * limit + row.index + 1,
     },
+
     {
-      accessorKey: "profileImage",
-      header: "Img",
-      cell: ({ row }) => (
+      Header: "Img",
+      id: "profileImage",
+      Cell: ({ row }) => (
         <img
           src={getImageUrl(row.original.profileImage)}
-          width={45}
-          height={45}
+          width={30}
+          height={30}
           style={{ borderRadius: "50%" }}
           alt="candidate"
           onError={(e) => {
@@ -48,54 +51,55 @@ function ManageCandidates() {
         />
       ),
     },
+
     {
-      accessorKey: "name",
-      header: "Candidates Name",
-      accessorFn: (row) =>
+      Header: "Candidates Name",
+      accessor: (row) =>
         `${row.first_name || ""} ${row.last_name || ""}`.toLowerCase(),
-      cell: ({ row }) => (
+      id: "name",
+      Cell: ({ row }) => (
         <>
           {row.original.first_name || "Not Provided"}{" "}
           {row.original.last_name || ""}
         </>
       ),
     },
+
     {
-      accessorKey: "email",
-      header: "Email ID",
-      accessorFn: (row) => (row.email || "").toLowerCase(),
-      cell: ({ row }) => row.original.email || "Not Provided",
+      Header: "Email ID",
+      accessor: "email",
+      Cell: ({ row }) => row.original.email || "Not Provided",
     },
+
     {
-      accessorKey: "phone",
-      header: "Contact Number",
-      accessorFn: (row) => (row.phone || "").toLowerCase(),
-      cell: ({ row }) => row.original.phone || "Not Provided",
+      Header: "Contact Number",
+      accessor: "phone",
+      Cell: ({ row }) => row.original.phone || "Not Provided",
     },
+
     {
-      accessorKey: "country",
-      header: "Country",
-      accessorFn: (row) => (row.Nationality || "").toLowerCase(),
-      cell: ({ row }) => row.original.Nationality || "Not Provided",
+      Header: "Country",
+      accessor: "Nationality",
+      Cell: ({ row }) => row.original.Nationality || "Not Provided",
     },
+
     {
-      accessorKey: "home",
-      header: "Home",
-      cell: () => (
+      Header: "Home",
+      id: "home",
+      Cell: () => (
         <div className="super-admin-toggle-switch">
-          {" "}
           <label className="switch">
-            {" "}
-            <input type="checkbox" defaultChecked />{" "}
-            <span className="slider round"></span>{" "}
-          </label>{" "}
+            <input type="checkbox" defaultChecked />
+            <span className="slider round"></span>
+          </label>
         </div>
       ),
     },
+
     {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
+      Header: "Status",
+      id: "status",
+      Cell: ({ row }) => {
         const userId = row.original._id;
         const currentStatus = row.original.status;
 
@@ -110,7 +114,7 @@ function ManageCandidates() {
                 headers: {
                   Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
-              }
+              },
             );
 
             if (response.data.success) {
@@ -138,11 +142,13 @@ function ManageCandidates() {
         );
       },
     },
+
     {
-      accessorKey: "action",
-      header: "Action",
-      cell: ({ row }) => {
+      Header: "Action",
+      id: "action",
+      Cell: ({ row }) => {
         const candidateId = row.original._id;
+
         const handleDelete = () => {
           Swal.fire({
             title: "Are you sure?",
@@ -157,21 +163,19 @@ function ManageCandidates() {
               try {
                 const response = await axios.post(
                   `${API_BASE_URL}delete/candidate`,
-                  { candidateId }, // <-- Correct parameter
+                  { candidateId },
                   {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                  }
+                  },
                 );
 
                 if (response.data.success) {
                   toast.success("Candidate deleted successfully!");
                   fetchCandidates();
                 } else {
-                  toast.error(
-                    response.data.message || "Failed to delete candidate."
-                  );
+                  toast.error(response.data.message);
                 }
               } catch (err) {
                 toast.error("Something went wrong!");
@@ -190,6 +194,7 @@ function ManageCandidates() {
             >
               <i className="fa-solid fa-eye"></i>
             </Link>
+
             <i
               className="fa-solid fa-trash"
               style={{ cursor: "pointer", marginLeft: "10px" }}
@@ -200,26 +205,205 @@ function ManageCandidates() {
       },
     },
   ];
+  // const columns = [
+  //   {
+  //     accessorKey: "sno",
+  //     header: "S.No",
+  //     cell: ({ row }) => (page - 1) * limit + row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "profileImage",
+  //     header: "Img",
+  //     cell: ({ row }) => (
+  //       <img
+  //         src={getImageUrl(row.original.profileImage)}
+  //         width={45}
+  //         height={45}
+  //         style={{ borderRadius: "50%" }}
+  //         alt="candidate"
+  //         onError={(e) => {
+  //           e.currentTarget.src =
+  //             "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  //         }}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Candidates Name",
+  //     accessorFn: (row) =>
+  //       `${row.first_name || ""} ${row.last_name || ""}`.toLowerCase(),
+  //     cell: ({ row }) => (
+  //       <>
+  //         {row.original.first_name || "Not Provided"}{" "}
+  //         {row.original.last_name || ""}
+  //       </>
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "email",
+  //     header: "Email ID",
+  //     accessorFn: (row) => (row.email || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.email || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "phone",
+  //     header: "Contact Number",
+  //     accessorFn: (row) => (row.phone || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.phone || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "country",
+  //     header: "Country",
+  //     accessorFn: (row) => (row.Nationality || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.Nationality || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "home",
+  //     header: "Home",
+  //     cell: () => (
+  //       <div className="super-admin-toggle-switch">
+  //         {" "}
+  //         <label className="switch">
+  //           {" "}
+  //           <input type="checkbox" defaultChecked />{" "}
+  //           <span className="slider round"></span>{" "}
+  //         </label>{" "}
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "status",
+  //     header: "Status",
+  //     cell: ({ row }) => {
+  //       const userId = row.original._id;
+  //       const currentStatus = row.original.status;
+
+  //       const handleStatusChange = async (e) => {
+  //         const newStatus = e.target.checked ? "Active" : "Inactive";
+
+  //         try {
+  //           const response = await axios.post(
+  //             `${API_BASE_URL}admin/jobSeekerStatus`,
+  //             { userId, status: newStatus },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //               },
+  //             },
+  //           );
+
+  //           if (response.data.success) {
+  //             toast.success(response.data.message);
+  //             fetchCandidates();
+  //           } else {
+  //             toast.error(response.data.message);
+  //           }
+  //         } catch (err) {
+  //           toast.error("Something went wrong!");
+  //         }
+  //       };
+
+  //       return (
+  //         <div className="super-admin-toggle-switch">
+  //           <label className="switch">
+  //             <input
+  //               type="checkbox"
+  //               checked={currentStatus === "Active"}
+  //               onChange={handleStatusChange}
+  //             />
+  //             <span className="slider round"></span>
+  //           </label>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     accessorKey: "action",
+  //     header: "Action",
+  //     cell: ({ row }) => {
+  //       const candidateId = row.original._id;
+  //       const handleDelete = () => {
+  //         Swal.fire({
+  //           title: "Are you sure?",
+  //           text: "You won't be able to revert this!",
+  //           icon: "warning",
+  //           showCancelButton: true,
+  //           confirmButtonColor: "#3085d6",
+  //           cancelButtonColor: "#d33",
+  //           confirmButtonText: "Yes, delete it!",
+  //         }).then(async (result) => {
+  //           if (result.isConfirmed) {
+  //             try {
+  //               const response = await axios.post(
+  //                 `${API_BASE_URL}delete/candidate`,
+  //                 { candidateId }, // <-- Correct parameter
+  //                 {
+  //                   headers: {
+  //                     Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //                   },
+  //                 },
+  //               );
+
+  //               if (response.data.success) {
+  //                 toast.success("Candidate deleted successfully!");
+  //                 fetchCandidates();
+  //               } else {
+  //                 toast.error(
+  //                   response.data.message || "Failed to delete candidate.",
+  //                 );
+  //               }
+  //             } catch (err) {
+  //               toast.error("Something went wrong!");
+  //             }
+  //           }
+  //         });
+  //       };
+
+  //       return (
+  //         <div className="super-admin-action-icons">
+  //           <Link
+  //             to="/admin/candidate-details"
+  //             state={{
+  //               candidateProfileId: row.original.candidateProfile?.userId,
+  //             }}
+  //           >
+  //             <i className="fa-solid fa-eye"></i>
+  //           </Link>
+  //           <i
+  //             className="fa-solid fa-trash"
+  //             style={{ cursor: "pointer", marginLeft: "10px" }}
+  //             onClick={handleDelete}
+  //           ></i>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  // ];
 
   // Fetch Data with page + limit
   const fetchCandidates = async () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${API_BASE_URL}admin/jobseekers?page=${page}&limit=${limit}`
+        `${API_BASE_URL}admin/jobseekers?page=${page}&limit=${limit}&search=${debouncedSearch}`,
       );
       setJobSeeker(response.data.data || []);
       setTotalPages(response.data.totalPages || 1);
+      setTotal(response.data.total || 0);
+      setLimit(response.data.total || 0);
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
     }
   };
-
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
   useEffect(() => {
     fetchCandidates();
-  }, [page, limit]);
+  }, [page, limit, debouncedSearch]);
 
   // Export Excel
   const exportAllCandidates = async () => {
@@ -231,7 +415,7 @@ function ManageCandidates() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       const totalPages = firstCall.data.totalPages;
@@ -245,7 +429,7 @@ function ManageCandidates() {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         allCandidates = [...allCandidates, ...res.data.data];
@@ -278,13 +462,19 @@ function ManageCandidates() {
       toast.error("Failed to export all data!");
     }
   };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 400);
 
+    return () => clearTimeout(timer);
+  }, [search]);
   return (
     <>
       <ToastContainer />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Manage Candidate</h4>
+          <h4>Candidate Management</h4>
         </div>
 
         <div className="super-dashboard-common-heading">
@@ -292,12 +482,19 @@ function ManageCandidates() {
             <Link to="/admin/">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Candidate List
+            Candidates
           </h5>
         </div>
 
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
-          <div className="common-fillter-select-area">
+          <div
+            className="common-fillter-select-area"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "flex-end",
+            }}
+          >
             <div className="data-export-btn-info">
               <button className="data-export-btn" onClick={exportAllCandidates}>
                 Export Data
@@ -305,7 +502,7 @@ function ManageCandidates() {
             </div>
           </div>
 
-          <div className="table-responsive">
+          <div className="table-responsive-data-table">
             {loading ? (
               <div className="d-flex justify-content-center py-5">
                 <div className="spinner-border text-primary"></div>
@@ -315,45 +512,13 @@ function ManageCandidates() {
                 <TableView
                   columns={columns}
                   data={jobSeeker}
+                  page={page}
+                  setPage={setPage}
                   limit={limit}
-                  setLimit={(value) => {
-                    setLimit(value);
-                    setPage(1);
-                  }}
+                  setLimit={setLimit}
+                  totalPages={totalPages}
+                  total={total}
                 />
-
-                {/* PAGINATION BUTTONS */}
-                <div className="d-flex justify-content-center mt-3">
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Prev
-                  </button>
-
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index}
-                      className={`btn btn-sm mx-1 ${
-                        page === index + 1
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
-                      onClick={() => setPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
               </>
             )}
           </div>

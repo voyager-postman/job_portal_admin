@@ -59,6 +59,18 @@ import ManageAssementList from "./pages/ManageAssementList";
 import CreateAssement from "./pages/CreateAssement";
 import ForgotPassword from "./pages/ForgotPassword";
 import ViewAssement from "./pages/ViewAssement";
+import UpdateBlog from "./pages/UpdateBlog";
+import ViewInvoice from "./pages/ViewInvoice";
+import AdminCreditManagement from "./pages/AdminCreditManagement";
+import InvoiceManagement from "./pages/InvoiceManagement";
+import NotificationsList from "./pages/NotificationsList";
+import CreateNotification from "./pages/CreateNotification";
+import PurchaseHistory from "./pages/PurchaseHistory";
+import EditInvoice from "./pages/EditInvoice";
+import AllInvoiceList from "./pages/AllInvoiceList";
+import NotificationGovernance from "./pages/NotificationGovernance";
+import ContactMessage from "./pages/ContactMessage";
+import EmployeerHomeContent from "./pages/CmsPages/EmployeerHomeContent";
 function App() {
   return (
     <div className="App">
@@ -74,6 +86,15 @@ function App() {
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="manage-recruiter" element={<ManageUsers />} />
           <Route path="add-employer" element={<AddEmployer />} />
+          <Route path="notification-template" element={<NotificationsList />} />
+          <Route
+            path="notification-governance"
+            element={<NotificationGovernance />}
+          />
+          <Route
+            path="create-notification/:id"
+            element={<CreateNotification />}
+          />{" "}
           <Route path="manage-candidates" element={<ManageCandidates />} />
           <Route path="recruiter-list" element={<RecruiterList />} />
           <Route path="company-active-job" element={<CompanyActiveJob />} />
@@ -81,13 +102,21 @@ function App() {
             path="employer-subscription"
             element={<EmployerSubscription />}
           />
-          <Route path="manage-blog" element={<ManageBlog />} />
           <Route
             path="complete-company-details"
             element={<CompanyCompleteDetails />}
           />
+          <Route
+            path="company-purchase-history"
+            element={<PurchaseHistory />}
+          />
+          <Route path="manage-blog" element={<ManageBlog />} />
+          <Route path="contact-messages" element={<ContactMessage />} />
           <Route path="manage-faq" element={<ManageFaq />} />
+          <Route path="all-invoice-list" element={<InvoiceManagement />} />
+          <Route path="invoice-list" element={<AllInvoiceList />} />
           <Route path="add-blog" element={<AddBlog />} />
+          <Route path="update-blog/:id" element={<UpdateBlog />} />
           <Route path="add-faq" element={<AddFaq />} />
           <Route path="super-admin-pack-details" element={<PackDetails />} />
           <Route path="manage-category" element={<ManageCategory />} />
@@ -100,6 +129,7 @@ function App() {
             path="manage-skill-categories"
             element={<ManageSkillCategory />}
           />
+          <Route path="/admin/edit-invoice/:id" element={<EditInvoice />} />
           <Route path="manage-question-bank" element={<ManageQuestionBank />} />
           <Route path="assessment-list" element={<ManageAssementList />} />
           <Route path="create-assessment" element={<CreateAssement />} />
@@ -125,6 +155,7 @@ function App() {
             path="super-admin-pack-creations-form"
             element={<AddPackCreation />}
           />
+          <Route path="view-invoice/:invoiceId" element={<ViewInvoice />} />{" "}
           <Route
             path="/admin/super-admin-pack-creations-form/:packId?"
             element={<AddPackCreation />}
@@ -134,9 +165,14 @@ function App() {
             element={<PlanSubscriberList />}
           />
           <Route path="industry-sector" element={<IndustrySector />} />
+          <Route path="credit-management" element={<AdminCreditManagement />} />
           <Route path="company" element={<Company />} />
           <Route path="seniority-level" element={<SeniorityLevel />} />
           <Route path="home-page-content" element={<HomePageContent />} />
+          <Route
+            path="employer-home-page-content"
+            element={<EmployeerHomeContent />}
+          />
           <Route path="employer_faq" element={<EmployerFAQ />} />
           <Route path="jobSeeker_faq" element={<EmployeeFAQ />} />
           <Route path="about-page-content" element={<AboutContent />} />

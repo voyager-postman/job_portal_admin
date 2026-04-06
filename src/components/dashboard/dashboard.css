@@ -176,7 +176,7 @@ tr {
   }
 
   .super-dashboard-content-wrapper {
-    margin-left: 30px !important;
+    /* margin-left: 30px !important; */
   }
 
   .sidebar-toggle-btn {
@@ -277,6 +277,10 @@ tr {
   overflow: auto;
 }
 
+/* .Recruiter-analytics-table2 {
+  overflow: auto;
+} */
+
 .users-recruiters-analytics-table {
   width: 49%;
   background: #fff;
@@ -319,11 +323,7 @@ tr {
 }
 
 /* Table Css Start here  */
-.information_dataTables table tbody tr td {
-  font-size: 14px;
-  color: #000;
-  font-weight: 600;
-}
+
 .my-profile-area .profile-form-content {
   background-color: #ffffff;
   margin-bottom: 30px;
@@ -433,9 +433,9 @@ tr {
 .default-btn {
   background-color: #0066cc;
   color: #ffffff;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: 500;
-  padding: 10px 10px;
+  padding: 10px 7px;
   border-radius: 5px;
   position: relative;
   text-align: center;

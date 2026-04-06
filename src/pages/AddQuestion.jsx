@@ -231,7 +231,7 @@ function AddQuestion() {
       <ToastContainer position="top-right" autoClose={3000} />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>{isEditMode ? "Update" : "Create"} Skill Assessment Question</h4>
+          <h4>{isEditMode ? "Update Question" : "Create New Question"}</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5 className="breadcrumb-heading">
@@ -242,23 +242,10 @@ function AddQuestion() {
 
             {/* Breadcrumb links */}
             <Link to="/admin" className="breadcrumb-link">
-              Dashboard
+              Question Bank
             </Link>
-
-           
-
-          
-
-            <span className="separator"> › </span>
-
-            <Link to="/admin/manage-question-bank" className="breadcrumb-link">
-              Questions
-            </Link>
-
-            <span className="separator"> › </span>
 
             {/* Active page */}
-            <span className="active">Add Question</span>
           </h5>
         </div>
 

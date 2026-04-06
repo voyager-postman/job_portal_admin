@@ -259,9 +259,9 @@ const MyProfile = () => {
           </div>
 
           <div className="col-12 my-3 text-center">
-            <Button variant="contained" onClick={handleSubmit}>
+            <button className="default-btn btn btn-primary" onClick={handleSubmit}>
               Update Profile
-            </Button>
+            </button>
           </div>
         </div>
       </div>

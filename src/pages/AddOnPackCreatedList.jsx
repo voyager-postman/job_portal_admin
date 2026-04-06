@@ -6,6 +6,8 @@ import { API_BASE_URL } from "../Url/Url";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import "react-toastify/dist/ReactToastify.css";
+import { Tooltip } from "antd";
+
 function AddOnPackCreatedList() {
   const [addOns, setAddOns] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,27 +16,197 @@ function AddOnPackCreatedList() {
   const [totalPages, setTotalPages] = useState(1);
 
   /* ================= TABLE COLUMNS ================= */
+  // const columns = [
+  //   {
+  //     header: "S.No",
+  //     cell: ({ row }) => row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Add On Pack Name",
+  //   },
+  //   {
+  //     header: "Type",
+  //     cell: ({ row }) => {
+  //       const type = row.original.type;
+
+  //       let badgeClass = "bg-secondary";
+  //       let label = "Unknown";
+
+  //       if (type === "BOTH") {
+  //         badgeClass = "bg-primary";
+  //         label = "Job + Profile Credits";
+  //       } else if (type === "JOB") {
+  //         badgeClass = "bg-warning text-dark";
+  //         label = "Job Posting Credits";
+  //       } else if (type === "CV") {
+  //         badgeClass = "bg-success";
+  //         label = "Profile Viewing Credits";
+  //       }
+
+  //       return <span className={`badge ${badgeClass}`}>{label}</span>;
+  //     },
+  //   },
+  //   {
+  //     header: "Credits",
+  //     cell: ({ row }) => {
+  //       const jobCredits = row.original?.jobPostingCredits ?? 0;
+  //       const profileCredits = row.original?.profileViewingCredits ?? 0;
+
+  //       return (
+  //         <Tooltip
+  //           title={`Job Posting Credits: ${jobCredits} | CV Viewing Credits: ${profileCredits}`}
+  //           placement="top"
+  //           arrow
+  //         >
+  //           <span style={{ cursor: "pointer", fontWeight: 500 }}>
+  //             {jobCredits}p / {profileCredits}v
+  //           </span>
+  //         </Tooltip>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     header: "Created Date",
+  //     cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+  //   },
+  //   {
+  //     header: "Online Pay",
+  //     cell: ({ row }) => {
+  //       const paymentMode = row.original?.paymentMode;
+
+  //       return (
+  //         <span
+  //           className={`badge ${
+  //             paymentMode === "Online" ? "bg-success" : "bg-secondary"
+  //           }`}
+  //         >
+  //           {paymentMode === "Online" ? "Yes" : "No"}
+  //         </span>
+  //       );
+  //     },
+  //   },
+
+  //   {
+  //     header: "Status",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-toggle-switch">
+  //         <label className="switch">
+  //           <input
+  //             type="checkbox"
+  //             checked={row.original.isActive}
+  //             onChange={() =>
+  //               toggleStatus(row.original._id, row.original.isActive)
+  //             }
+  //           />
+  //           <span className="slider round" />
+  //         </label>
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     header: "Actions",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-action-icons">
+  //         <Link
+  //           to="/admin/super-admin-add-on-pack-create-form"
+  //           state={{ addOnData: row.original }}
+  //         >
+  //           <i className="fa-solid fa-pen" />
+  //         </Link>
+
+  //         {/* <Link
+  //           to="/admin/super-admin-add-on-pack-details"
+  //           state={{ addOnData: row.original }}
+  //         >
+  //           <i className="fa-solid fa-eye" />
+  //         </Link> */}
+
+  //         <a
+  //           href="#"
+  //           onClick={(e) => {
+  //             e.preventDefault();
+  //             deleteAddOn(row.original._id);
+  //           }}
+  //         >
+  //           <i className="fa-solid fa-trash" />
+  //         </a>
+  //       </div>
+  //     ),
+  //   },
+  // ];
   const columns = [
     {
-      header: "S.No",
-      cell: ({ row }) => row.index + 1,
+      Header: "S.No",
+      id: "index",
+      Cell: ({ row }) => row.index + 1,
     },
     {
-      accessorKey: "name",
-      header: "Add On Pack Name",
+      Header: "Add On Pack Name",
+      accessor: "name",
     },
     {
-      header: "Validity",
-      cell: ({ row }) =>
-        `${row.original.validityValue} ${row.original.validityUnit}`,
+      Header: "Type",
+      Cell: ({ row }) => {
+        const type = row.original.type;
+
+        let badgeClass = "bg-secondary";
+        let label = "Unknown";
+
+        if (type === "BOTH") {
+          badgeClass = "bg-primary";
+          label = "Job + Profile Credits";
+        } else if (type === "JOB") {
+          badgeClass = "bg-warning text-dark";
+          label = "Job Posting Credits";
+        } else if (type === "CV") {
+          badgeClass = "bg-success";
+          label = "Profile Viewing Credits";
+        }
+
+        return <span className={`badge ${badgeClass}`}>{label}</span>;
+      },
     },
     {
-      header: "Created Date",
-      cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+      Header: "Credits",
+      Cell: ({ row }) => {
+        const jobCredits = row.original?.jobPostingCredits ?? 0;
+        const profileCredits = row.original?.profileViewingCredits ?? 0;
+
+        return (
+          <Tooltip
+            title={`Job Posting Credits: ${jobCredits} | CV Viewing Credits: ${profileCredits}`}
+          >
+            <span style={{ cursor: "pointer", fontWeight: 500 }}>
+              {jobCredits}p / {profileCredits}v
+            </span>
+          </Tooltip>
+        );
+      },
     },
     {
-      header: "Status",
-      cell: ({ row }) => (
+      Header: "Created Date",
+      Cell: ({ row }) => new Date(row.original.createdAt).toLocaleDateString(),
+    },
+    {
+      Header: "Online Pay",
+      Cell: ({ row }) => {
+        const paymentMode = row.original?.paymentMode;
+
+        return (
+          <span
+            className={`badge ${
+              paymentMode === "Online" ? "bg-success" : "bg-secondary"
+            }`}
+          >
+            {paymentMode === "Online" ? "Yes" : "No"}
+          </span>
+        );
+      },
+    },
+    {
+      Header: "Status",
+      Cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
@@ -50,8 +222,8 @@ function AddOnPackCreatedList() {
       ),
     },
     {
-      header: "Actions",
-      cell: ({ row }) => (
+      Header: "Actions",
+      Cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <Link
             to="/admin/super-admin-add-on-pack-create-form"
@@ -59,13 +231,6 @@ function AddOnPackCreatedList() {
           >
             <i className="fa-solid fa-pen" />
           </Link>
-
-          {/* <Link
-            to="/admin/super-admin-add-on-pack-details"
-            state={{ addOnData: row.original }}
-          >
-            <i className="fa-solid fa-eye" />
-          </Link> */}
 
           <a
             href="#"
@@ -80,22 +245,17 @@ function AddOnPackCreatedList() {
       ),
     },
   ];
-
   /* ================= FETCH ADD-ONS ================= */
   const fetchAddOns = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(
-        `${API_BASE_URL}/getAllAddOns?page=${page}&limit=${limit}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const res = await axios.get(`${API_BASE_URL}/getAllAddOns`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
 
       setAddOns(res.data.data || []);
-      setTotalPages(res.data.totalPages || 1); // safe fallback
     } catch (error) {
       console.error(error);
       toast.error("Failed to load add-on packs");
@@ -118,11 +278,11 @@ function AddOnPackCreatedList() {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       toast.success(
-        `Add-on pack ${currentStatus ? "deactivated" : "activated"}`
+        `Add-on pack ${currentStatus ? "deactivated" : "activated"}`,
       );
       fetchAddOns();
     } catch (error) {
@@ -151,7 +311,7 @@ function AddOnPackCreatedList() {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
               },
-            }
+            },
           );
 
           toast.success("Add-on pack deleted successfully");
@@ -169,20 +329,20 @@ function AddOnPackCreatedList() {
       <ToastContainer position="top-right" autoClose={3000} />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Add On Pack List </h4>
+          <h4>Add-On Packages </h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5>
             <Link to="/admin/super-admin-pack-creations">
               <i className="fa-solid fa-angles-left" />
             </Link>
-            Add On Pack Management
+            Add-On Package Management
           </h5>
           <Link
             to="/admin/super-admin-add-on-pack-create-form"
             className="default-btn btn btn-primary"
           >
-            + Create Add On Pack
+            + Add Add-On Package
           </Link>
         </div>
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
@@ -193,48 +353,10 @@ function AddOnPackCreatedList() {
               </div>
             ) : (
               <>
-                <TableView
-                  columns={columns}
-                  data={addOns}
-                  limit={limit}
-                  setLimit={(value) => {
-                    setLimit(value);
-                    setPage(1);
-                  }}
-                />
+                <TableView columns={columns} data={addOns} />
 
                 {/* PAGINATION */}
-                <div className="d-flex justify-content-center mt-3">
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Prev
-                  </button>
-
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index}
-                      className={`btn btn-sm mx-1 ${
-                        page === index + 1
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
-                      onClick={() => setPage(index + 1)}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
+               
               </>
             )}
           </div>

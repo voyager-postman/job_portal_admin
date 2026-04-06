@@ -7,30 +7,86 @@ import axios from "axios";
 import { ToastContainer } from "react-toastify";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import dayjs from "dayjs";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const CompanyCompleteDetails = () => {
   const location = useLocation();
+  const [selectedSubscriber, setSelectedSubscriber] = useState(null);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [loading, setLoading] = useState(false);
   const companyProfileId = location?.state?.companyProfileId;
   const companyDataId = location?.state?.companyProfileId;
   const companyActiveId = location?.state?.companyProfileId;
   const companyActiveIdSub = location?.state?.companyProfileId;
   const companyDetailsData = location?.state?.companyDetails;
-  console.log(companyProfileId);
-  console.log(companyDataId);
-  console.log(companyDetailsData?.companyId?.logo);
-  console.log(companyActiveId);
-  console.log(companyDetailsData);
+
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [loadingWelcome, setLoadingWelcome] = useState(false);
   const [welcomePack, setWelcomePack] = useState({
     jobPosting: 0,
     profileViewing: 0,
+    dailyJobLimit: 2,
+    dailyProfileLimit: 20,
     expiresAt: "",
-    resetDailyUsage: true,
   });
+  const [creditStatus, setCreditStatus] = useState({
+    totalJobCredits: 0,
+    totalProfileCredits: 0,
+    dailyJobLimit: 0,
+    dailyProfileLimit: 0,
+    jobsUsedToday: 0,
+    profilesViewedToday: 0,
+    expiresAt: null,
+  });
+  const [managePack, setManagePack] = useState({
+    companyPackId: "",
+    addJobCredits: 0,
+    addProfileCredits: 0,
+    removeJobCredits: 0,
+    removeProfileCredits: 0,
+    extendDays: 0,
+    cancelExpiry: false,
+    dailyJobPostingLimit: 0,
+    dailyProfileViewingLimit: 0,
+  });
+
+  useEffect(() => {
+    if (companyProfileId) {
+      fetchCreditStatus();
+      getCompanyDashboard();
+    }
+  }, [companyProfileId]);
+  const fetchCreditStatus = async () => {
+    try {
+      if (!companyProfileId) return;
+
+      const res = await axios.get(
+        `${API_BASE_URL}credit-status?companyId=${companyProfileId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      const data = res.data.data;
+
+      setCreditStatus({
+        totalJobCredits: data?.welcomePack?.totalJobCredits ?? 0,
+        totalProfileCredits: data?.welcomePack?.totalProfileCredits ?? 0,
+        dailyJobLimit: data?.welcomePack?.dailyJobLimit ?? 0,
+        dailyProfileLimit: data?.welcomePack?.dailyProfileLimit ?? 0,
+        jobsUsedToday: data?.jobsUsedToday ?? 0,
+        profilesViewedToday: data?.profilesViewedToday ?? 0,
+        expiresAt: data?.welcomePack?.expiresAt ?? null,
+      });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load credit status");
+    }
+  };
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
   const barCanvasRef = useRef(null);
@@ -41,72 +97,118 @@ const CompanyCompleteDetails = () => {
   const creditChartRef = useRef(null);
   const [activeTab, setActiveTab] = useState("daily");
 
+  // useEffect(() => {
+  //   if (!barCanvasRef.current) return;
+
+  //   if (barChartRef.current) {
+  //     barChartRef.current.destroy();
+  //   }
+
+  //   barChartRef.current = new Chart(barCanvasRef.current, {
+  //     type: "bar",
+  //     data: {
+  //       labels: ["22", "23", "24", "25", "26"],
+  //       datasets: [
+  //         {
+  //           label: "Job Offers",
+  //           data: [65, 95, 125, 155, 85],
+  //           backgroundColor: "#4f86f7",
+  //           borderRadius: 6,
+  //           barThickness: 25, // exact px width
+  //           maxBarThickness: 30, // limit max
+  //           categoryPercentage: 0.6, // spacing between bars
+  //           barPercentage: 0.7, // bar width inside category
+  //         },
+  //       ],
+  //     },
+  //     options: {
+  //       responsive: true,
+  //       maintainAspectRatio: false,
+  //       scales: { y: { beginAtZero: true } },
+  //     },
+  //   });
+
+  //   return () => {
+  //     barChartRef.current?.destroy();
+  //     barChartRef.current = null;
+  //   };
+  // }, []);
   useEffect(() => {
-    if (!barCanvasRef.current) return;
+    if (!barCanvasRef.current || !dashboardData) return;
 
     if (barChartRef.current) {
       barChartRef.current.destroy();
     }
 
+    const labels = dashboardData.jobGraphData?.map((item) => item.x);
+    const values = dashboardData.jobGraphData?.map((item) => item.y);
+
     barChartRef.current = new Chart(barCanvasRef.current, {
       type: "bar",
       data: {
-        labels: ["22", "23", "24", "25", "26"],
+        labels: labels,
         datasets: [
           {
             label: "Job Offers",
-            data: [65, 95, 125, 155, 85],
+            data: values,
             backgroundColor: "#4f86f7",
             borderRadius: 6,
-            barThickness: 25, // exact px width
-            maxBarThickness: 30, // limit max
-            categoryPercentage: 0.6, // spacing between bars
-            barPercentage: 0.7, // bar width inside category
+            barThickness: 25,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: { y: { beginAtZero: true } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: dashboardData?.graphMeta?.max || 10,
+          },
+        },
       },
     });
 
     return () => {
       barChartRef.current?.destroy();
-      barChartRef.current = null;
     };
-  }, []);
-
-  const chartData = {
-    daily: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      data: [5, 15, 8, 22, 14, 28, 35],
-    },
-    weekly: {
-      labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
-      data: [120, 180, 150, 220],
-    },
-    monthly: {
-      labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-      data: [400, 520, 480, 600, 750, 900],
-    },
+  }, [dashboardData]);
+  const chartData = dashboardData?.creditGraphs || {};
+  // const chartData = {
+  //   daily: {
+  //     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  //     data: [5, 15, 8, 22, 14, 28, 35],
+  //   },
+  //   weekly: {
+  //     labels: ["Week 1", "Week 2", "Week 3", "Week 4"],
+  //     data: [120, 180, 150, 220],
+  //   },
+  //   monthly: {
+  //     labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
+  //     data: [400, 520, 480, 600, 750, 900],
+  //   },
+  // };
+  const closeModal = () => {
+    setSelectedSubscriber(null);
+    setCreditAmount("");
   };
-
   useEffect(() => {
-    if (!lineCanvasRef.current) return;
+    if (!lineCanvasRef.current || !chartData[activeTab]) return;
 
     if (lineChartRef.current) {
       lineChartRef.current.destroy();
     }
 
+    const labels = chartData[activeTab].map((item) => item.x);
+    const values = chartData[activeTab].map((item) => item.y);
+
     lineChartRef.current = new Chart(lineCanvasRef.current, {
       type: "line",
       data: {
-        labels: chartData[activeTab].labels,
+        labels: labels,
         datasets: [
           {
-            data: chartData[activeTab].data,
+            data: values,
             borderColor: "#2f80ed",
             backgroundColor: "rgba(47,128,237,0.15)",
             fill: true,
@@ -125,10 +227,102 @@ const CompanyCompleteDetails = () => {
 
     return () => {
       lineChartRef.current?.destroy();
-      lineChartRef.current = null;
     };
-  }, [activeTab]);
+  }, [activeTab, dashboardData]);
+  // useEffect(() => {
+  //   if (!lineCanvasRef.current) return;
 
+  //   if (lineChartRef.current) {
+  //     lineChartRef.current.destroy();
+  //   }
+
+  //   lineChartRef.current = new Chart(lineCanvasRef.current, {
+  //     type: "line",
+  //     data: {
+  //       labels: chartData[activeTab].labels,
+  //       datasets: [
+  //         {
+  //           data: chartData[activeTab].data,
+  //           borderColor: "#2f80ed",
+  //           backgroundColor: "rgba(47,128,237,0.15)",
+  //           fill: true,
+  //           tension: 0.4,
+  //           pointRadius: 5,
+  //         },
+  //       ],
+  //     },
+  //     options: {
+  //       responsive: true,
+  //       maintainAspectRatio: false,
+  //       plugins: { legend: { display: false } },
+  //       scales: { y: { beginAtZero: true } },
+  //     },
+  //   });
+
+  //   return () => {
+  //     lineChartRef.current?.destroy();
+  //     lineChartRef.current = null;
+  //   };
+  // }, [activeTab]);
+  const openManageModal = async () => {
+    try {
+      const companyId = location?.state?.companyProfileId;
+
+      const res = await axios.get(
+        `${API_BASE_URL}credit-status?companyId=${companyId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      const pack = res.data.data.purchasedPack;
+
+      if (!pack) {
+        toast.error("No purchased pack found");
+        return;
+      }
+
+      setManagePack({
+        companyPackId: pack.companyPackId,
+        addJobCredits: 0,
+        addProfileCredits: 0,
+        removeJobCredits: 0,
+        removeProfileCredits: 0,
+        extendDays: 0,
+        cancelExpiry: false,
+        dailyJobPostingLimit: pack.dailyJobLimit,
+        dailyProfileViewingLimit: pack.dailyProfileLimit,
+      });
+
+      setSelectedSubscriber(pack); // to open modal
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load subscription");
+    }
+  };
+  const updateSubscription = async () => {
+    try {
+      await axios.post(
+        `${API_BASE_URL}updateCompanyPackAdmin/${managePack.companyPackId}`,
+        managePack,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+
+      toast.success("Subscription updated successfully");
+
+      setSelectedSubscriber(null);
+      fetchCreditStatus();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update subscription");
+    }
+  };
   useEffect(() => {
     if (!creditCanvasRef.current) return;
 
@@ -174,6 +368,7 @@ const CompanyCompleteDetails = () => {
   const openWelcomePackModal = async () => {
     try {
       const companyId = location?.state?.companyProfileId;
+
       const res = await axios.get(
         `${API_BASE_URL}credit-status?companyId=${companyId}`,
         {
@@ -182,24 +377,73 @@ const CompanyCompleteDetails = () => {
           },
         },
       );
-      const d = res.data.data;
+
+      const d = res.data.data.welcomePack;
+
       setWelcomePack({
-        jobPosting: d.totalJobPostingCredits,
-        profileViewing: d.totalProfileViewingCredits,
-        expiresAt: d.expiresAt ? d.expiresAt.slice(0, 10) : null,
+        jobPosting: d?.totalJobCredits ?? 0,
+        profileViewing: d?.totalProfileCredits ?? 0,
+        dailyJobLimit: d?.dailyJobLimit ?? 2,
+        dailyProfileLimit: d?.dailyProfileLimit ?? 20,
+        expiresAt: d?.expiresAt ? d.expiresAt.slice(0, 10) : "",
         resetDailyUsage: true,
       });
 
       setShowWelcomeModal(true);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update Welcome Pack");
+      toast.error("Failed to load Welcome Pack");
     }
   };
+  const validateWelcomePack = () => {
+    const {
+      jobPosting,
+      profileViewing,
+      dailyJobLimit,
+      dailyProfileLimit,
+      expiresAt,
+    } = welcomePack;
 
+    // Convert to numbers
+    const jobCredits = Number(jobPosting);
+    const profileCredits = Number(profileViewing);
+    const dailyJob = Number(dailyJobLimit);
+    const dailyProfile = Number(dailyProfileLimit);
+
+    if (jobCredits < 0 || profileCredits < 0) {
+      toast.error("Credits cannot be negative");
+      return false;
+    }
+
+    if (dailyJob <= 0 || dailyProfile <= 0) {
+      toast.error("Daily limits must be greater than 0");
+      return false;
+    }
+
+    if (jobCredits === 0 && profileCredits === 0) {
+      toast.error("At least one credit must be greater than 0");
+      return false;
+    }
+
+    if (expiresAt) {
+      const selectedDate = new Date(expiresAt);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedDate < today) {
+        toast.error("Expiry date cannot be in the past");
+        return false;
+      }
+    }
+
+    return true;
+  };
   const submitWelcomePack = async () => {
+    if (!validateWelcomePack()) return;
+
     try {
       setLoadingWelcome(true);
+
       const companyId =
         companyProfileId ||
         companyActiveId ||
@@ -211,8 +455,9 @@ const CompanyCompleteDetails = () => {
         {
           jobPosting: Number(welcomePack.jobPosting),
           profileViewing: Number(welcomePack.profileViewing),
-          expiresAt: welcomePack.expiresAt,
-          resetDailyUsage: welcomePack.resetDailyUsage,
+          dailyJobLimit: Number(welcomePack.dailyJobLimit),
+          dailyProfileLimit: Number(welcomePack.dailyProfileLimit),
+          expiresAt: welcomePack.expiresAt || null,
         },
         {
           headers: {
@@ -221,8 +466,8 @@ const CompanyCompleteDetails = () => {
         },
       );
 
-      setShowWelcomeModal(false);
       toast.success("Welcome Pack updated successfully");
+      setShowWelcomeModal(false);
     } catch (err) {
       console.error(err);
       toast.error("Failed to update Welcome Pack");
@@ -254,6 +499,24 @@ const CompanyCompleteDetails = () => {
     // ✅ Local uploaded image
     return `${API_IMAGE_URL}${url}`;
   };
+  const getCompanyDashboard = async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.get(`${API_BASE_URL}getCompanyDashboard`, {
+        params: { companyId: companyProfileId }, // ✅ query parameter
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setDashboardData(data?.data || {});
+    } catch (error) {
+      console.error("Error fetching company dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -261,6 +524,14 @@ const CompanyCompleteDetails = () => {
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
           <h4>Company Details</h4>
+        </div>
+        <div className="super-dashboard-common-heading">
+          <h5>
+            <Link to="/admin/manage-recruiter">
+              <i className="fa-solid fa-angles-left" />
+            </Link>
+            Company Details
+          </h5>
         </div>
         <div className="super-dashboard-detail-info">
           <div className="super-dashboard-common-heading">
@@ -271,7 +542,7 @@ const CompanyCompleteDetails = () => {
                   src={cleanImageUrl(companyDetailsData?.companyId?.logo)}
                   alt="logo"
                 />
-                &nbsp; Complete Company Details
+                &nbsp; Company Details
               </h5>
             </div>
             <div className="company-button-info-area">
@@ -286,7 +557,15 @@ const CompanyCompleteDetails = () => {
                   Welcome Pack
                 </a>
               )}
-
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  openManageModal(companyDetailsData);
+                }}
+              >
+                Subscription
+              </a>
               <Link
                 to="/admin/company-details"
                 state={{
@@ -294,7 +573,7 @@ const CompanyCompleteDetails = () => {
                   companyActiveId: companyActiveId,
                 }}
               >
-                Company Details
+                Company Profile
               </Link>
               <Link
                 to="/admin/recruiter-list"
@@ -302,7 +581,7 @@ const CompanyCompleteDetails = () => {
                   companyDataId: companyDataId,
                 }}
               >
-                View Recruiter Accounts
+                Recruiters
               </Link>
               <Link
                 to="/admin/company-active-job"
@@ -310,7 +589,7 @@ const CompanyCompleteDetails = () => {
                   companyActiveId: companyActiveId,
                 }}
               >
-                View Job Offers
+                Job Posts
               </Link>
               <Link
                 to="/admin/employer-subscription"
@@ -318,11 +597,27 @@ const CompanyCompleteDetails = () => {
                   companyActiveId: companyActiveIdSub,
                 }}
               >
-                View Subscription Plans
+                Subscription Plans
+              </Link>
+              <Link
+                to="/admin/company-purchase-history"
+                state={{
+                  companyActiveId: companyProfileId,
+                }}
+              >
+                Purchase History
+              </Link>
+              <Link
+                to="/admin/all-invoice-list"
+                state={{
+                  companyActiveId: companyProfileId,
+                }}
+              >
+                Invoice
               </Link>
             </div>
           </div>
-          <div className="company-status-main-area">
+          {/* <div className="company-status-main-area">
             <ul>
               <li>
                 Company ID:<strong>123456 </strong>
@@ -337,11 +632,34 @@ const CompanyCompleteDetails = () => {
                 Credits Available:<strong>350</strong>
               </li>
             </ul>
+          </div> */}
+          <div className="company-status-main-area">
+            <ul>
+              <li>
+                Company Name:
+                <strong> {dashboardData?.brandName}</strong>
+              </li>
+
+              <li>
+                Status:
+                <strong className="color">
+                  {dashboardData?.status || "N/A"}
+                </strong>
+              </li>
+
+              <li>
+                Subscription Plan:
+                <strong>
+                  {" "}
+                  {dashboardData?.subscriptionPlan || "No Plan"}{" "}
+                </strong>
+              </li>
+            </ul>
           </div>
           <div className="super-dashboard-common-heading">
             <h5>Performance Overview</h5>
           </div>
-          <div className="performance-overview-info-area">
+          {/* <div className="performance-overview-info-area">
             <div className="performance-overview-fillter">
               <div className="date-range">
                 <h5>Date Range:</h5>
@@ -369,31 +687,35 @@ const CompanyCompleteDetails = () => {
               <a href="#">Apply Fillter</a>
               <a href="#">Reset</a>
             </div>
-          </div>
+          </div> */}
 
           <div className="job-stat-card-area">
             <div className="job-card-box-area">
-              <h4>Total Job Offers Created</h4>
-              <h5>45</h5>
+              <h4> Global Posting Credits</h4>
+              <h5>{dashboardData?.creditsAvailable?.globalJobCredits ?? 0}</h5>
             </div>
             <div className="job-card-box-area">
-              <h4>Active Job Offers</h4>
-              <h5>18</h5>
-              <span>
-                <i className="fa-solid fa-arrow-down" /> 10% vs previous period
-              </span>
+              <h4> Global Viewing Credits</h4>
+              <h5>
+                {dashboardData?.creditsAvailable?.globalProfileCredits ?? 0}
+              </h5>
+            </div>
+
+            <div className="job-card-box-area">
+              <h4> Daily Job Usage</h4>
+              <h5> {dashboardData?.dailyUsage?.job ?? "0/0"}</h5>
             </div>
             <div className="job-card-box-area">
-              <h4>Total CV Views</h4>
-              <h5>1,230</h5>
+              <h4> Daily Profile Usage</h4>
+              <h5>{dashboardData?.dailyUsage?.profile ?? "0/0"}</h5>
             </div>
             <div className="job-card-box-area">
-              <h4>Credits Consumed</h4>
-              <h5>120</h5>
-            </div>
-            <div className="job-card-box-area">
-              <h4>Credits Remaining</h4>
-              <h5>120</h5>
+              <h4> Credit Expiry</h4>
+              <h5>
+                {dashboardData?.creditExpiry
+                  ? new Date(dashboardData.creditExpiry).toLocaleDateString()
+                  : "No Expiry"}
+              </h5>
             </div>
           </div>
         </div>
@@ -415,78 +737,46 @@ const CompanyCompleteDetails = () => {
                 <table className="table table-bordered">
                   <thead>
                     <tr>
+                      <th>S.No</th>
                       <th>Job Title</th>
                       <th>Recruiter</th>
                       <th>Created Date</th>
                       <th>Status</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    <tr>
-                      <td>Marketing Manager</td>
-                      <td>John Smith</td>
-                      <td>05/12/2022</td>
-                      <td>
-                        <div className="super-admin-toggle-switch">
-                          <label className="switch">
-                            <input type="checkbox" defaultChecked />
-                            <span className="slider round" />
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Software Engineer</td>
-                      <td>Emily Johnson</td>
-                      <td>10/01/2023</td>
-                      <td>
-                        <div className="super-admin-toggle-switch">
-                          <label className="switch">
-                            <input type="checkbox" defaultChecked />
-                            <span className="slider round" />
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>UI/UX Designer</td>
-                      <td>Michael Brown</td>
-                      <td>18/02/2023</td>
-                      <td>
-                        <div className="super-admin-toggle-switch">
-                          <label className="switch">
-                            <input type="checkbox" defaultChecked />
-                            <span className="slider round" />
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>Project Manager</td>
-                      <td>Sarah Wilson</td>
-                      <td>25/03/2023</td>
-                      <td>
-                        <div className="super-admin-toggle-switch">
-                          <label className="switch">
-                            <input type="checkbox" defaultChecked />
-                            <span className="slider round" />
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>QA Engineer</td>
-                      <td>David Lee</td>
-                      <td>07/04/2023</td>
-                      <td>
-                        <div className="super-admin-toggle-switch">
-                          <label className="switch">
-                            <input type="checkbox" defaultChecked />
-                            <span className="slider round" />
-                          </label>
-                        </div>
-                      </td>
-                    </tr>
+                    {dashboardData?.jobSummary?.length > 0 ? (
+                      dashboardData.jobSummary.map((job, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{job.jobTitle}</td>
+                          <td>{job.recruiter || "-"}</td>
+                          <td>
+                            {new Date(job.createdDate).toLocaleDateString()}
+                          </td>
+                          <td>
+                            <span
+                              className={`badge ${
+                                job.status === "published"
+                                  ? "bg-success"
+                                  : job.status === "draft"
+                                    ? "bg-warning"
+                                    : "bg-secondary"
+                              }`}
+                            >
+                              {job.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="text-center">
+                          No Jobs Found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -521,6 +811,7 @@ const CompanyCompleteDetails = () => {
                 <table className="table table-bordered">
                   <thead>
                     <tr>
+                      <th>S.No</th>
                       <th>Date</th>
                       <th>Activity</th>
                       <th>Description</th>
@@ -528,49 +819,30 @@ const CompanyCompleteDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>05/14/2022</td>
-                      <td>Job Posting</td>
-                      <td>Sales Executive</td>
-                      <td>20</td>
-                    </tr>
-                    <tr>
-                      <td>10/01/2023</td>
-                      <td>Job Posting</td>
-                      <td>Software Engineer</td>
-                      <td>30</td>
-                    </tr>
-                    <tr>
-                      <td>18/02/2023</td>
-                      <td>Job Posting</td>
-                      <td>UI/UX Designer</td>
-                      <td>15</td>
-                    </tr>
-                    <tr>
-                      <td>25/03/2023</td>
-                      <td>Job Posting</td>
-                      <td>Project Manager</td>
-                      <td>25</td>
-                    </tr>
-                    <tr>
-                      <td>07/04/2023</td>
-                      <td>Job Posting</td>
-                      <td>QA Engineer</td>
-                      <td>10</td>
-                    </tr>
-                    <tr>
-                      <td>12/05/2023</td>
-                      <td>Job Posting</td>
-                      <td>Business Analyst</td>
-                      <td>18</td>
-                    </tr>
+                    {dashboardData?.creditUsageHistory?.length > 0 ? (
+                      dashboardData.creditUsageHistory.map((item, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{new Date(item.date).toLocaleDateString()}</td>
+                          <td>{item.activity}</td>
+                          <td>{item.description}</td>
+                          <td>{item.creditsUsed}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4" className="text-center">
+                          No Credit Usage Found
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
         </div>
-        <div className="offer-dwm-cre-chart-area">
+        {/* <div className="offer-dwm-cre-chart-area">
           <div className="row">
             <div className="col-lg-6 col-md-6 col-sm-12">
               <div className="credit-consumption-over-time">
@@ -635,7 +907,7 @@ const CompanyCompleteDetails = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </section>
 
       {showWelcomeModal && (
@@ -643,7 +915,7 @@ const CompanyCompleteDetails = () => {
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Welcome Pack</h5>
+                <h5 className="modal-title">Welcome Pack Settings</h5>
                 <button
                   className="btn-close"
                   onClick={() => setShowWelcomeModal(false)}
@@ -651,8 +923,9 @@ const CompanyCompleteDetails = () => {
               </div>
 
               <div className="modal-body">
+                {/* Total Job Credits */}
                 <div className="mb-3">
-                  <label>Job Posting Credits</label>
+                  <label>Total Job Posting Credits</label>
                   <input
                     type="number"
                     className="form-control"
@@ -666,8 +939,9 @@ const CompanyCompleteDetails = () => {
                   />
                 </div>
 
+                {/* Total Profile Credits */}
                 <div className="mb-3">
-                  <label>Profile Viewing Credits</label>
+                  <label>Total Profile Viewing Credits</label>
                   <input
                     type="number"
                     className="form-control"
@@ -681,6 +955,39 @@ const CompanyCompleteDetails = () => {
                   />
                 </div>
 
+                {/* Daily Job Limit */}
+                <div className="mb-3">
+                  <label>Daily Job Posting Limit</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={welcomePack.dailyJobLimit}
+                    onChange={(e) =>
+                      setWelcomePack({
+                        ...welcomePack,
+                        dailyJobLimit: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Daily Profile Limit */}
+                <div className="mb-3">
+                  <label>Daily Profile Viewing Limit</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={welcomePack.dailyProfileLimit}
+                    onChange={(e) =>
+                      setWelcomePack({
+                        ...welcomePack,
+                        dailyProfileLimit: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+
+                {/* Expiry Date */}
                 <div className="mb-3">
                   <label>Expires At</label>
                   <input
@@ -694,21 +1001,6 @@ const CompanyCompleteDetails = () => {
                       })
                     }
                   />
-                </div>
-
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={welcomePack.resetDailyUsage}
-                    onChange={(e) =>
-                      setWelcomePack({
-                        ...welcomePack,
-                        resetDailyUsage: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">Reset Daily Usage</label>
                 </div>
               </div>
 
@@ -725,12 +1017,274 @@ const CompanyCompleteDetails = () => {
                   onClick={submitWelcomePack}
                   disabled={loadingWelcome}
                 >
-                  {loadingWelcome ? "Updating..." : "Update"}
+                  {loadingWelcome ? "Updating..." : "Update Welcome Pack"}
                 </button>
               </div>
             </div>
           </div>
         </div>
+      )}
+      {selectedSubscriber && (
+        <>
+          <div className="modal fade show d-block" tabIndex="-1">
+            <div className="modal-dialog modal-lg modal-dialog-centered">
+              <div className="modal-content">
+                {/* HEADER */}
+
+                <div className="modal-header bg-primary text-white">
+                  <h5 className="modal-title">Manage Subscription</h5>
+
+                  <button
+                    className="btn-close btn-close-white"
+                    onClick={() => setSelectedSubscriber(null)}
+                  ></button>
+                </div>
+
+                <div className="modal-body">
+                  {/* ADD CREDITS */}
+                  <div className="mb-4 p-3 bg-light rounded">
+                    <div className="row">
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Email:</strong> {selectedSubscriber?.email}
+                        </p>
+
+                        <p>
+                          <strong>Plan:</strong> {selectedSubscriber?.packName}
+                        </p>
+
+                        <p>
+                          <strong>Status:</strong>{" "}
+                          {selectedSubscriber?.active ? "Active" : "Inactive"}
+                        </p>
+
+                        <p>
+                          <strong>Payment Mode:</strong>{" "}
+                          {selectedSubscriber?.paymentMode}
+                        </p>
+                        <p>
+                          <strong>Daily Job Limit:</strong>{" "}
+                          {selectedSubscriber?.dailyJobLimit}
+                        </p>
+                      </div>
+
+                      <div className="col-md-6">
+                        <p>
+                          <strong>Job Credits:</strong>{" "}
+                          {selectedSubscriber?.jobCreditsRemaining}
+                        </p>
+
+                        <p>
+                          <strong>Profile Credits:</strong>{" "}
+                          {selectedSubscriber?.profileCreditsRemaining}
+                        </p>
+
+                        <p>
+                          <strong>Expires At:</strong>{" "}
+                          {selectedSubscriber?.expiresAt
+                            ? new Date(
+                                selectedSubscriber.expiresAt,
+                              ).toLocaleDateString()
+                            : "No Expiry"}
+                        </p>
+
+                        <p>
+                          <strong>Days Left:</strong>{" "}
+                          {selectedSubscriber?.daysLeft ?? 0}
+                        </p>
+                        <p>
+                          <strong>Daily Profile Limit:</strong>{" "}
+                          {selectedSubscriber?.dailyProfileLimit}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Daily Limits */}
+                  </div>
+                  <div className="card mb-4 shadow-sm border-0">
+                    <div className="card-body">
+                      <h6 className="text-primary mb-3">Add Credits</h6>
+
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label>Job Credits</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.addJobCredits}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                addJobCredits: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-6">
+                          <label>Profile Credits</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.addProfileCredits}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                addProfileCredits: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* REMOVE CREDITS */}
+
+                  <div className="card mb-4 shadow-sm border-0">
+                    <div className="card-body">
+                      <h6 className="text-danger mb-3">Remove Credits</h6>
+
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label>Remove Job Credits</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.removeJobCredits}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                removeJobCredits: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-6">
+                          <label>Remove Profile Credits</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.removeProfileCredits}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                removeProfileCredits: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* EXTEND PLAN */}
+
+                  <div className="card mb-4 shadow-sm border-0">
+                    <div className="card-body">
+                      <h6 className="text-primary mb-3">Extend Subscription</h6>
+
+                      <label>Extend Days</label>
+
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={managePack.extendDays}
+                        onChange={(e) =>
+                          setManagePack({
+                            ...managePack,
+                            extendDays: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* CANCEL EXPIRY */}
+
+                  <div className="form-check mb-4">
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={managePack.cancelExpiry}
+                      onChange={(e) =>
+                        setManagePack({
+                          ...managePack,
+                          cancelExpiry: e.target.checked,
+                        })
+                      }
+                    />
+
+                    <label className="form-check-label">
+                      Cancel Expiry (Make Unlimited)
+                    </label>
+                  </div>
+
+                  {/* DAILY LIMITS */}
+
+                  <div className="card shadow-sm border-0">
+                    <div className="card-body">
+                      <h6 className="text-primary mb-3">Daily Limits</h6>
+
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label>Daily Job Posting Limit</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.dailyJobPostingLimit}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                dailyJobPostingLimit: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+
+                        <div className="col-md-6">
+                          <label>Daily Profile Viewing Limit</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.dailyProfileViewingLimit}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                dailyProfileViewingLimit: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* FOOTER */}
+
+                <div className="modal-footer">
+                  <button
+                    className="btn btn-secondary"
+                    onClick={() => setSelectedSubscriber(null)}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    className="btn btn-success"
+                    onClick={updateSubscription}
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-backdrop fade show"></div>
+        </>
       )}
     </>
   );

@@ -14,30 +14,35 @@ const ManageQuestionBank = () => {
   const [editItem, setEditItem] = useState(null);
   const [techName, setTechName] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10000);
+  const [totalPages, setTotalPages] = useState(1);
   // ✅ Fetch all Tech Stacks
-  const fetchTechStacks = async () => {
+  const fetchTechStacks = async (pageNumber = 1, pageSize = 10) => {
     try {
       setLoading(true);
 
-      const response = await axios.get(`${API_BASE_URL}/getAllQuestions`);
+      const response = await axios.get(
+        `${API_BASE_URL}/getAllQuestions?page=${pageNumber}&limit=${pageSize}`,
+      );
 
       if (response.data?.success) {
-        setData(response.data.data || []); // ✅ FIXED
+        setData(response.data.data || []);
+        setTotalPages(response.data.pagination.totalPages);
+        setPage(response.data.pagination.currentPage);
+        setLimit(response.data.pagination.pageSize);
       } else {
         setData([]);
       }
     } catch (error) {
-      console.error("Error fetching Categories Name:", error);
-      // toast.error("Failed to load Skills Name");
+      console.error("Error fetching Questions:", error);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    fetchTechStacks();
-  }, []);
+    fetchTechStacks(page, limit);
+  }, [page, limit]);
 
   // ✅ Open Add Modal
 
@@ -124,59 +129,139 @@ const ManageQuestionBank = () => {
     }
   };
 
+  // const columns = [
+  //   {
+  //     header: "S.No",
+  //     cell: ({ row }) => row.index + 1,
+  //   },
+  //   {
+  //     header: "Skill Category",
+  //     cell: ({ row }) => row.original.skillCategory?.name || "-",
+  //   },
+  //   {
+  //     header: "Question",
+  //     cell: ({ row }) => {
+  //       const question = row.original.question;
+
+  //       return (
+  //         <div
+  //           className="truncate-text"
+  //           title={question} // ✅ browser tooltip
+  //         >
+  //           {question}
+  //         </div>
+  //       );
+  //     },
+  //   },
+
+  //   {
+  //     accessorKey: "level",
+  //     header: "Question Level",
+  //   },
+  //   {
+  //     header: "Correct Answer",
+  //     cell: ({ row }) => {
+  //       const correctKeys = row.original.correctAnswers || [];
+  //       if (!correctKeys.length) return "-";
+
+  //       // Join all correct option keys
+  //       return correctKeys.join(", ");
+  //     },
+  //   },
+
+  //   {
+  //     header: "Created Date",
+  //     cell: ({ row }) =>
+  //       new Date(row.original.createdAt).toLocaleDateString("en-US", {
+  //         year: "numeric",
+  //         month: "short",
+  //         day: "2-digit",
+  //       }),
+  //   },
+  //   {
+  //     accessorKey: "isActive",
+  //     header: "Status",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-toggle-switch">
+  //         <label className="switch">
+  //           <input
+  //             type="checkbox"
+  //             checked={row.original.isActive}
+  //             onChange={() =>
+  //               handleStatusChange(row.original._id, row.original.isActive)
+  //             }
+  //           />
+  //           <span className="slider round"></span>
+  //         </label>
+  //       </div>
+  //     ),
+  //   },
+
+  //   {
+  //     header: "Actions",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-action-icons">
+  //         <i
+  //           className="fa-solid fa-pencil"
+  //           title="Edit"
+  //           onClick={() =>
+  //             navigate("/admin/add-question", {
+  //               state: { addOnData: row.original },
+  //             })
+  //           }
+  //         />
+  //         <i
+  //           className="fa-solid fa-trash"
+  //           title="Delete"
+  //           onClick={() => handleDelete(row.original._id)}
+  //         />
+  //       </div>
+  //     ),
+  //   },
+  // ];
   const columns = [
     {
-      header: "S.No",
-      cell: ({ row }) => row.index + 1,
+      Header: "S.No",
+      id: "index",
+      Cell: ({ row }) => row.index + 1,
     },
     {
-      header: "Skill Category",
-      cell: ({ row }) => row.original.skillCategory?.name || "-",
+      Header: "Skill Category",
+      accessor: (row) => row.skillCategory?.name || "-",
+      Cell: ({ value }) => value,
     },
     {
-      header: "Question",
-      cell: ({ row }) => {
-        const question = row.original.question;
-
-        return (
-          <div
-            className="truncate-text"
-            title={question} // ✅ browser tooltip
-          >
-            {question}
-          </div>
-        );
-      },
-    },
-
-    {
-      accessorKey: "level",
-      header: "Question Level",
+      Header: "Question",
+      accessor: "question",
+      Cell: ({ value }) => (
+        <div className="truncate-text" title={value}>
+          {value}
+        </div>
+      ),
     },
     {
-      header: "Correct Answer",
-      cell: ({ row }) => {
-        const correctKeys = row.original.correctAnswers || [];
-        if (!correctKeys.length) return "-";
-
-        // Join all correct option keys
-        return correctKeys.join(", ");
-      },
+      Header: "Question Level",
+      accessor: "level",
     },
-
     {
-      header: "Created Date",
-      cell: ({ row }) =>
-        new Date(row.original.createdAt).toLocaleDateString("en-US", {
+      Header: "Correct Answer",
+      accessor: (row) => row.correctAnswers?.join(", ") || "-",
+      Cell: ({ value }) => value,
+    },
+    {
+      Header: "Created Date",
+      accessor: "createdAt",
+      Cell: ({ value }) =>
+        new Date(value).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
           day: "2-digit",
         }),
     },
     {
-      accessorKey: "isActive",
-      header: "Status",
-      cell: ({ row }) => (
+      Header: "Status",
+      accessor: "isActive",
+      Cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
@@ -191,10 +276,10 @@ const ManageQuestionBank = () => {
         </div>
       ),
     },
-
     {
-      header: "Actions",
-      cell: ({ row }) => (
+      Header: "Actions",
+      id: "actions",
+      Cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <i
             className="fa-solid fa-pencil"
@@ -214,13 +299,12 @@ const ManageQuestionBank = () => {
       ),
     },
   ];
-
   return (
     <div>
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Assessment Questions</h4>
+          <h4>Question Bank</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5 className="breadcrumb-heading">
@@ -230,7 +314,7 @@ const ManageQuestionBank = () => {
             </Link>
 
             {/* Active page */}
-            <span className="active">Assessment Questions</span>
+            <span className="active">Manage Questions</span>
           </h5>
         </div>
 
@@ -239,7 +323,7 @@ const ManageQuestionBank = () => {
             <div className="profile-form-content add-recruiters-btn-postion">
               <div className="button-flex">
                 <div>
-                  <h3>Question Bank</h3>
+                  <h3>All Assessment Questions</h3>
                 </div>
                 <div className="button-flex2">
                   <div className="add-recruiters-btn">
@@ -247,7 +331,7 @@ const ManageQuestionBank = () => {
                       to="/admin/add-question"
                       className="default-btn btn btn-primary"
                     >
-                      + Add Question
+                      +Add New Question
                     </Link>
                   </div>
                 </div>
@@ -259,7 +343,15 @@ const ManageQuestionBank = () => {
                     {loading ? (
                       <p>Loading...</p>
                     ) : (
-                      <TableView columns={columns} data={data} />
+                      <TableView
+                        columns={columns}
+                        data={data}
+                        page={page}
+                        setPage={setPage}
+                        totalPages={totalPages}
+                        limit={limit}
+                        setLimit={setLimit}
+                      />
                     )}
                   </div>
                 </div>

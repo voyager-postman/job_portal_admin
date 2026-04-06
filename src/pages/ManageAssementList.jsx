@@ -18,7 +18,7 @@ const ManageAssementList = () => {
   const [showErrorModal, setShowErrorModal] = useState(false);
   const [errors, setErrors] = useState([]);
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(10000);
   const [totalPages, setTotalPages] = useState(1);
   const token = localStorage.getItem("token");
 
@@ -38,11 +38,12 @@ const ManageAssementList = () => {
     }));
   };
 
-  const fetchTechStacks = async () => {
+  const fetchTechStacks = async (pageNumber = page, pageSize = limit) => {
     try {
       setLoading(true);
+
       const response = await axios.get(
-        `${API_BASE_URL}/getSkillAssessments?page=${page}&limit=${limit}`,
+        `${API_BASE_URL}/getSkillAssessments?page=${pageNumber}&limit=${pageSize}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -52,8 +53,12 @@ const ManageAssementList = () => {
 
       if (response.data?.success) {
         const formattedData = mapAssessments(response.data.data);
+
         setData(formattedData);
+
         setTotalPages(response.data.pagination.totalPages);
+        setPage(response.data.pagination.currentPage);
+        setLimit(response.data.pagination.pageSize);
       } else {
         setData([]);
       }
@@ -65,35 +70,40 @@ const ManageAssementList = () => {
   };
 
   useEffect(() => {
-    fetchTechStacks();
+    fetchTechStacks(page, limit);
   }, [page, limit]);
-
   const columns = [
-    {
-      header: "Assessment Name",
-      accessorKey: "assessmentName",
+     {
+      Header: "S.No",
+      id: "index",
+      Cell: ({ row }) => row.index + 1,
     },
     {
-      header: "Total Questions",
-      accessorKey: "totalQuestions",
+      Header: "Assessment Name",
+      accessor: "assessmentName",
     },
     {
-      header: "Total Duration (mins)",
-      accessorKey: "totalDuration",
+      Header: "Total Questions",
+      accessor: "totalQuestions",
     },
     {
-      header: "Created By",
-      accessorKey: "createdBy",
-      cell: ({ row }) => `${row.original.createdBy}`,
+      Header: "Total Duration (mins)",
+      accessor: "totalDuration",
     },
     {
-      header: "Passing %",
-      accessorKey: "passingPercentage",
-      cell: ({ row }) => `${row.original.passingPercentage}%`,
+      Header: "Created By",
+      accessor: "createdBy",
+      Cell: ({ row }) => `${row.original.createdBy}`,
     },
     {
-      header: "Actions",
-      cell: ({ row }) => (
+      Header: "Passing %",
+      accessor: "passingPercentage",
+      Cell: ({ row }) => `${row.original.passingPercentage}%`,
+    },
+    {
+      Header: "Actions",
+      id: "actions",
+      Cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <i
             className="fa-solid fa-pencil"
@@ -104,6 +114,7 @@ const ManageAssementList = () => {
               })
             }
           />
+
           <Link
             to="/admin/view-assessment"
             state={{
@@ -112,6 +123,7 @@ const ManageAssementList = () => {
           >
             <i className="fa-solid fa-eye"></i>
           </Link>
+
           <i
             className="fa-solid fa-trash"
             title="Delete"
@@ -121,6 +133,59 @@ const ManageAssementList = () => {
       ),
     },
   ];
+  // const columns = [
+  //   {
+  //     header: "Assessment Name",
+  //     accessorKey: "assessmentName",
+  //   },
+  //   {
+  //     header: "Total Questions",
+  //     accessorKey: "totalQuestions",
+  //   },
+  //   {
+  //     header: "Total Duration (mins)",
+  //     accessorKey: "totalDuration",
+  //   },
+  //   {
+  //     header: "Created By",
+  //     accessorKey: "createdBy",
+  //     cell: ({ row }) => `${row.original.createdBy}`,
+  //   },
+  //   {
+  //     header: "Passing %",
+  //     accessorKey: "passingPercentage",
+  //     cell: ({ row }) => `${row.original.passingPercentage}%`,
+  //   },
+  //   {
+  //     header: "Actions",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-action-icons">
+  //         <i
+  //           className="fa-solid fa-pencil"
+  //           title="Edit"
+  //           onClick={() =>
+  //             navigate("/admin/create-assessment", {
+  //               state: { assessmentId: row.original._id },
+  //             })
+  //           }
+  //         />
+  //         <Link
+  //           to="/admin/view-assessment"
+  //           state={{
+  //             assessmentId: row.original._id,
+  //           }}
+  //         >
+  //           <i className="fa-solid fa-eye"></i>
+  //         </Link>
+  //         <i
+  //           className="fa-solid fa-trash"
+  //           title="Delete"
+  //           onClick={() => handleDelete(row.original._id)}
+  //         />
+  //       </div>
+  //     ),
+  //   },
+  // ];
   // ✅ Open Add Modal
 
   // ✅ Add or Update Tech Stack
@@ -248,7 +313,7 @@ const ManageAssementList = () => {
       {" "}
       <div className="main-dashboard-content d-flex flex-column">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Assessments</h4>
+          <h4>Assessment Management</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5 className="breadcrumb-heading">
@@ -266,7 +331,7 @@ const ManageAssementList = () => {
             <div className="profile-form-content add-recruiters-btn-postion">
               <div className="button-flex">
                 <div>
-                  <h3>Assessments</h3>
+                  <h3>Assessment List</h3>
                 </div>
                 <div className="button-flex2">
                   <div className="add-recruiters-btn">
@@ -274,7 +339,7 @@ const ManageAssementList = () => {
                       to="/admin/create-assessment"
                       className="default-btn btn btn-primary"
                     >
-                      + Add
+                      + Create Assessment
                     </Link>
                   </div>
                   <div className="add-recruiters-btn">
@@ -282,7 +347,7 @@ const ManageAssementList = () => {
                       className="default-btn btn btn-primary"
                       onClick={() => setShowImportModal(true)}
                     >
-                      Import
+                      Import Assessments
                     </Link>
                   </div>
                 </div>
@@ -298,42 +363,12 @@ const ManageAssementList = () => {
                         <TableView
                           columns={columns}
                           data={data}
+                          page={page}
+                          setPage={setPage}
+                          totalPages={totalPages}
                           limit={limit}
-                          setLimit={(val) => {
-                            setLimit(val);
-                            setPage(1);
-                          }}
+                          setLimit={setLimit}
                         />
-                        {/* Pagination */}
-                        <div className="d-flex justify-content-center mt-3">
-                          <button
-                            className="btn btn-sm btn-primary mx-1"
-                            disabled={page === 1}
-                            onClick={() => setPage(page - 1)}
-                          >
-                            Prev
-                          </button>
-                          {[...Array(totalPages)].map((_, i) => (
-                            <button
-                              key={i}
-                              className={`btn btn-sm mx-1 ${
-                                page === i + 1
-                                  ? "btn-primary"
-                                  : "btn-outline-primary"
-                              }`}
-                              onClick={() => setPage(i + 1)}
-                            >
-                              {i + 1}
-                            </button>
-                          ))}
-                          <button
-                            className="btn btn-sm btn-primary mx-1"
-                            disabled={page === totalPages}
-                            onClick={() => setPage(page + 1)}
-                          >
-                            Next
-                          </button>
-                        </div>
                       </>
                     )}
                   </div>

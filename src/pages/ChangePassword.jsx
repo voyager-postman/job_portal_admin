@@ -117,13 +117,13 @@ const ChangePassword = () => {
           </div>
 
           <div className="col-12 my-3 d-flex justify-content-center">
-            <Button
-              variant="contained"
+            <button
+             className="default-btn btn"
               disabled={loading}
               onClick={handleSubmit}
             >
               {loading ? "Updating..." : "Submit"}
-            </Button>
+            </button>
           </div>
         </div>
       </div>

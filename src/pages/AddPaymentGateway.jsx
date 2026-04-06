@@ -278,7 +278,7 @@ function AddPaymentGateway() {
                     <option value="">-- Select Mode --</option>
                     <option value="test">Test</option>
                     <option value="live">Live</option>
-                    <option value="production">Production</option>
+                    <option value="sandbox">Sandbox</option>
                   </select>
                 </div>
               </div>

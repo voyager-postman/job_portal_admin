@@ -1,40 +1,44 @@
 import { useState } from "react";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  flexRender,
-} from "@tanstack/react-table";
+import ReactPaginate from "react-paginate";
+import { useGlobalFilter, useTable } from "react-table";
 
 export const TableView = ({
   columns = [],
   data = [],
   customElement = <></>,
-  limit,
-  setLimit,
 }) => {
-  const [globalFilter, setGlobalFilter] = useState("");
-
-  const table = useReactTable({
-    data,
-    columns,
-    state: {
-      globalFilter,
+  const [pageNumber, setPageNumber] = useState(0);
+  const [usersPerPage, setUserPerPage] = useState(10);
+  const pagesVisited = pageNumber * usersPerPage;
+  const pageCount = Math.ceil(data.length / usersPerPage);
+  const {
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
+    setGlobalFilter,
+  } = useTable(
+    {
+      columns,
+      data,
     },
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
+    useGlobalFilter,
+  );
+
+  const changePage = ({ selected }) => {
+    setPageNumber(selected);
+  };
 
   return (
     <div className="top-space-search-reslute">
       <div className="tab-content px-2 md:!px-4">
         <div className="parentProduceSearch">
           <div className="entries">
-            <small>show</small>{" "}
+            <small>Show</small>{" "}
             <select
-              value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
+              value={usersPerPage}
+              onChange={(e) => setUserPerPage(e.target.value)}
             >
               <option value="10">10</option>
               <option value="25">25</option>
@@ -51,49 +55,63 @@ export const TableView = ({
             />
           </div>
         </div>
-
         {customElement}
-        
         <div className="tab-pane active" id="header" role="tabpanel">
           <div
             id="datatable_wrapper"
             className="information_dataTables dataTables_wrapper dt-bootstrap4 table-responsive"
           >
             <table
-              className="display table table-bordered borderTerpProduce"
+              {...getTableProps()}
+              id="example"
+              className="display table table-hover table-bordered borderTerpProduce"
               style={{ width: "100%" }}
             >
               <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th key={header.id}>
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
+                {headerGroups.map((headerGroup) => (
+                  <tr {...headerGroup.getHeaderGroupProps()}>
+                    {headerGroup.headers.map((column) => (
+                      <th {...column.getHeaderProps()}>
+                        {column.render("Header")}
                       </th>
                     ))}
                   </tr>
                 ))}
               </thead>
+              <tbody {...getTableBodyProps()}>
+                {rows
+                  .slice(pagesVisited, pagesVisited + usersPerPage)
+                  .map((row) => {
+                    prepareRow(row);
 
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="rowCursorPointer">
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                    return (
+                      <tr className="rowCursorPointer" {...row.getRowProps()}>
+                        {row?.cells.map((cell) => {
+                          return (
+                            <td {...cell.getCellProps()}>
+                              {cell.render("Cell")}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
+        </div>
+        <div className="flex justify-end">
+          <ReactPaginate
+            previousLabel={"Previous"}
+            nextLabel={"Next"}
+            pageCount={pageCount}
+            onPageChange={changePage}
+            containerClassName={"paginationBttns"}
+            previousLinkClassName={"previousBttn"}
+            nextLinkClassName={"nextBttn"}
+            disabledClassName={"paginationDisabled"}
+            activeClassName={"paginationActive"}
+          />
         </div>
       </div>
     </div>

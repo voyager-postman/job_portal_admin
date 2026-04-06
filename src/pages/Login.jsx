@@ -18,6 +18,7 @@ export default function Login() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // ✅ Handle input change
   const handleChange = (e) => {
@@ -83,14 +84,30 @@ export default function Login() {
           />
 
           {/* Password */}
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            className="input-field"
-            value={formData.password}
-            onChange={handleChange}
-          />
+          <div className="form-group eye-icon-postion">
+            <div style={{ position: "relative" }}>
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                className="input-field"
+                value={formData.password}
+                onChange={handleChange}
+              />
+              <i
+                className={`fa-solid ${showPassword ? "fa-eye-slash" : "fa-eye"} toggle-password`}
+                onClick={() => setShowPassword((prev) => !prev)} // ✅
+                style={{
+                  position: "absolute",
+                  right: "10px",
+                  top: "40%",
+                  transform: "translateY(-50%)",
+                  cursor: "pointer",
+                  color: "#f2662c"
+                }}
+              />
+            </div>
+          </div>
 
           <button
             type="submit"

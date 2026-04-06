@@ -31,7 +31,7 @@ const CompanyActiveJob = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log("API Response:", response.data.jobs);
       setPublishJob(response.data.jobs || []);
@@ -42,62 +42,53 @@ const CompanyActiveJob = () => {
       setLoading(false);
     }
   };
-
   const columns = [
     {
-      accessorKey: "id",
-      header: "S.No",
-      cell: ({ row }) => (page - 1) * limit + row.index + 1,
+      Header: "S.No",
+      id: "index",
+      Cell: ({ row }) => (page - 1) * limit + row.index + 1,
     },
     {
-      accessorKey: "jobTitle",
-      header: "Job Title",
-      accessorFn: (row) => (row.jobTitle || "").toLowerCase(),
-      cell: ({ row }) => row.original.jobTitle || "Not Provided",
+      Header: "Job Title",
+      accessor: "jobTitle",
+      Cell: ({ row }) => row.original.jobTitle || "Not Provided",
     },
     {
-      accessorKey: "jobCategory",
-      header: "Job Category",
-      accessorFn: (row) => (row?.jobCategory?.name || "").toLowerCase(),
-      cell: ({ row }) => row.original?.jobCategory?.name || "Not Provided",
+      Header: "Job Category",
+      accessor: "jobCategory",
+      Cell: ({ row }) => row.original?.jobCategory?.name || "Not Provided",
     },
     {
-      accessorKey: "employmentType",
-      header: "Employment Type",
-      accessorFn: (row) => (row?.employmentType?.name || "").toLowerCase(),
-      cell: ({ row }) => row.original?.employmentType?.name || "Not Provided",
+      Header: "Employment Type",
+      accessor: "employmentType",
+      Cell: ({ row }) => row.original?.employmentType?.name || "Not Provided",
     },
     {
-      accessorKey: "remote",
-      header: "Remote Type",
-      accessorFn: (row) => (row.remote || "").toLowerCase(),
-      cell: ({ row }) => row.original.remote || "Not Provided",
+      Header: "Remote Type",
+      accessor: "remote",
+      Cell: ({ row }) => row.original.remote || "Not Provided",
     },
     {
-      accessorKey: "applicantCount",
-      header: "Applicant Count",
-      accessorFn: (row) => String(row?.jobTitle ?? "").toLowerCase(),
-      cell: ({ row }) => row.original.applicantCount || "Not Provided",
+      Header: "Applicant Count",
+      accessor: "applicantCount",
+      Cell: ({ row }) => row.original.applicantCount ?? "Not Provided",
     },
     {
-      accessorKey: "minSalary",
-      header: "Min Salary",
-      accessorFn: (row) =>
-        String(row?.privatJobDetails?.minSalary ?? "").toLowerCase(),
-      cell: ({ row }) =>
+      Header: "Min Salary",
+      accessor: "privatJobDetails.minSalary",
+      Cell: ({ row }) =>
         row.original?.privatJobDetails?.minSalary || "Not Provided",
     },
     {
-      accessorKey: "maxSalary",
-      header: "Max Salary",
-      accessorFn: (row) =>
-        String(row?.privatJobDetails?.maxSalary ?? "").toLowerCase(),
-      cell: ({ row }) =>
+      Header: "Max Salary",
+      accessor: "privatJobDetails.maxSalary",
+      Cell: ({ row }) =>
         row.original?.privatJobDetails?.maxSalary || "Not Provided",
     },
     {
-      header: "Action",
-      cell: ({ row }) => {
+      Header: "Action",
+      id: "action",
+      Cell: ({ row }) => {
         const job = row.original;
         const isPublished = job.status === "published";
 
@@ -113,9 +104,7 @@ const CompanyActiveJob = () => {
             </div>
 
             <span
-              className={`fw-semibold ${
-                isPublished ? "text-danger" : "text-success"
-              }`}
+              className={`fw-semibold ${isPublished ? "text-danger" : "text-success"}`}
             >
               {isPublished ? "Stop" : "Publish"}
             </span>
@@ -124,6 +113,87 @@ const CompanyActiveJob = () => {
       },
     },
   ];
+  // const columns = [
+  //   {
+  //     accessorKey: "id",
+  //     header: "S.No",
+  //     cell: ({ row }) => (page - 1) * limit + row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "jobTitle",
+  //     header: "Job Title",
+  //     accessorFn: (row) => (row.jobTitle || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.jobTitle || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "jobCategory",
+  //     header: "Job Category",
+  //     accessorFn: (row) => (row?.jobCategory?.name || "").toLowerCase(),
+  //     cell: ({ row }) => row.original?.jobCategory?.name || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "employmentType",
+  //     header: "Employment Type",
+  //     accessorFn: (row) => (row?.employmentType?.name || "").toLowerCase(),
+  //     cell: ({ row }) => row.original?.employmentType?.name || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "remote",
+  //     header: "Remote Type",
+  //     accessorFn: (row) => (row.remote || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.remote || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "applicantCount",
+  //     header: "Applicant Count",
+  //     accessorFn: (row) => String(row?.jobTitle ?? "").toLowerCase(),
+  //     cell: ({ row }) => row.original.applicantCount || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "minSalary",
+  //     header: "Min Salary",
+  //     accessorFn: (row) =>
+  //       String(row?.privatJobDetails?.minSalary ?? "").toLowerCase(),
+  //     cell: ({ row }) =>
+  //       row.original?.privatJobDetails?.minSalary || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "maxSalary",
+  //     header: "Max Salary",
+  //     accessorFn: (row) =>
+  //       String(row?.privatJobDetails?.maxSalary ?? "").toLowerCase(),
+  //     cell: ({ row }) =>
+  //       row.original?.privatJobDetails?.maxSalary || "Not Provided",
+  //   },
+  //   {
+  //     header: "Action",
+  //     cell: ({ row }) => {
+  //       const job = row.original;
+  //       const isPublished = job.status === "published";
+
+  //       return (
+  //         <div className="d-flex align-items-center gap-2">
+  //           <div className="form-check form-switch mb-0">
+  //             <input
+  //               className="form-check-input"
+  //               type="checkbox"
+  //               checked={isPublished}
+  //               onChange={(e) => toggleJobStatus(job._id, e.target.checked)}
+  //             />
+  //           </div>
+
+  //           <span
+  //             className={`fw-semibold ${
+  //               isPublished ? "text-danger" : "text-success"
+  //             }`}
+  //           >
+  //             {isPublished ? "Stop" : "Publish"}
+  //           </span>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  // ];
   const toggleJobStatus = async (jobId, checked) => {
     try {
       const status = checked ? "published" : "unpublished";
@@ -135,7 +205,7 @@ const CompanyActiveJob = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
 
       fetchCandidates(companyActiveId);
@@ -153,17 +223,29 @@ const CompanyActiveJob = () => {
 
         <div className="super-dashboard-common-heading">
           <h5>
-            <Link to="/admin/complete-company-details" state={{ companyProfileId: companyActiveId }}>
+            <Link
+              to="/admin/complete-company-details"
+              state={{
+                companyProfileId: companyActiveId,
+                companyActiveId: companyActiveId,
+                companyDataId: companyActiveId,
+              }}
+            >
               <i className="fa-solid fa-angles-left" />
             </Link>
             Active Jobs List
           </h5>
         </div>
 
-        <div className="table-responsive">
+        <div className="super-admin-manage-candidate-list super-admin-white-bg">
           {loading ? (
             <div className="d-flex justify-content-center py-5">
               <div className="spinner-border text-primary"></div>
+            </div>
+          ) : publishJob.length === 0 ? (
+            <div className="text-center py-5">
+              <i className="fa-solid fa-briefcase fa-2x text-muted mb-2"></i>
+              <h6 className="text-muted">No Active Jobs Found</h6>
             </div>
           ) : (
             <>
@@ -178,35 +260,7 @@ const CompanyActiveJob = () => {
               />
 
               {/* Pagination */}
-              <div className="d-flex justify-content-center mt-3">
-                <button
-                  className="btn btn-sm btn-primary mx-1"
-                  disabled={page === 1}
-                  onClick={() => setPage(page - 1)}
-                >
-                  Prev
-                </button>
-
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i}
-                    className={`btn btn-sm mx-1 ${
-                      page === i + 1 ? "btn-primary" : "btn-outline-primary"
-                    }`}
-                    onClick={() => setPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-
-                <button
-                  className="btn btn-sm btn-primary mx-1"
-                  disabled={page === totalPages}
-                  onClick={() => setPage(page + 1)}
-                >
-                  Next
-                </button>
-              </div>
+             
             </>
           )}
         </div>

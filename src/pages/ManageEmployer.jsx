@@ -10,6 +10,8 @@ import Swal from "sweetalert2";
 
 function ManageUsers() {
   const [employer, setEmployer] = useState([]);
+  const [search, setSearch] = useState("");
+  const [newSearch, setNewSearch] = useState("");
   const [newEmployer, setNewEmployer] = useState([]);
   const [loadingAll, setLoadingAll] = useState(true);
   const [loadingNew, setLoadingNew] = useState(true);
@@ -34,11 +36,12 @@ function ManageUsers() {
     try {
       setLoadingAll(true);
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: { page, limit },
+        params: { page, limit, search }, // ✅ added search
       });
 
       setEmployer(response.data.data || []);
       setTotalPages(response.data.totalPages || 1);
+      setLimit(response.data.total || 1);
     } catch (err) {
       console.log(err);
     } finally {
@@ -53,7 +56,7 @@ function ManageUsers() {
     try {
       setLoadingNew(true);
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: { status: "new", page: newPage, limit },
+        params: { status: "new", page: newPage, limit, search: newSearch }, // ✅ added search
       });
 
       setNewEmployer(response.data.data || []);
@@ -64,14 +67,13 @@ function ManageUsers() {
       setLoadingNew(false);
     }
   };
-
   useEffect(() => {
     fetchEmployerList();
-  }, [page, limit]);
+  }, [page, limit, search]); // ✅ added search
 
   useEffect(() => {
     fetchNewEmployerList();
-  }, [newPage, limit]);
+  }, [newPage, limit, newSearch]); // ✅ added newSearch
 
   // ------------------------------------------------------
   // COLUMNS FOR ALL COMPANIES (columns1)
@@ -106,23 +108,22 @@ function ManageUsers() {
       );
     }
   };
-
   const columns1 = [
     {
-      accessorKey: "id",
-      header: "S.No",
-      cell: ({ row }) => (page - 1) * limit + row.index + 1,
+      id: "id",
+      Header: "S.No",
+      Cell: ({ row }) => (page - 1) * limit + row.index + 1,
     },
     {
-      accessorKey: "profileImage",
-      header: "Img",
-      cell: ({ row }) => (
+      id: "profileImage",
+      Header: "Img",
+      Cell: ({ row }) => (
         <img
-          crossorigin="anonymous"
+          crossOrigin="anonymous"
           src={getImageUrl(row.original.companyId?.logo)}
           alt="candidate"
-          width={45}
-          height={45}
+          width={30}
+          height={30}
           style={{ borderRadius: "50%" }}
           onError={(e) => {
             e.currentTarget.src =
@@ -132,28 +133,27 @@ function ManageUsers() {
       ),
     },
     {
-      accessorKey: "name",
-      header: "Company Name",
-      accessorFn: (row) => (row.companyId.brandName || "").toLowerCase(),
-      cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
+      id: "name",
+      Header: "Company Name",
+      accessor: (row) => (row.companyId?.brandName || "").toLowerCase(),
+      Cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
     },
     {
-      accessorKey: "email",
-      header: "Email ID",
-      accessorFn: (row) => (row.email || "").toLowerCase(),
-      cell: ({ row }) => row.original.email || "Not Provided",
+      id: "email",
+      Header: "Email ID",
+      accessor: (row) => (row.email || "").toLowerCase(),
+      Cell: ({ row }) => row.original.email || "Not Provided",
     },
     {
-      accessorKey: "industry",
-      header: "Industry",
-      accessorFn: (row) => (row.companyId.industry.name || "").toLowerCase(),
-      cell: ({ row }) =>
-        row.original?.companyId?.industry?.name || "Not Provided",
+      id: "industry",
+      Header: "Industry",
+      accessor: (row) => (row.industry?.name || "").toLowerCase(),
+      Cell: ({ row }) => row.original?.industry?.name || "Not Provided",
     },
     {
-      accessorKey: "verified",
-      header: "Verified",
-      cell: ({ row }) => {
+      id: "verified",
+      Header: "Verified",
+      Cell: ({ row }) => {
         const isVerified =
           row.original?.verifiedByAdmin === "true" ||
           row.original?.verifiedByAdmin === true;
@@ -175,26 +175,65 @@ function ManageUsers() {
         );
       },
     },
-    // 👉 Home Toggle
+
     {
-      accessorKey: "home",
-      header: "Home",
-      cell: () => (
-        <div className="super-admin-toggle-switch">
-          <label className="switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider round"></span>
-          </label>
-        </div>
-      ),
+      id: "home",
+      Header: "Home",
+      Cell: ({ row }) => {
+        const companyId = row.original?.companyId?._id;
+
+        const highlightEnabled =
+          row.original?.companyId?.companyProfileHighlightEnabled === true;
+
+        const handleHighlightToggle = async (e) => {
+          const newStatus = e.target.checked;
+
+          try {
+            const response = await axios.post(
+              `${API_BASE_URL}company-profile/highlight`,
+              { companyId, highlightEnabled: newStatus },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
+            );
+
+            if (response.data.success) {
+              toast.success(response.data.message || "Highlight updated");
+              fetchEmployerList();
+            } else {
+              toast.error(response.data.message);
+            }
+          } catch (error) {
+            toast.error(
+              error?.response?.data?.message || "Failed to update highlight",
+            );
+          }
+        };
+
+        return (
+          <div className="super-admin-toggle-switch">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={highlightEnabled}
+                onChange={handleHighlightToggle}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        );
+      },
     },
+
     {
-      accessorKey: "enterpriseCanCreateTests",
-      header: "Assessment",
-      cell: ({ row }) => {
+      id: "enterpriseCanCreateTests",
+      Header: "Assessment",
+      Cell: ({ row }) => {
         const companyId = row.original.companyId._id;
         const apiStatus =
-          row.original.companyId.enterpriseCanCreateTests === true;
+          row.original.companyId.enterpriseCanCreateTests == true;
 
         const handleStatusChange = async (e) => {
           const newStatus = e.target.checked;
@@ -212,7 +251,7 @@ function ManageUsers() {
 
             if (response.data.success) {
               toast.success(response.data.message);
-              fetchEmployerList(); // refresh data
+              fetchEmployerList();
             } else {
               toast.error(response.data.message);
             }
@@ -235,10 +274,59 @@ function ManageUsers() {
         );
       },
     },
+
     {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => {
+      id: "notifications",
+      Header: "Notifications",
+      Cell: ({ row }) => {
+        const companyId = row.original?.companyId?._id;
+
+        const currentStatus =
+          row.original?.companyId?.notificationsEnabled ?? false;
+
+        const handleNotificationToggle = async (e) => {
+          const newStatus = e.target.checked;
+
+          try {
+            const response = await axios.post(
+              `${API_BASE_URL}admin/company/${companyId}/notification-toggle`,
+              { notificationsEnabled: newStatus },
+              {
+                headers: {
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+              },
+            );
+            if (response.data.success) {
+              toast.success(response.data.message || "Notification updated!");
+              fetchEmployerList();
+            } else {
+              toast.error(response.data.message);
+            }
+          } catch (err) {
+            toast.error("Something went wrong!");
+          }
+        };
+
+        return (
+          <div className="super-admin-toggle-switch">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={currentStatus}
+                onChange={handleNotificationToggle}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        );
+      },
+    },
+
+    {
+      id: "status",
+      Header: "Status",
+      Cell: ({ row }) => {
         const companyId = row.original._id;
         const currentStatus = row.original.status;
 
@@ -282,12 +370,12 @@ function ManageUsers() {
       },
     },
 
-    // 👉 Action
     {
-      accessorKey: "action",
-      header: "Action",
-      cell: ({ row }) => {
+      id: "action",
+      Header: "Action",
+      Cell: ({ row }) => {
         const companyId = row.original._id;
+
         const handleDelete = () => {
           Swal.fire({
             title: "Are you sure?",
@@ -319,6 +407,7 @@ function ManageUsers() {
             }
           });
         };
+
         return (
           <div className="super-admin-action-icons">
             <Link
@@ -330,28 +419,7 @@ function ManageUsers() {
             >
               <i className="fa-solid fa-eye"></i>
             </Link>
-            {/* <Link
-              to="/admin/recruiter-list"
-              state={{
-                companyDataId: row.original?.companyId?._id,
-              }}
-            >
-              <i
-                className="fas fa-users-cog"
-                style={{ cursor: "pointer", marginLeft: "10px" }}
-              ></i>
-            </Link>
-            <Link
-              to="/admin/company-active-job"
-              state={{
-                companyActiveId: row.original?.companyId?._id,
-              }}
-            >
-              <i
-                className="fas fa-upload"
-                style={{ cursor: "pointer", marginLeft: "10px" }}
-              ></i>
-            </Link> */}
+
             <i
               className="fa-solid fa-trash"
               style={{ cursor: "pointer", marginLeft: "10px" }}
@@ -362,26 +430,22 @@ function ManageUsers() {
       },
     },
   ];
-
-  // ------------------------------------------------------
-  // COLUMNS FOR NEW COMPANIES (columns2)
-  // ------------------------------------------------------
   const columns2 = [
     {
-      accessorKey: "id",
-      header: "S.No",
-      cell: ({ row }) => (newPage - 1) * limit + row.index + 1,
+      id: "id",
+      Header: "S.No",
+      Cell: ({ row }) => (newPage - 1) * limit + row.index + 1,
     },
     {
-      accessorKey: "profileImage",
-      header: "Img",
-      cell: ({ row }) => (
+      id: "profileImage",
+      Header: "Img",
+      Cell: ({ row }) => (
         <img
-          crossorigin="anonymous"
+          crossOrigin="anonymous"
           src={getImageUrl(row.original.companyId?.logo)}
           alt="candidate"
-          width={45}
-          height={45}
+          width={30}
+          height={30}
           style={{ borderRadius: "50%" }}
           onError={(e) => {
             e.currentTarget.src =
@@ -391,41 +455,28 @@ function ManageUsers() {
       ),
     },
     {
-      accessorKey: "name",
-      header: "Company Name",
-      accessorFn: (row) => (row.companyId.brandName || "").toLowerCase(),
-      cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
+      id: "name",
+      Header: "Company Name",
+      accessor: (row) => (row.companyId?.brandName || "").toLowerCase(),
+      Cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
     },
     {
-      accessorKey: "email",
-      header: "Email",
-      accessorFn: (row) => (row.email || "").toLowerCase(),
-      cell: ({ row }) => row.original.email || "Not Provided",
+      id: "email",
+      Header: "Email",
+      accessor: (row) => (row.email || "").toLowerCase(),
+      Cell: ({ row }) => row.original.email || "Not Provided",
     },
     {
-      accessorKey: "industry",
-      header: "Industry",
-      accessorFn: (row) => (row.companyId.industry.name || "").toLowerCase(),
-      cell: ({ row }) =>
-        row.original?.companyId?.industry?.name || "Not Provided",
-    },
-    // 👉 Home Toggle
-    {
-      accessorKey: "home",
-      header: "Home",
-      cell: () => (
-        <div className="super-admin-toggle-switch">
-          <label className="switch">
-            <input type="checkbox" defaultChecked />
-            <span className="slider round"></span>
-          </label>
-        </div>
-      ),
+      id: "industry",
+      Header: "Industry",
+      accessor: (row) => (row?.industry?.name || "").toLowerCase(),
+      Cell: ({ row }) =>
+        row.original?.industry?.name || "Not Provided",
     },
     {
-      accessorKey: "verified",
-      header: "Verified",
-      cell: ({ row }) => (
+      id: "verified",
+      Header: "Verified",
+      Cell: ({ row }) => (
         <div className="super-admin-toggle-switch">
           <label className="switch">
             <input
@@ -440,11 +491,10 @@ function ManageUsers() {
         </div>
       ),
     },
-    // 👉 Action
     {
-      accessorKey: "action",
-      header: "Action",
-      cell: ({ row }) => (
+      id: "action",
+      Header: "Action",
+      Cell: ({ row }) => (
         <div className="super-admin-action-icons">
           <Link
             to="/admin/company-details"
@@ -452,7 +502,7 @@ function ManageUsers() {
               companyProfileId: row.original?.companyId?._id,
             }}
           >
-            <i class="fa-solid fa-eye"></i>
+            <i className="fa-solid fa-eye"></i>
           </Link>
 
           <i
@@ -495,6 +545,481 @@ function ManageUsers() {
       ),
     },
   ];
+  // const columns1 = [
+  //   {
+  //     accessorKey: "id",
+  //     header: "S.No",
+  //     cell: ({ row }) => (page - 1) * limit + row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "profileImage",
+  //     header: "Img",
+  //     cell: ({ row }) => (
+  //       <img
+  //         crossorigin="anonymous"
+  //         src={getImageUrl(row.original.companyId?.logo)}
+  //         alt="candidate"
+  //         width={45}
+  //         height={45}
+  //         style={{ borderRadius: "50%" }}
+  //         onError={(e) => {
+  //           e.currentTarget.src =
+  //             "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  //         }}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Company Name",
+  //     accessorFn: (row) => (row.companyId.brandName || "").toLowerCase(),
+  //     cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "email",
+  //     header: "Email ID",
+  //     accessorFn: (row) => (row.email || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.email || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "industry",
+  //     header: "Industry",
+  //     accessorFn: (row) => (row.industry.name || "").toLowerCase(),
+  //     cell: ({ row }) =>
+  //       row.original?.industry?.name || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "verified",
+  //     header: "Verified",
+  //     cell: ({ row }) => {
+  //       const isVerified =
+  //         row.original?.verifiedByAdmin === "true" ||
+  //         row.original?.verifiedByAdmin === true;
+
+  //       return (
+  //         <span
+  //           style={{
+  //             color: isVerified ? "#16a34a" : "#dc2626",
+  //             backgroundColor: isVerified ? "#dcfce7" : "#fee2e2",
+  //             padding: "4px 10px",
+  //             borderRadius: "6px",
+  //             fontSize: "13px",
+  //             fontWeight: "600",
+  //             display: "inline-block",
+  //           }}
+  //         >
+  //           {isVerified ? "Verified" : "Not Verified"}
+  //         </span>
+  //       );
+  //     },
+  //   },
+
+  //   {
+  //     accessorKey: "home",
+  //     header: "Home",
+  //     cell: ({ row }) => {
+  //       const companyId = row.original?.companyId?._id;
+
+  //       const highlightEnabled =
+  //         row.original?.companyId?.companyProfileHighlightEnabled === true;
+
+  //       const handleHighlightToggle = async (e) => {
+  //         const newStatus = e.target.checked;
+
+  //         try {
+  //           const response = await axios.post(
+  //             `${API_BASE_URL}company-profile/highlight`,
+  //             {
+  //               companyId,
+  //               highlightEnabled: newStatus,
+  //             },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //               },
+  //             },
+  //           );
+
+  //           if (response.data.success) {
+  //             toast.success(response.data.message || "Highlight updated");
+  //             fetchEmployerList();
+  //           } else {
+  //             toast.error(response.data.message);
+  //           }
+  //         } catch (error) {
+  //           toast.error(
+  //             error?.response?.data?.message || "Failed to update highlight",
+  //           );
+  //         }
+  //       };
+
+  //       return (
+  //         <div className="super-admin-toggle-switch">
+  //           <label className="switch">
+  //             <input
+  //               type="checkbox"
+  //               checked={highlightEnabled}
+  //               onChange={handleHighlightToggle}
+  //             />
+  //             <span className="slider round"></span>
+  //           </label>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     accessorKey: "enterpriseCanCreateTests",
+  //     header: "Assessment",
+  //     cell: ({ row }) => {
+  //       const companyId = row.original.companyId._id;
+  //       const apiStatus =
+  //         row.original.companyId.enterpriseCanCreateTests == true;
+
+  //       const handleStatusChange = async (e) => {
+  //         const newStatus = e.target.checked;
+
+  //         try {
+  //           const response = await axios.put(
+  //             `${API_BASE_URL}admin/company/test-access/${companyId}`,
+  //             { enable: newStatus },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //               },
+  //             },
+  //           );
+
+  //           if (response.data.success) {
+  //             toast.success(response.data.message);
+  //             fetchEmployerList(); // refresh data
+  //           } else {
+  //             toast.error(response.data.message);
+  //           }
+  //         } catch (error) {
+  //           toast.error(error?.response?.data?.message || "Update failed");
+  //         }
+  //       };
+
+  //       return (
+  //         <div className="super-admin-toggle-switch">
+  //           <label className="switch">
+  //             <input
+  //               type="checkbox"
+  //               checked={apiStatus}
+  //               onChange={handleStatusChange}
+  //             />
+  //             <span className="slider round"></span>
+  //           </label>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     accessorKey: "notifications",
+  //     header: "Notifications",
+  //     cell: ({ row }) => {
+  //       const companyId = row.original?.companyId?._id;
+
+  //       const currentStatus =
+  //         row.original?.companyId?.notificationsEnabled ?? false;
+  //       const handleNotificationToggle = async (e) => {
+  //         const newStatus = e.target.checked;
+
+  //         try {
+  //           const response = await axios.post(
+  //             `${API_BASE_URL}admin/company/${companyId}/notification-toggle`,
+  //             { notificationsEnabled: newStatus },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //               },
+  //             },
+  //           );
+  //           if (response.data.success) {
+  //             toast.success(response.data.message || "Notification updated!");
+  //             fetchEmployerList(); // refresh data
+  //           } else {
+  //             toast.error(response.data.message);
+  //           }
+  //         } catch (err) {
+  //           toast.error("Something went wrong!");
+  //         }
+  //       };
+
+  //       return (
+  //         <div className="super-admin-toggle-switch">
+  //           <label className="switch">
+  //             <input
+  //               type="checkbox"
+  //               checked={currentStatus}
+  //               onChange={handleNotificationToggle}
+  //             />
+  //             <span className="slider round"></span>
+  //           </label>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  //   {
+  //     accessorKey: "status",
+  //     header: "Status",
+  //     cell: ({ row }) => {
+  //       const companyId = row.original._id;
+  //       const currentStatus = row.original.status;
+
+  //       const handleStatusChange = async (e) => {
+  //         const newStatus = e.target.checked ? "Active" : "Inactive";
+
+  //         try {
+  //           const response = await axios.post(
+  //             `${API_BASE_URL}admin/companyStatus`,
+  //             { companyId, status: newStatus },
+  //             {
+  //               headers: {
+  //                 Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //               },
+  //             },
+  //           );
+
+  //           if (response.data.success) {
+  //             toast.success(response.data.message);
+  //             fetchEmployerList();
+  //           } else {
+  //             toast.error(response.data.message);
+  //           }
+  //         } catch (err) {
+  //           toast.error("Something went wrong!");
+  //         }
+  //       };
+
+  //       return (
+  //         <div className="super-admin-toggle-switch">
+  //           <label className="switch">
+  //             <input
+  //               type="checkbox"
+  //               checked={currentStatus === "Active"}
+  //               onChange={handleStatusChange}
+  //             />
+  //             <span className="slider round"></span>
+  //           </label>
+  //         </div>
+  //       );
+  //     },
+  //   },
+
+  //   // 👉 Action
+  //   {
+  //     accessorKey: "action",
+  //     header: "Action",
+  //     cell: ({ row }) => {
+  //       const companyId = row.original._id;
+  //       const handleDelete = () => {
+  //         Swal.fire({
+  //           title: "Are you sure?",
+  //           text: "You won't be able to revert this!",
+  //           icon: "warning",
+  //           showCancelButton: true,
+  //           confirmButtonColor: "#3085d6",
+  //           cancelButtonColor: "#d33",
+  //           confirmButtonText: "Yes, delete it!",
+  //         }).then(async (result) => {
+  //           if (result.isConfirmed) {
+  //             try {
+  //               const response = await axios.post(
+  //                 `${API_BASE_URL}delete/company`,
+  //                 { companyId },
+  //                 {
+  //                   headers: {
+  //                     Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //                   },
+  //                 },
+  //               );
+  //               if (response.data.success) {
+  //                 toast.success("Company Deleted Successfully!");
+  //                 fetchEmployerList();
+  //               }
+  //             } catch (err) {
+  //               toast.error("Something went wrong!");
+  //             }
+  //           }
+  //         });
+  //       };
+  //       return (
+  //         <div className="super-admin-action-icons">
+  //           <Link
+  //             to="/admin/complete-company-details"
+  //             state={{
+  //               companyProfileId: row.original?.companyId?._id,
+  //               companyDetails: row.original,
+  //             }}
+  //           >
+  //             <i className="fa-solid fa-eye"></i>
+  //           </Link>
+  //           {/* <Link
+  //             to="/admin/recruiter-list"
+  //             state={{
+  //               companyDataId: row.original?.companyId?._id,
+  //             }}
+  //           >
+  //             <i
+  //               className="fas fa-users-cog"
+  //               style={{ cursor: "pointer", marginLeft: "10px" }}
+  //             ></i>
+  //           </Link>
+  //           <Link
+  //             to="/admin/company-active-job"
+  //             state={{
+  //               companyActiveId: row.original?.companyId?._id,
+  //             }}
+  //           >
+  //             <i
+  //               className="fas fa-upload"
+  //               style={{ cursor: "pointer", marginLeft: "10px" }}
+  //             ></i>
+  //           </Link> */}
+  //           <i
+  //             className="fa-solid fa-trash"
+  //             style={{ cursor: "pointer", marginLeft: "10px" }}
+  //             onClick={handleDelete}
+  //           ></i>
+  //         </div>
+  //       );
+  //     },
+  //   },
+  // ];
+
+  // ------------------------------------------------------
+  // COLUMNS FOR NEW COMPANIES (columns2)
+  // ------------------------------------------------------
+  // const columns2 = [
+  //   {
+  //     accessorKey: "id",
+  //     header: "S.No",
+  //     cell: ({ row }) => (newPage - 1) * limit + row.index + 1,
+  //   },
+  //   {
+  //     accessorKey: "profileImage",
+  //     header: "Img",
+  //     cell: ({ row }) => (
+  //       <img
+  //         crossorigin="anonymous"
+  //         src={getImageUrl(row.original.companyId?.logo)}
+  //         alt="candidate"
+  //         width={45}
+  //         height={45}
+  //         style={{ borderRadius: "50%" }}
+  //         onError={(e) => {
+  //           e.currentTarget.src =
+  //             "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  //         }}
+  //       />
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: "name",
+  //     header: "Company Name",
+  //     accessorFn: (row) => (row.companyId.brandName || "").toLowerCase(),
+  //     cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "email",
+  //     header: "Email",
+  //     accessorFn: (row) => (row.email || "").toLowerCase(),
+  //     cell: ({ row }) => row.original.email || "Not Provided",
+  //   },
+  //   {
+  //     accessorKey: "industry",
+  //     header: "Industry",
+  //     accessorFn: (row) => (row.companyId.industry.name || "").toLowerCase(),
+  //     cell: ({ row }) =>
+  //       row.original?.companyId?.industry?.name || "Not Provided",
+  //   },
+  //   // 👉 Home Toggle
+  //   // {
+  //   //   accessorKey: "home",
+  //   //   header: "Home",
+  //   //   cell: () => (
+  //   //     <div className="super-admin-toggle-switch">
+  //   //       <label className="switch">
+  //   //         <input type="checkbox" defaultChecked />
+  //   //         <span className="slider round"></span>
+  //   //       </label>
+  //   //     </div>
+  //   //   ),
+  //   // },
+  //   {
+  //     accessorKey: "verified",
+  //     header: "Verified",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-toggle-switch">
+  //         <label className="switch">
+  //           <input
+  //             type="checkbox"
+  //             checked={row.original?.verifiedByAdmin}
+  //             onChange={(e) =>
+  //               handleVerifyChange(row.original?._id, e.target.checked)
+  //             }
+  //           />
+  //           <span className="slider round" />
+  //         </label>
+  //       </div>
+  //     ),
+  //   },
+  //   // 👉 Action
+  //   {
+  //     accessorKey: "action",
+  //     header: "Action",
+  //     cell: ({ row }) => (
+  //       <div className="super-admin-action-icons">
+  //         <Link
+  //           to="/admin/company-details"
+  //           state={{
+  //             companyProfileId: row.original?.companyId?._id,
+  //           }}
+  //         >
+  //           <i class="fa-solid fa-eye"></i>
+  //         </Link>
+
+  //         <i
+  //           className="fa-solid fa-trash"
+  //           title="Delete"
+  //           style={{ cursor: "pointer", marginLeft: "10px" }}
+  //           onClick={() => {
+  //             Swal.fire({
+  //               title: "Are you sure?",
+  //               text: "You won't be able to revert this!",
+  //               icon: "warning",
+  //               showCancelButton: true,
+  //               confirmButtonColor: "#3085d6",
+  //               cancelButtonColor: "#d33",
+  //               confirmButtonText: "Yes, delete it!",
+  //             }).then(async (result) => {
+  //               if (result.isConfirmed) {
+  //                 try {
+  //                   const response = await axios.post(
+  //                     `${API_BASE_URL}delete/company`,
+  //                     { companyId: row.original._id },
+  //                     {
+  //                       headers: {
+  //                         Authorization: `Bearer ${localStorage.getItem("token")}`,
+  //                       },
+  //                     },
+  //                   );
+  //                   if (response.data.success) {
+  //                     toast.success("Company Deleted Successfully!");
+  //                     fetchNewEmployerList();
+  //                   }
+  //                 } catch (err) {
+  //                   toast.error("Something went wrong!");
+  //                 }
+  //               }
+  //             });
+  //           }}
+  //         ></i>
+  //       </div>
+  //     ),
+  //   },
+  // ];
 
   // ------------------------------------------------------
   // EXPORT ALL COMPANIES (DYNAMIC PAGINATION)
@@ -565,7 +1090,7 @@ function ManageUsers() {
       <ToastContainer />
 
       <div className="super-dashboard-breadcrumb-info">
-        <h4>Manage Company</h4>
+        <h4>Company Management</h4>
       </div>
 
       <div className="super-dashboard-common-heading">
@@ -573,7 +1098,7 @@ function ManageUsers() {
           <Link to="/admin/">
             <i className="fa-solid fa-angles-left" />
           </Link>
-          Company List
+          Companies
         </h5>
       </div>
 
@@ -591,7 +1116,7 @@ function ManageUsers() {
 
           <li className="nav-item">
             <a className="nav-link" data-bs-toggle="tab" href="#New-Companies">
-              New Companies
+              New Registrations
             </a>
           </li>
         </ul>
@@ -604,7 +1129,7 @@ function ManageUsers() {
                 <div className="spinner-border text-primary"></div>
               </div>
             ) : (
-              <>
+              <div className="Recruiter-analytics-table2">
                 <div className="data-export-btn-info">
                   <button
                     className="data-export-btn"
@@ -622,39 +1147,15 @@ function ManageUsers() {
                     setLimit(val);
                     setPage(1);
                   }}
+                  globalFilter={search}
+                  setGlobalFilter={(val) => {
+                    setSearch(val);
+                    setPage(1); // reset page on search
+                  }}
                 />
 
                 {/* Pagination */}
-                <div className="d-flex justify-content-center mt-3">
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === 1}
-                    onClick={() => setPage(page - 1)}
-                  >
-                    Prev
-                  </button>
-
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      className={`btn btn-sm mx-1 ${
-                        page === i + 1 ? "btn-primary" : "btn-outline-primary"
-                      }`}
-                      onClick={() => setPage(i + 1)}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={page === totalPages}
-                    onClick={() => setPage(page + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
-              </>
+              </div>
             )}
           </div>
 
@@ -683,40 +1184,14 @@ function ManageUsers() {
                     setLimit(val);
                     setNewPage(1);
                   }}
+                  globalFilter={newSearch}
+                  setGlobalFilter={(val) => {
+                    setNewSearch(val);
+                    setNewPage(1); // reset page
+                  }}
                 />
 
                 {/* Pagination */}
-                <div className="d-flex justify-content-center mt-3">
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={newPage === 1}
-                    onClick={() => setNewPage(newPage - 1)}
-                  >
-                    Prev
-                  </button>
-
-                  {[...Array(newTotalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      className={`btn btn-sm mx-1 ${
-                        newPage === i + 1
-                          ? "btn-primary"
-                          : "btn-outline-primary"
-                      }`}
-                      onClick={() => setNewPage(i + 1)}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    className="btn btn-sm btn-primary mx-1"
-                    disabled={newPage === newTotalPages}
-                    onClick={() => setNewPage(newPage + 1)}
-                  >
-                    Next
-                  </button>
-                </div>
               </>
             )}
           </div>
