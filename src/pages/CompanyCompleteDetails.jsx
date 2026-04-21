@@ -279,8 +279,9 @@ const CompanyCompleteDetails = () => {
 
       const pack = res.data.data.purchasedPack;
 
-      if (!pack) {
-        toast.error("No purchased pack found");
+      // ✅ If no subscription plan found
+      if (!pack || !pack.companyPackId || !pack.packId || !pack.packName) {
+        toast.error("No active subscription plan found for this company");
         return;
       }
 
@@ -292,11 +293,11 @@ const CompanyCompleteDetails = () => {
         removeProfileCredits: 0,
         extendDays: 0,
         cancelExpiry: false,
-        dailyJobPostingLimit: pack.dailyJobLimit,
-        dailyProfileViewingLimit: pack.dailyProfileLimit,
+        dailyJobPostingLimit: pack.dailyJobLimit || 0,
+        dailyProfileViewingLimit: pack.dailyProfileLimit || 0,
       });
 
-      setSelectedSubscriber(pack); // to open modal
+      setSelectedSubscriber(pack); // open modal
     } catch (err) {
       console.error(err);
       toast.error("Failed to load subscription");
@@ -304,6 +305,11 @@ const CompanyCompleteDetails = () => {
   };
   const updateSubscription = async () => {
     try {
+      if (!managePack.companyPackId) {
+        toast.error("No subscription available to update");
+        return;
+      }
+
       await axios.post(
         `${API_BASE_URL}updateCompanyPackAdmin/${managePack.companyPackId}`,
         managePack,
@@ -315,7 +321,6 @@ const CompanyCompleteDetails = () => {
       );
 
       toast.success("Subscription updated successfully");
-
       setSelectedSubscriber(null);
       fetchCreditStatus();
     } catch (error) {
@@ -534,8 +539,8 @@ const CompanyCompleteDetails = () => {
           </h5>
         </div>
         <div className="super-dashboard-detail-info">
-          <div className="super-dashboard-common-heading">
-            <div className="dashboard-common-heading">
+          <div className="super-dashboard-common-heading d-flex justify-content-between">
+            <div className="dashboard-common-heading ">
               <h5>
                 <img
                   crossOrigin="anonymous"

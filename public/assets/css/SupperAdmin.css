@@ -540,28 +540,6 @@ margin-bottom: 20px;
   transition: margin-left 0.3s ease-in-out;
 } */
 
-.super-dashboard-common-heading {
-  display: flex;
-  background: #fff;
-  margin-top: 30px;
-  padding: 15px 15px;
-  align-items: center;
-  margin-bottom: 20px;
-  justify-content: space-between;
-}
-
-.super-dashboard-common-heading i {
-  color: #ff6600;
-  margin-right: 10px;
-}
-
-.super-dashboard-common-heading i:hover {
-  color: #0066cc;
-}
-
-.super-dashboard-common-heading h5 {
-  font-size: 18px;
-}
 
 .super-dashboard-dashboard-box {
   display: flex;

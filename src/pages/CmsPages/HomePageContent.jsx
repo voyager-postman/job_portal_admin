@@ -297,7 +297,7 @@ const HomePageContent = () => {
     const blob = await response.blob();
     return new File([blob], filename, { type: blob.type });
   };
-  
+
   const handleFifthSubmit = async (e) => {
     e.preventDefault();
 
@@ -563,7 +563,7 @@ const HomePageContent = () => {
                         <span key={i} className="badge bg-primary me-2">
                           {k}
                           <i
-                            className="fa fa-times ms-2"
+                            className="fa fa-times ms-2 py-1"
                             style={{ cursor: "pointer" }}
                             onClick={() => removeKeyword(i)}
                           />

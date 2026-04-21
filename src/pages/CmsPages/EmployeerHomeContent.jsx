@@ -6,14 +6,15 @@ import "react-toastify/dist/ReactToastify.css";
 import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url";
 
 const EmployeerHomeContent = () => {
-  const [sliders, setSliders] = useState([
-    {
-      title: "",
-      description: "",
-      bannerImage: null,
-      preview: "",
-    },
-  ]);
+  const [newSlider, setNewSlider] = useState({
+    title: "",
+    description: "",
+    image: null,
+    preview: "",
+  });
+
+  const [sliders, setSliders] = useState([]);
+
   const [sections, setSections] = useState([
     {
       mainTitle: "",
@@ -64,23 +65,18 @@ const EmployeerHomeContent = () => {
       if (res.data.success) {
         const sliderData = res.data.data.sliders;
 
-        setSliders(
-          sliderData?.length > 0
-            ? sliderData.map((item) => ({
-                title: item.title,
-                description: item.paragraph,
-                bannerImage: null,
-                preview: item.image,
-              }))
-            : [
-                {
-                  title: "",
-                  description: "",
-                  bannerImage: null,
-                  preview: "",
-                },
-              ],
-        );
+        const formatted = sliderData.map((item) => ({
+          _id: item._id,
+          title: item.title || "",
+          description: item.paragraph || "",
+          bannerImage: null,
+          preview: item.image
+            ? `${API_IMAGE_URL}${item.image}`
+            : `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
+        }));
+
+        setSliders(formatted);
+
         // SECOND SECTION
         const second = res.data.data.secondSections;
 
@@ -159,77 +155,69 @@ const EmployeerHomeContent = () => {
   useEffect(() => {
     getRecruiterHome();
   }, []);
-  const handleSliderChange = (index, e) => {
+  const handleSliderChange = (e) => {
     const { name, value } = e.target;
 
-    const updated = [...sliders];
-    updated[index][name] = value;
-
-    setSliders(updated);
+    setNewSlider((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
-  const handleSliderImage = (index, e) => {
+  const handleSliderImage = (e) => {
     const file = e.target.files[0];
 
-    const updated = [...sliders];
-    updated[index].bannerImage = file;
-    updated[index].preview = URL.createObjectURL(file);
-
-    setSliders(updated);
+    if (file) {
+      setNewSlider((prev) => ({
+        ...prev,
+        image: file,
+        preview: URL.createObjectURL(file),
+      }));
+    }
   };
-  const addSlider = () => {
-    setSliders([
-      ...sliders,
-      {
-        title: "",
-        description: "",
-        bannerImage: null,
-        preview: "",
-      },
-    ]);
-  };
-  const removeSlider = (index) => {
-    const updated = [...sliders];
-    updated.splice(index, 1);
-    setSliders(updated);
-  };
-  const handleSliderSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleAddSlider = async () => {
     try {
       const formData = new FormData();
 
-      const sliderData = sliders.map((slider) => ({
-        title: slider.title,
-        description: slider.description,
-      }));
-
-      formData.append("sliders", JSON.stringify(sliderData));
-
-      sliders.forEach((slider) => {
-        if (slider.bannerImage) {
-          formData.append("images", slider.bannerImage);
-        }
-      });
+      formData.append("title", newSlider.title);
+      // formData.append("description", newSlider.description);
+      formData.append("paragraph", newSlider.description);
+      formData.append("image", newSlider.image);
 
       const res = await axios.post(
         `${API_BASE_URL}recruiterHome/sliders`,
         formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
       );
 
       if (res.data.success) {
-        toast.success("Sliders updated successfully");
-        getRecruiterHome();
+        toast.success("Slider Added Successfully");
+
+        getRecruiterHome(); // refresh sliders
+
+        setNewSlider({
+          title: "",
+          description: "",
+          image: null,
+          preview: "",
+        });
       }
     } catch (error) {
       console.log(error);
-      toast.error("Slider update failed");
     }
   };
+  const deleteSlider = async (id) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}delete/sliders/${id}`);
+
+      if (res.data.success) {
+        toast.success("Slider Deleted");
+
+        setSliders((prev) => prev.filter((slider) => slider._id !== id));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const handleFifthInputChange = (index, e) => {
     const { name, value } = e.target;
 
@@ -509,96 +497,123 @@ const EmployeerHomeContent = () => {
 
       <div className="super-dashboard-cms-content-form">
         <div className="container">
-          <form onSubmit={handleSliderSubmit} encType="multipart/form-data">
-            {sliders.map((slider, index) => (
-              <div key={index} className="row mb-4 p-3 border">
-                <div className="col-lg-5">
-                  <label>Slider Title</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="title"
-                    value={slider.title}
-                    onChange={(e) => handleSliderChange(index, e)}
+          <div className="super-dashboard-common-heading ">
+            <h5>Add Slider</h5>
+          </div>
+
+          <div className="row">
+            {/* Title */}
+            <div className="col-lg-6 form-group">
+              <label>Slider Title</label>
+              <input
+                type="text"
+                className="form-control"
+                name="title"
+                value={newSlider.title}
+                onChange={handleSliderChange}
+              />
+            </div>
+
+            {/* Description */}
+            <div className="col-lg-6 form-group">
+              <label>Description</label>
+              <input
+                type="text"
+                className="form-control"
+                name="description"
+                value={newSlider.description}
+                onChange={handleSliderChange}
+              />
+            </div>
+
+        
+            <div className="col-lg-12 col-md-12 mt-2">
+              <div className="section-Img-upload-input">
+                <label>Slider Image</label>
+              </div>
+
+              <div className="upload-company-info-area">
+                {/* Preview */}
+                <div className="upload-company-img-preview">
+                  <img
+                    src={
+                      newSlider.preview
+                        ? newSlider.preview
+                        : `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`
+                    }
+                    class="main-logo"
+                    id="preview"
+                    alt="Image Preview"
                   />
                 </div>
 
-                <div className="col-lg-5">
-                  <label>Description</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="description"
-                    value={slider.description}
-                    onChange={(e) => handleSliderChange(index, e)}
-                  />
+                {/* Hidden File Input */}
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleSliderImage}
+                  id="teamMemberImage"
+                />
+
+                <div className="upload-company-file-name">
+                  <span className="file-name">
+                    {newSlider.image
+                      ? newSlider.image.name
+                      : "No file selected"}
+                  </span>
                 </div>
 
-                <div className="col-lg-2 d-flex align-items-end">
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    onClick={() => removeSlider(index)}
+                <div className="upload-company-file-btn">
+                  <label
+                    htmlFor="teamMemberImage"
+                    className="super-dashboard-custom-upload"
                   >
-                    Remove
-                  </button>
+                    Choose Img
+                  </label>
                 </div>
+              </div>
+            </div>
+            {/* Add Button */}
+            <div className="col-lg-12 mt-3">
+              <button
+                className="super-dashboard-content-btn"
+                onClick={handleAddSlider}
+              >
+                Add Slider
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="super-dashboard-cms-content-form mt-4">
+        <div className="container">
+          <h5>Sliders</h5>
 
-                <div className="col-lg-12 mt-3">
-                  <div className="upload-company-info-area">
-                    <div className="upload-company-img-preview">
-                      <img
-                        src={
-                          slider.preview
-                            ? slider.preview
-                            : `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`
-                        }
-                        class="main-logo"
-                        id="preview"
-                        alt="Image Preview"
-                      />
-                    </div>
+          <div className="row mt-3">
+            {sliders.map((slider) => (
+              <div className="col-lg-3 mb-3" key={slider._id}>
+                <div className="card p-2 text-center">
+                  <img
+                    crossOrigin="anonymous"
+                    src={`${slider.preview}`}
+                    height="120"
+                    style={{ objectFit: "cover" }}
+                  />
 
-                    <input
-                      type="file"
-                      id={`slider_${index}`}
-                      hidden
-                      onChange={(e) => handleSliderImage(index, e)}
-                    />
-                    <div className="upload-company-file-name">
-                      <span className="file-name">
-                        {slider.bannerImage
-                          ? slider.bannerImage.name
-                          : "No file selected"}
-                      </span>
-                    </div>
-                    <div className="upload-company-file-btn">
-                      <label
-                        htmlFor={`slider_${index}`}
-                        className="super-dashboard-custom-upload"
-                      >
-                        Choose Img
-                      </label>
-                    </div>
-                  </div>
+                  <h6 className="mt-2">{slider.title}</h6>
+                  <p>{slider.description}</p>
+
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => deleteSlider(slider._id)}
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             ))}
-
-            <button
-              type="button"
-              className="btn btn-primary mb-3"
-              onClick={addSlider}
-            >
-              Add Slider
-            </button>
-
-            <div className="super-dashboard-content-btn-info">
-              <button type="submit" className="super-dashboard-content-btn">
-                Update Sliders
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
 
