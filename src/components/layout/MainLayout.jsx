@@ -8,6 +8,8 @@ import { API_IMAGE_URL } from "../../Url/Url";
 import { Outlet } from "react-router-dom";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
+// ✅ Add import at top
+import SmartToyIcon from "@mui/icons-material/SmartToy";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 import { SiGoogleanalytics } from "react-icons/si";
 import { LuEqualApproximately } from "react-icons/lu";
@@ -46,7 +48,7 @@ const MainLayout = () => {
     localStorage.clear();
     navigate("/");
   };
-
+  const aiKeys = ["ai-settings", "currency-settings"];
   // ✅ Detect active key based on route
   const getActiveKey = () => {
     const path = location.pathname;
@@ -121,6 +123,9 @@ const MainLayout = () => {
       setOpenKeys(["billing", "payment-gateway"]);
     } else if (skillsKey.includes(key)) {
       setOpenKeys(["assessment"]);
+    } // ✅ Add inside route openKeys logic
+    else if (aiKeys.includes(key)) {
+      setOpenKeys(["settings"]);
     } else {
       setOpenKeys([]);
     }
@@ -183,7 +188,6 @@ const MainLayout = () => {
             <Menu.Item key="" icon={<AiOutlineDashboard className="fs-6" />}>
               Dashboard
             </Menu.Item>
-
             {/* MANAGEMENT */}
             <Menu.SubMenu
               key="management"
@@ -356,7 +360,6 @@ const MainLayout = () => {
                 Invoice
               </Menu.Item>
             </Menu.SubMenu>
-
             {/* ASSESSMENT */}
             <Menu.SubMenu
               key="assessment"
@@ -376,6 +379,23 @@ const MainLayout = () => {
 
               <Menu.Item key="assessment-list" icon={<QuestionAnswerIcon />}>
                 Assessments
+              </Menu.Item>
+            </Menu.SubMenu>
+
+            <Menu.SubMenu
+              key="settings"
+              icon={<SmartToyIcon />}
+              title="AI Settings"
+            >
+              <Menu.Item key="ai-settings" icon={<SmartToyIcon />}>
+                AI Prompt Config
+              </Menu.Item>
+
+              <Menu.Item
+                key="currency-settings"
+                icon={<MonetizationOnIcon className="fs-6" />}
+              >
+                Currency Settings
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>

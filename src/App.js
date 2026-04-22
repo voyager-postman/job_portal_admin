@@ -71,6 +71,8 @@ import AllInvoiceList from "./pages/AllInvoiceList";
 import NotificationGovernance from "./pages/NotificationGovernance";
 import ContactMessage from "./pages/ContactMessage";
 import EmployeerHomeContent from "./pages/CmsPages/EmployeerHomeContent";
+import AdminAISettings from "./pages/AdminAISettings";
+import AdminCurrencySettings from "./pages/AdminCurrencySettings";
 function App() {
   return (
     <div className="App">
@@ -98,6 +100,8 @@ function App() {
           <Route path="manage-candidates" element={<ManageCandidates />} />
           <Route path="recruiter-list" element={<RecruiterList />} />
           <Route path="company-active-job" element={<CompanyActiveJob />} />
+          <Route path="ai-settings" element={<AdminAISettings />} />{" "}
+          <Route path="currency-settings" element={<AdminCurrencySettings />} />{" "}
           <Route
             path="employer-subscription"
             element={<EmployerSubscription />}
