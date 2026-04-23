@@ -331,7 +331,7 @@ function AddOnPackCreatedList() {
         <div className="super-dashboard-breadcrumb-info">
           <h4>Add-On Packages </h4>
         </div>
-        <div className="super-dashboard-common-heading">
+        <div className="super-dashboard-common-heading d-flex justify-content-between">
           <h5>
             <Link to="/admin/super-admin-pack-creations">
               <i className="fa-solid fa-angles-left" />

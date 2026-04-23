@@ -10,6 +10,36 @@ function AdOnPackCreateForm() {
   const { state } = useLocation();
   const addOnData = state?.addOnData;
   console.log(addOnData);
+  const [globalCurrency, setGlobalCurrency] = useState({
+    code: "MAD",
+    symbol: "DH",
+  });
+  const fetchGlobalCurrency = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}getGlobalCurrency`);
+
+      if (res.data.success) {
+        const currencyCode = res.data.data?.code || "MAD";
+        const currencySymbol = res.data.data?.symbol || "DH";
+
+        setGlobalCurrency({
+          code: currencyCode,
+          symbol: currencySymbol,
+        });
+
+        // ✅ update this page formData
+        setFormData((prev) => ({
+          ...prev,
+          currency: prev.currency || currencyCode,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchGlobalCurrency();
+  }, []);
   const isEditMode = Boolean(addOnData?._id);
   const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
@@ -80,7 +110,6 @@ function AdOnPackCreateForm() {
       return;
     }
 
-
     const url = isEditMode
       ? `${API_BASE_URL}updateAddOn/${addOnData._id}`
       : `${API_BASE_URL}createAddOn`;
@@ -97,7 +126,6 @@ function AdOnPackCreateForm() {
               ? Number(formData.jobPostingCredits)
               : 0,
 
-        
           profileViewingCredits:
             formData.type === "CV" || formData.type === "BOTH"
               ? Number(formData.profileViewingCredits)
@@ -202,7 +230,6 @@ function AdOnPackCreateForm() {
                       />
                     </div>
                   </div>
-
                 </>
               )}
               {(formData.type === "CV" || formData.type === "BOTH") && (
@@ -220,17 +247,15 @@ function AdOnPackCreateForm() {
                       />
                     </div>
                   </div>
-
                 </>
               )}
 
-
-             
-
+              {/* CURRENCY */}
               {/* CURRENCY */}
               <div className="col-lg-6 col-md-6">
                 <div className="form-group">
                   <label>Currency</label>
+
                   <select
                     className="form-select form-control"
                     name="currency"
@@ -238,10 +263,11 @@ function AdOnPackCreateForm() {
                     onChange={handleChange}
                   >
                     <option value="">Select Currency</option>
-                     <option value="MAD">MAD</option>
-                    <option value="INR">INR</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
+
+                    {/* Dynamic Currency from Admin */}
+                    <option value={globalCurrency.code}>
+                      {globalCurrency.code} ({globalCurrency.symbol})
+                    </option>
                   </select>
                 </div>
               </div>

@@ -214,12 +214,14 @@ function PackCreationList() {
         const jobCredits = row.original.jobPostingCredits ?? 0;
         const profileCredits = row.original.profileViewingCredits ?? 0;
 
+        const formatValue = (val) => (val === -1 ? "Unlimited" : val);
+
         return (
           <Tooltip
-            title={`Job Posting Credits: ${jobCredits} | CV Viewing Credits: ${profileCredits}`}
+            title={`Job Posting Credits: ${formatValue(jobCredits)} | CV Viewing Credits: ${formatValue(profileCredits)}`}
           >
             <span style={{ cursor: "pointer" }}>
-              {jobCredits}p / {profileCredits}v
+              {formatValue(jobCredits)}p / {formatValue(profileCredits)}v
             </span>
           </Tooltip>
         );
@@ -228,16 +230,18 @@ function PackCreationList() {
     {
       Header: "Daily Limits",
       Cell: ({ row }) => {
-        const jobLimit = row.original?.dailyJobPostingLimit ?? 0;
-        const profileLimit = row.original?.dailyProfileViewingLimit ?? 0;
+        const jobLimit = row.original.dailyJobPostingLimit ?? 0;
+        const profileLimit = row.original.dailyProfileViewingLimit ?? 0;
+
+        const formatValue = (val) => (val === -1 ? "Unlimited" : val);
 
         return (
           <Tooltip
-            title={`Daily Job Posting Limit: ${jobLimit} | Daily CV Viewing Limit: ${profileLimit}`}
+            title={`Daily Job Posting Limit: ${formatValue(jobLimit)} | Daily CV Viewing Limit: ${formatValue(profileLimit)}`}
             placement="top"
           >
             <span style={{ cursor: "pointer", fontWeight: 500 }}>
-              {jobLimit}p / {profileLimit}v
+              {formatValue(jobLimit)}p / {formatValue(profileLimit)}v
             </span>
           </Tooltip>
         );
@@ -463,7 +467,7 @@ function PackCreationList() {
         <div className="super-dashboard-breadcrumb-info">
           <h4>Subscription Packages</h4>
         </div>
-        <div className="super-dashboard-common-heading">
+        <div className="super-dashboard-common-heading d-flex justify-content-between">
           <h5>
             <Link to="/admin">
               <i className="fa-solid fa-angles-left" />
@@ -524,7 +528,6 @@ function PackCreationList() {
               <>
                 <TableView columns={columns} data={packs} />
                 {/* PAGINATION BUTTONS */}
-             
               </>
             )}
           </div>

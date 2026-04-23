@@ -40,7 +40,36 @@ function AddPackCreation() {
     companyProfileHighlightEnabled: false,
     addMoreFeature: false, // ✅ NEW
   });
+  const [globalCurrency, setGlobalCurrency] = useState({
+    code: "MAD",
+    symbol: "DH",
+  });
+  const fetchGlobalCurrency = async () => {
+    try {
+      const res = await axios.get(`${API_BASE_URL}getGlobalCurrency`);
 
+      if (res.data.success) {
+        const currencyCode = res.data.data?.code || "MAD";
+        const currencySymbol = res.data.data?.symbol || "DH";
+
+        setGlobalCurrency({
+          code: currencyCode,
+          symbol: currencySymbol,
+        });
+
+        // ✅ update this page formData
+        setFormData((prev) => ({
+          ...prev,
+          currency: prev.currency || currencyCode,
+        }));
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    fetchGlobalCurrency();
+  }, []);
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -932,10 +961,9 @@ function AddPackCreation() {
                     onChange={handleChange}
                   >
                     <option value="">Select Currency</option>
-                     <option value="MAD">MAD</option>
-                    <option value="INR">INR</option>
-                    <option value="USD">USD</option>
-                    <option value="EUR">EUR</option>
+                    <option value={globalCurrency.code}>
+                      {globalCurrency.code} ({globalCurrency.symbol})
+                    </option>
                   </select>
                 </div>
               </div>
@@ -943,7 +971,7 @@ function AddPackCreation() {
               {/* PRICE */}
               <div className="col-lg-6 col-md-6">
                 <div className="form-group">
-                  <label>Price</label>
+                  <label>Price ({globalCurrency.code})</label>
                   <input
                     type="number"
                     className="form-control"
