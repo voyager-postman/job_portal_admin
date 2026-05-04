@@ -6,115 +6,118 @@ import "react-toastify/dist/ReactToastify.css";
 import { API_BASE_URL } from "../Url/Url";
 import { Link } from "react-router-dom";
 
-function JobType() {
+function Remote() {
   const [data, setData] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [jobTypeName, setJobTypeName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // ✅ Fetch all Job Types
-  const fetchJobTypes = async () => {
+  // ✅ GET ALL REMOTE
+  const fetchRemote = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/getJobTypeList`);
-      if (response.data?.success) {
-        setData(response.data.jobTypes || []);
+      const res = await axios.get(`${API_BASE_URL}/getAllRemote`);
+      if (res.data?.success) {
+        setData(res.data.data || []);
       } else {
         setData([]);
       }
-    } catch (error) {
-      console.error("Error fetching Employment Type:", error);
-      toast.error("Failed to load job types!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load remote filters!");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchJobTypes();
+    fetchRemote();
   }, []);
 
-  // ✅ Open Add Modal
-  const handleAddClick = () => {
-    setEditItem(null);
-    setJobTypeName("");
-    setShowModal(true);
+  // ✅ ADD / UPDATE
+  const handleSave = async () => {
+    if (!jobTypeName.trim()) {
+      toast.warn("Remote Type is required!");
+      return;
+    }
+
+    try {
+      if (editItem) {
+        // UPDATE
+        await axios.post(`${API_BASE_URL}/updateRemote/${editItem._id}`, {
+          name: jobTypeName,
+        });
+        toast.success("Job Type updated!");
+      } else {
+        // ADD
+        await axios.post(`${API_BASE_URL}/addRemote`, {
+          name: jobTypeName,
+        });
+        toast.success("Job Type added!");
+      }
+
+      setShowModal(false);
+      fetchRemote();
+    } catch (err) {
+      console.error(err);
+
+      const message = err?.response?.data?.message;
+
+      if (message) {
+        toast.error(message);
+      } else {
+        toast.error("Save failed!");
+      }
+    }
   };
 
-  // ✅ Open Edit Modal
+  // ✅ DELETE
+  const handleDelete = async (id) => {
+    if (!window.confirm("Delete this Remote Type?")) return;
+
+    try {
+      await axios.post(`${API_BASE_URL}/deleteRemote/${id}`);
+      toast.success("Deleted successfully!");
+      fetchRemote();
+    } catch (err) {
+      console.error(err);
+      toast.error("Delete failed!");
+    }
+  };
+
+  // ✅ TOGGLE STATUS
+  const handleStatusChange = async (id) => {
+    try {
+      await axios.post(`${API_BASE_URL}/toggleRemote/${id}`);
+
+      // instant UI update
+      setData((prev) =>
+        prev.map((item) =>
+          item._id === id ? { ...item, is_Active: !item.is_Active } : item,
+        ),
+      );
+
+      toast.success("Status updated!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Status update failed!");
+    }
+  };
+
+  // ✅ EDIT
   const handleEditClick = (row) => {
     setEditItem(row.original);
     setJobTypeName(row.original.name);
     setShowModal(true);
   };
 
-  // ✅ Add / Update Job Type
-  const handleSave = async () => {
-    if (!jobTypeName.trim()) {
-      toast.warn("Employment Type name is required!");
-      return;
-    }
-
-    try {
-      if (editItem) {
-        await axios.put(`${API_BASE_URL}/job-type/${editItem._id}`, {
-          name: jobTypeName,
-        });
-        toast.success("Employment Type updated successfully!");
-      } else {
-        await axios.post(`${API_BASE_URL}/addJobType`, {
-          name: jobTypeName,
-        });
-        toast.success("Employment Type added successfully!");
-      }
-
-      setShowModal(false);
-      fetchJobTypes();
-    } catch (error) {
-      console.error("Error saving Employment Type:", error);
-      toast.error("Failed to save Employment Type!");
-    }
+  // ✅ ADD
+  const handleAddClick = () => {
+    setEditItem(null);
+    setJobTypeName("");
+    setShowModal(true);
   };
-
-  // ✅ Delete Job Type
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this Employment Type?")) {
-      try {
-        await axios.delete(`${API_BASE_URL}/job-type/${id}`);
-        toast.success("Employment Type deleted successfully!");
-        fetchJobTypes();
-      } catch (error) {
-        console.error("Error deleting Employment Type:", error);
-        toast.error("Failed to delete Employment Type!");
-      }
-    }
-  };
-
-  // ✅ Toggle Active/Inactive
-  const handleStatusChange = async (id, currentStatus) => {
-    try {
-      const newStatus = !currentStatus;
-      await axios.put(`${API_BASE_URL}/job-type/status/${id}`, {
-        is_Active: newStatus,
-      });
-
-      // update UI instantly
-      setData((prev) =>
-        prev.map((item) =>
-          item._id === id ? { ...item, is_Active: newStatus } : item,
-        ),
-      );
-
-      toast.success(
-        `Job Type marked as ${newStatus ? "Active" : "Inactive"} successfully!`,
-      );
-    } catch (error) {
-      console.error("Error updating Employment Type status:", error);
-      toast.error("Failed to update Employment Type status!");
-    }
-  };
-
 
   const columns = [
     {
@@ -123,7 +126,7 @@ function JobType() {
       Cell: ({ row }) => row.index + 1,
     },
     {
-      Header: "Employment Type",
+      Header: "Remote Type",
       accessor: "name",
     },
     {
@@ -167,14 +170,14 @@ function JobType() {
     <>
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
-          <h4>Manage Employment Type</h4>
+          <h4>Manage Remote Type</h4>
         </div>
         <div className="super-dashboard-common-heading">
           <h5>
             <Link to="/admin/">
               <i className="fa-solid fa-angles-left" />
             </Link>
-          Employment Type List
+            Remote Type List
           </h5>
         </div>
       </section>
@@ -185,7 +188,7 @@ function JobType() {
             <div className="profile-form-content add-recruiters-btn-postion">
               <div className="button-flex">
                 <div>
-                  <h3>Employment Type List</h3>
+                  <h3>Remote Type List</h3>
                 </div>
                 <div className="button-flex2">
                   <div className="add-recruiters-btn">
@@ -193,7 +196,7 @@ function JobType() {
                       onClick={handleAddClick}
                       className="default-btn btn btn-primary"
                     >
-                      + Add Employment Type
+                      + Add Remote Type
                     </button>
                   </div>
                 </div>
@@ -224,7 +227,7 @@ function JobType() {
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">
-                    {editItem ? "Edit Employment Type" : "Add Employment Type"}
+                    {editItem ? "Edit Remote Type" : "Add Remote Type"}
                   </h5>
                   <button
                     type="button"
@@ -235,13 +238,13 @@ function JobType() {
 
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label">Employment Type Name</label>
+                    <label className="form-label">Remote Type Name</label>
                     <input
                       type="text"
                       className="form-control"
                       value={jobTypeName}
                       onChange={(e) => setJobTypeName(e.target.value)}
-                      placeholder="Enter Employment Type name"
+                      placeholder="Enter Remote Type name"
                     />
                   </div>
                 </div>
@@ -271,4 +274,4 @@ function JobType() {
   );
 }
 
-export default JobType;
+export default Remote;

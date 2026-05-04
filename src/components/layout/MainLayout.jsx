@@ -16,6 +16,7 @@ import { LuEqualApproximately } from "react-icons/lu";
 import CodeIcon from "@mui/icons-material/Code";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
 import CategoryIcon from "@mui/icons-material/Category";
+import PublicIcon from "@mui/icons-material/Public"; // globe
 import ApartmentIcon from "@mui/icons-material/Apartment";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import CastleIcon from "@mui/icons-material/Castle";
@@ -57,7 +58,8 @@ const MainLayout = () => {
   };
   const categoryKeys = [
     "tech-stack",
-    "job-type",
+    "employment-type",
+    "remote",
     "salary-range",
     "industry-sector",
     "company",
@@ -222,12 +224,17 @@ const MainLayout = () => {
               </Menu.Item>
 
               <Menu.Item
-                key="job-type"
+                key="employment-type"
                 icon={<CategoryIcon className="fs-6" />}
               >
-                Job Type
+                Employment Type
               </Menu.Item>
-
+              <Menu.Item
+                key="remote"
+                icon={<PublicIcon className="fs-6" />}
+              >
+                Remote
+              </Menu.Item>
               <Menu.Item
                 key="salary-range"
                 icon={<MonetizationOnIcon className="fs-6" />}

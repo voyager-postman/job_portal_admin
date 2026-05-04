@@ -73,6 +73,7 @@ import ContactMessage from "./pages/ContactMessage";
 import EmployeerHomeContent from "./pages/CmsPages/EmployeerHomeContent";
 import AdminAISettings from "./pages/AdminAISettings";
 import AdminCurrencySettings from "./pages/AdminCurrencySettings";
+import Remote from "./pages/Remote";
 function App() {
   return (
     <div className="App">
@@ -127,7 +128,8 @@ function App() {
           <Route path="candidate-details" element={<CandinatesDetails />} />
           <Route path="company-details" element={<Companydatails />} />
           <Route path="tech-stack" element={<TechStack />} />
-          <Route path="job-type" element={<JobType />} />
+          <Route path="employment-type" element={<JobType />} />
+          <Route path="remote" element={<Remote />} />
           <Route path="salary-range" element={<SalaryRange />} />
           <Route
             path="manage-skill-categories"
