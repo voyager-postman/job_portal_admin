@@ -74,6 +74,7 @@ import EmployeerHomeContent from "./pages/CmsPages/EmployeerHomeContent";
 import AdminAISettings from "./pages/AdminAISettings";
 import AdminCurrencySettings from "./pages/AdminCurrencySettings";
 import Remote from "./pages/Remote";
+import SearchQuotes from "./pages/SearchQuotes";
 function App() {
   return (
     <div className="App">
@@ -131,6 +132,7 @@ function App() {
           <Route path="employment-type" element={<JobType />} />
           <Route path="remote" element={<Remote />} />
           <Route path="salary-range" element={<SalaryRange />} />
+          <Route path="search-quotes" element={<SearchQuotes />} />
           <Route
             path="manage-skill-categories"
             element={<ManageSkillCategory />}

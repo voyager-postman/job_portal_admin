@@ -92,7 +92,7 @@ const MainLayout = () => {
       "notification-governance",
     ];
 
-    const contentKeys = ["manage-blog"];
+    const contentKeys = ["manage-blog","search-quotes"];
 
     const packageKeys = [
       "super-admin-pack-creations",
@@ -261,7 +261,9 @@ const MainLayout = () => {
               <Menu.Item key="manage-blog" icon={<AiOutlineRead />}>
                 Blog
               </Menu.Item>
-
+<Menu.Item key="search-quotes" icon={<LuEqualApproximately />}>
+  Search Quotes
+</Menu.Item>
               {/* <Menu.Item key="manage-faq" icon={<AiOutlineQuestionCircle />}>
                 FAQ
               </Menu.Item> */}
