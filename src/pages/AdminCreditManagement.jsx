@@ -1,13 +1,33 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import { API_BASE_URL } from "../Url/Url";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { TableView } from "../components/DataTable";
+import { useDebounce } from "../hooks/useDebounce";
 import { Tooltip } from "antd";
+
+const REQUEST_STATUSES = [
+  "Pending",
+  "Contacted",
+  "Invoice Sent",
+  "Payment Received",
+  "Completed",
+  "Rejected",
+];
+
+const getCompanyName = (row) =>
+  row.company?.brandName || row.contactPersonName || "";
+
+const getContactEmail = (row) =>
+  row.requestType === "MANUAL_CREDITS"
+    ? row.company?.userId?.email || ""
+    : row.contactEmail || "";
+
 function AdminCreditManagement() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState("pack");
   const [packRequests, setPackRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +38,9 @@ function AdminCreditManagement() {
   const [showManualModal, setShowManualModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [manualCreditRequests, setManualCreditRequests] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [manualInvoiceData, setManualInvoiceData] = useState({
     amount: "",
@@ -30,12 +53,17 @@ function AdminCreditManagement() {
     setSelectedRequest(req);
     setShowManualModal(true);
   };
-  const fetchPackRequests = async () => {
-    try {
-      setLoading(true);
+  const buildRequestParams = useCallback(() => {
+    const params = { page, limit };
+    if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+    if (statusFilter) params.status = statusFilter;
+    return params;
+  }, [page, limit, debouncedSearch, statusFilter]);
 
+  const fetchPackRequests = useCallback(async () => {
+    try {
       const response = await axios.get(`${API_BASE_URL}addOn/requests`, {
-        params: { page, limit },
+        params: buildRequestParams(),
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -49,16 +77,14 @@ function AdminCreditManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [buildRequestParams]);
 
-  const fetchManualRequests = async () => {
+  const fetchManualRequests = useCallback(async () => {
     try {
-      setLoading(true);
-
       const response = await axios.get(
         `${API_BASE_URL}getManualRequestsForAdmin`,
         {
-          params: { page, limit },
+          params: buildRequestParams(),
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -73,14 +99,29 @@ function AdminCreditManagement() {
     } finally {
       setLoading(false);
     }
+  }, [buildRequestParams]);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
   };
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.key]);
+
   useEffect(() => {
     if (activeTab === "pack") {
       fetchPackRequests();
     } else if (activeTab === "manual") {
       fetchManualRequests();
     }
-  }, [page, limit, activeTab]);
+  }, [page, limit, activeTab, fetchPackRequests, fetchManualRequests]);
   const columns = [
     {
       Header: "S.No",
@@ -89,21 +130,17 @@ function AdminCreditManagement() {
     },
 
     {
-      Header: "Contact Person",
+      Header: "Company Name",
       id: "contactPerson",
-      Cell: ({ row }) =>
-        row.original.requestType === "MANUAL_CREDITS"
-          ? row.original.company?.brandName || "-"
-          : row.original.contactPersonName || "-",
+      accessor: (row) => getCompanyName(row),
+      Cell: ({ row }) => getCompanyName(row.original) || "-",
     },
 
     {
       Header: "Email",
       id: "email",
-      Cell: ({ row }) =>
-        row.original.requestType === "MANUAL_CREDITS"
-          ? row.original.company?.userId?.email || "-"
-          : row.original.contactEmail || "-",
+      accessor: (row) => getContactEmail(row),
+      Cell: ({ row }) => getContactEmail(row.original) || "-",
     },
 
     {
@@ -178,6 +215,7 @@ function AdminCreditManagement() {
     {
       Header: "Status",
       id: "status",
+      accessor: "status",
       Cell: ({ row }) => getStatusBadge(row.original.status),
     },
 
@@ -201,7 +239,10 @@ function AdminCreditManagement() {
                     className="dropdown-item"
                     onClick={() =>
                       navigate(`/admin/view-invoice/${req.invoiceId}`, {
-                        state: { from: "/admin/credit-management" },
+                        state: {
+                          from: "/admin/credit-management",
+                          activeTab,
+                        },
                       })
                     }
                   >
@@ -582,7 +623,7 @@ function AdminCreditManagement() {
         toast.success("Invoice Generated");
 
         navigate(`/admin/view-invoice/${res.data.data._id}`, {
-          state: { from: "/admin/credit-management" },
+          state: { from: "/admin/credit-management", activeTab },
         });
       }
     } catch (err) {
@@ -656,7 +697,9 @@ function AdminCreditManagement() {
 
         setShowManualModal(false);
 
-        navigate(`/admin/view-invoice/${invoiceId}`);
+        navigate(`/admin/view-invoice/${invoiceId}`, {
+          state: { from: "/admin/credit-management", activeTab },
+        });
       }
     } catch (error) {
       console.error(error);
@@ -671,6 +714,32 @@ function AdminCreditManagement() {
   );
 
   const manualData = manualCreditRequests;
+
+  const filterToolbar = (
+    <div className="d-flex gap-2 align-items-center flex-wrap w-100 justify-content-end">
+      <input
+        type="search"
+        placeholder="Search by company name, email, phone, type..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+      <select
+        value={statusFilter}
+        onChange={(e) => {
+          setStatusFilter(e.target.value);
+          setPage(1);
+        }}
+      >
+        <option value="">All Status</option>
+        {REQUEST_STATUSES.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <>
       <section className="super-dashboard-content-wrapper">
@@ -695,7 +764,10 @@ function AdminCreditManagement() {
               <li className="nav-item">
                 <button
                   className={`nav-link ${activeTab === "pack" ? "active" : ""}`}
-                  onClick={() => setActiveTab("pack")}
+                  onClick={() => {
+                    setActiveTab("pack");
+                    setPage(1);
+                  }}
                 >
                   Add-on Inquiries
                 </button>
@@ -704,48 +776,87 @@ function AdminCreditManagement() {
               <li className="nav-item">
                 <button
                   className={`nav-link ${activeTab === "manual" ? "active" : ""}`}
-                  onClick={() => setActiveTab("manual")}
+                  onClick={() => {
+                    setActiveTab("manual");
+                    setPage(1);
+                  }}
                 >
                   Custom Credit Requests
                 </button>
               </li>
             </ul>
 
-            {activeTab === "pack" &&
-              (loading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary"></div>
-                </div>
-              ) : packAddonData.length === 0 ? (
-                <div className="text-center py-4">
-                  <h6>No Addon Requests Found</h6>
-                </div>
-              ) : (
-                <div className="credit-management-table">
-                  <TableView
-                    columns={columns}
-                    data={packAddonData}
-                    loading={loading}
-                  />
-                </div>
-              ))}
+            {activeTab === "pack" && (
+              <div className="credit-management-table">
+                <TableView
+                  columns={columns}
+                  data={packAddonData}
+                  hideSearch
+                  hidePagination
+                  toolbarExtra={filterToolbar}
+                  page={page}
+                  setPage={setPage}
+                  limit={limit}
+                  setLimit={(value) => {
+                    setLimit(value);
+                    setPage(1);
+                  }}
+                  totalPages={totalPages}
+                />
 
-            {activeTab === "manual" &&
-              (loading ? (
-                <div className="text-center py-4">
-                  <div className="spinner-border text-primary"></div>
-                </div>
-              ) : manualData.length === 0 ? (
-                <div className="text-center py-4">
-                  <h6>No Manual Credit Requests Found</h6>
-                </div>
-              ) : (
+                {loading && packAddonData.length === 0 && (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-primary"></div>
+                  </div>
+                )}
+
+                {!loading && packAddonData.length === 0 && (
+                  <div className="text-center py-4">
+                    <h6>
+                      {searchQuery || statusFilter
+                        ? "No matching add-on requests found"
+                        : "No Addon Requests Found"}
+                    </h6>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "manual" && (
+              <>
                 <TableView
                   columns={columns}
                   data={manualData}
-                  loading={loading}
+                  hideSearch
+                  hidePagination
+                  toolbarExtra={filterToolbar}
+                  page={page}
+                  setPage={setPage}
+                  limit={limit}
+                  setLimit={(value) => {
+                    setLimit(value);
+                    setPage(1);
+                  }}
+                  totalPages={totalPages}
                 />
-              ))}
+
+                {loading && manualData.length === 0 && (
+                  <div className="text-center py-4">
+                    <div className="spinner-border text-primary"></div>
+                  </div>
+                )}
+
+                {!loading && manualData.length === 0 && (
+                  <div className="text-center py-4">
+                    <h6>
+                      {searchQuery || statusFilter
+                        ? "No matching custom credit requests found"
+                        : "No Manual Credit Requests Found"}
+                    </h6>
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <div className="d-flex justify-content-center mt-3">
             <button

@@ -636,30 +636,186 @@ margin-bottom: 20px;
 .super-dashboard-total-revenue-report {
   display: flex;
   justify-content: space-between;
+  gap: 2%;
 }
 
 .total-revenue-report-chart {
   width: 49%;
   background: #fff;
-  padding: 20px 20px;
+  padding: 20px;
 }
 
 .total-revenue-report-chart h5 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-size: 18px;
+}
+
+.revenue-chart-container {
+  min-height: 320px;
 }
 
 .total-revenue-report-tabel {
   width: 49%;
   background: #fff;
-  padding: 20px 20px;
+  padding: 20px;
 }
 
-.total-revenue-report-tabel h5 {
+.revenue-report-data-panel {
+  min-width: 0;
+}
+
+.revenue-report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.revenue-report-header h5 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
   font-size: 18px;
+}
+
+.revenue-report-subtitle {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.revenue-report-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.revenue-report-control-label {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.revenue-report-limit-select {
+  width: 84px;
+}
+
+.revenue-report-table-wrap {
+  overflow: auto;
+  max-height: 50vh;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.revenue-report-table {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.revenue-report-table thead th {
+  background: #1e3a5f;
+  color: #fff;
+  white-space: nowrap;
+  padding: 12px 14px;
+  font-weight: 600;
+  border: none;
+  vertical-align: middle;
+}
+
+.revenue-report-table tbody td {
+  padding: 11px 14px;
+  vertical-align: middle;
+  border-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.revenue-report-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.revenue-report-cell-date {
+  white-space: nowrap;
+}
+
+.revenue-report-cell-truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.revenue-report-cell-id {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
+  color: #475569;
+}
+
+.revenue-report-cell-amount {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.revenue-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.revenue-status-success {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.revenue-status-pending {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.revenue-status-failed {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.revenue-status-default {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.revenue-report-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.revenue-report-page-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 991px) {
+  .revenue-report-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .revenue-report-controls {
+    justify-content: flex-start;
+  }
 }
 
 /*.copy-right-area-info {
@@ -798,6 +954,168 @@ position: fixed;
   display: inline-block;
 }
 
+.candidate-details-page {
+  padding-bottom: 15px;
+}
+
+.candidate-details-page .super-admin-candidate-img-short-detail {
+  align-items: center;
+  gap: 20px;
+  border: 1px solid #e4eaf2;
+  border-radius: 8px;
+}
+
+.candidate-details-page .super-admin-candidate-img img {
+  width: 96px;
+  height: 96px;
+  margin-right: 0;
+  border: 1px solid #dfe6ef;
+  border-radius: 50%;
+  background: #f4f7fb;
+}
+
+.candidate-details-page .super-admin-candidate-short-detail {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.candidate-details-page .super-admin-candidate-short-detail h3 {
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #eef1f5;
+  border-radius: 6px;
+  background: #f9fbfd;
+  color: #3d4752;
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.candidate-details-page .super-admin-candidate-short-detail strong {
+  width: auto;
+  min-width: 72px;
+  margin-right: 6px;
+  color: #111827;
+}
+
+.candidate-summary-card {
+  margin-top: 16px;
+  padding: 18px;
+  border: 1px solid #e4eaf2;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.candidate-summary-card h4 {
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.candidate-detail-text,
+.candidate-summary-card p {
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.candidate-summary-card .candidate-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  align-items: stretch;
+  justify-content: initial;
+  padding: 0;
+  margin: 0;
+}
+
+.candidate-info-grid > li {
+  min-width: 0;
+  padding: 12px;
+  list-style: none;
+  border: 1px solid #edf1f6;
+  border-radius: 6px;
+  background: #f9fbfd;
+}
+
+.candidate-info-grid > li h5,
+.candidate-experience-card h5 {
+  margin: 0 0 6px;
+  color: #111827;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.candidate-info-grid > li p,
+.candidate-experience-card p {
+  margin: 0;
+}
+
+.candidate-experience-list {
+  display: grid;
+  gap: 14px;
+}
+
+.candidate-experience-card {
+  padding: 14px;
+  border: 1px solid #edf1f6;
+  border-radius: 8px;
+  background: #f9fbfd;
+}
+
+.candidate-experience-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+}
+
+.candidate-description-block {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e5eaf0;
+}
+
+.candidate-empty-text {
+  margin: 0;
+  color: #6b7280;
+}
+
+.candidate-salary-grid > li p + p {
+  margin-top: 6px;
+}
+
+.candidate-profile-divider-line {
+  margin: 14px 0;
+  border-top: 1px solid #e5eaf0;
+}
+
+@media (max-width: 991px) {
+  .candidate-details-page .super-admin-candidate-img-short-detail {
+    align-items: flex-start;
+  }
+
+  .candidate-details-page .super-admin-candidate-short-detail,
+  .candidate-experience-header {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575px) {
+  .candidate-details-page .super-admin-candidate-img-short-detail {
+    flex-direction: column;
+  }
+
+  .candidate-summary-card {
+    padding: 14px;
+  }
+}
+
 /*super admin candidate profile css end here*/
 
 /*super admin company List css start here*/
@@ -821,27 +1139,42 @@ position: fixed;
 
 .super-admin-company-img-short-detail {
   background: #fff;
-  padding: 15px 15px;
+  padding: 16px;
   margin: 0px 0px 0px 0px;
+}
+
+.super-admin-company-img {
+  width: 100%;
+  height: 240px;
+  background: linear-gradient(135deg, #eef4ff 0%, #f8fafc 100%);
+  border: 1px solid #e5eaf2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .super-admin-company-img img {
   width: 100%;
-  height: 300px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .super-admin-company-short-detail {
   display: flex;
-  margin-top: 25px;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .super-admin-company-logo {
-  width: 150px;
-  height: 65px;
-  background: #eee;
-  padding: 0px 10px;
-  margin-right: 20px;
+  width: 120px;
+  height: 64px;
+  background: #f8fafc;
+  border: 1px solid #e5eaf2;
+  padding: 8px;
+  flex: 0 0 120px;
 }
 
 .super-admin-company-logo img {
@@ -852,6 +1185,8 @@ position: fixed;
 
 .super-admin-company-about-short-info ul {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   list-style: none;
   margin: 10px 0px 0px 0px;
   padding: 0px 0px 0px 0px;
@@ -860,7 +1195,7 @@ position: fixed;
 .super-admin-company-about-short-info ul li {
   font-size: 15px;
   margin: 0px 0px 0px 0px;
-  padding: 0px 20px 0px 0px;
+  padding: 0px;
 }
 
 .super-admin-company-about-short-info h4 {
@@ -904,6 +1239,121 @@ position: fixed;
   margin-top: 15px;
   background: #fff;
   padding: 20px 15px;
+}
+
+.company-detail-empty-state {
+  min-height: 120px;
+  border: 1px dashed #d7dee8;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+}
+
+.company-detail-empty-state i {
+  font-size: 24px;
+  color: #94a3b8;
+}
+
+.company-detail-empty-state p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.admin-table-empty-state {
+  min-height: 170px;
+  border: 1px dashed #d7dee8;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 28px 20px;
+  margin-top: 16px;
+}
+
+.admin-table-empty-state i {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: #0066cc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.admin-table-empty-state h6 {
+  color: #1f2937;
+  margin: 4px 0 0;
+  font-size: 16px;
+}
+
+.admin-table-empty-state p {
+  margin: 0;
+  max-width: 360px;
+}
+
+.simple-list-empty-state {
+  min-height: 130px;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.simple-list-empty-state i {
+  color: #555;
+  font-size: 24px;
+}
+
+.simple-list-empty-state h6 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.job-offer-dwm-time-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.job-offer-dwm-time-table th,
+.job-offer-dwm-time-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.job-offer-dwm-time-table th:first-child,
+.job-offer-dwm-time-table td:first-child {
+  width: 52px;
+}
+
+.job-offer-dwm-time-table .table-text-truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-offer-dwm-time-table th:nth-child(4),
+.job-offer-dwm-time-table td:nth-child(4),
+.job-offer-dwm-time-table th:last-child,
+.job-offer-dwm-time-table td:last-child {
+  width: 96px;
 }
 
 .super-admin-company-profile-detail-info {

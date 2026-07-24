@@ -3,6 +3,7 @@ import axios from "axios";
 import { Button } from "@mui/material";
 import { toast, ToastContainer } from "react-toastify";
 import { API_BASE_URL } from "../Url/Url";
+import { encryptPasswordFields } from "../utils/passwordEncryption";
 
 const ChangePassword = () => {
   const token = localStorage.getItem("token");
@@ -45,7 +46,10 @@ const ChangePassword = () => {
 
       const res = await axios.put(
         `${API_BASE_URL}change-password`,
-        { oldPassword, newPassword, confirmPassword },
+        await encryptPasswordFields(
+          { oldPassword, newPassword, confirmPassword },
+          ["oldPassword", "newPassword", "confirmPassword"],
+        ),
         {
           headers: {
             Authorization: `Bearer ${token}`,

@@ -7,6 +7,7 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
+import { useDebounce } from "../hooks/useDebounce";
 
 function ManageUsers() {
   const [employer, setEmployer] = useState([]);
@@ -20,10 +21,16 @@ function ManageUsers() {
   const [totalPages, setTotalPages] = useState(1);
   const [newPage, setNewPage] = useState(1);
   const [newTotalPages, setNewTotalPages] = useState(1);
+  const debouncedSearch = useDebounce(search.trim(), 400);
+  const debouncedNewSearch = useDebounce(newSearch.trim(), 400);
+  const defaultCompanyLogo = `${process.env.PUBLIC_URL}/assets/images/companyImg/partner-logo-2.png`;
+
+  const getTotalPages = (responseData) =>
+    responseData?.pagination?.totalPages || responseData?.totalPages || 1;
 
   const getImageUrl = (url) => {
     if (!url || url === "undefined") {
-      return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+      return defaultCompanyLogo;
     }
     if (url.startsWith("http")) return url;
     return `${API_IMAGE_URL}${url}`;
@@ -36,12 +43,15 @@ function ManageUsers() {
     try {
       setLoadingAll(true);
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: { page, limit, search }, // ✅ added search
+        params: {
+          page,
+          limit,
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        },
       });
 
       setEmployer(response.data.data || []);
-      setTotalPages(response.data.totalPages || 1);
-      setLimit(response.data.total || 1);
+      setTotalPages(getTotalPages(response.data));
     } catch (err) {
       console.log(err);
     } finally {
@@ -56,11 +66,16 @@ function ManageUsers() {
     try {
       setLoadingNew(true);
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: { status: "new", page: newPage, limit, search: newSearch }, // ✅ added search
+        params: {
+          status: "new",
+          page: newPage,
+          limit,
+          ...(debouncedNewSearch ? { search: debouncedNewSearch } : {}),
+        },
       });
 
       setNewEmployer(response.data.data || []);
-      setNewTotalPages(response.data.totalPages || 1);
+      setNewTotalPages(getTotalPages(response.data));
     } catch (err) {
       console.log(err);
     } finally {
@@ -68,12 +83,20 @@ function ManageUsers() {
     }
   };
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
     fetchEmployerList();
-  }, [page, limit, search]); // ✅ added search
+  }, [page, limit, debouncedSearch]);
+
+  useEffect(() => {
+    setNewPage(1);
+  }, [debouncedNewSearch]);
 
   useEffect(() => {
     fetchNewEmployerList();
-  }, [newPage, limit, newSearch]); // ✅ added newSearch
+  }, [newPage, limit, debouncedNewSearch]);
 
   // ------------------------------------------------------
   // COLUMNS FOR ALL COMPANIES (columns1)
@@ -126,8 +149,8 @@ function ManageUsers() {
           height={30}
           style={{ borderRadius: "50%" }}
           onError={(e) => {
-            e.currentTarget.src =
-              "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = defaultCompanyLogo;
           }}
         />
       ),
@@ -448,8 +471,8 @@ function ManageUsers() {
           height={30}
           style={{ borderRadius: "50%" }}
           onError={(e) => {
-            e.currentTarget.src =
-              "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = defaultCompanyLogo;
           }}
         />
       ),
@@ -1124,76 +1147,78 @@ function ManageUsers() {
         <div className="tab-content">
           {/* TAB 1 - ALL COMPANIES */}
           <div id="All-Companies" className="tab-pane fade show active">
-            {loadingAll ? (
-              <div className="d-flex justify-content-center py-5">
-                <div className="spinner-border text-primary"></div>
+            <div className="Recruiter-analytics-table2">
+              <div className="data-export-btn-info">
+                <button
+                  className="data-export-btn"
+                  onClick={() => exportAllCompanies("all")}
+                >
+                  Export Data
+                </button>
               </div>
-            ) : (
-              <div className="Recruiter-analytics-table2">
-                <div className="data-export-btn-info">
-                  <button
-                    className="data-export-btn"
-                    onClick={() => exportAllCompanies("all")}
-                  >
-                    Export Data
-                  </button>
+
+              {loadingAll && (
+                <div className="d-flex justify-content-center py-2">
+                  <div className="spinner-border spinner-border-sm text-primary"></div>
                 </div>
+              )}
 
-                <TableView
-                  columns={columns1}
-                  data={employer}
-                  limit={limit}
-                  setLimit={(val) => {
-                    setLimit(val);
-                    setPage(1);
-                  }}
-                  globalFilter={search}
-                  setGlobalFilter={(val) => {
-                    setSearch(val);
-                    setPage(1); // reset page on search
-                  }}
-                />
+              <TableView
+                columns={columns1}
+                data={employer}
+                page={page}
+                setPage={setPage}
+                limit={limit}
+                setLimit={(val) => {
+                  setLimit(val);
+                  setPage(1);
+                }}
+                totalPages={totalPages}
+                globalFilter={search}
+                setGlobalFilter={(val) => {
+                  setSearch(val || "");
+                }}
+              />
 
-                {/* Pagination */}
-              </div>
-            )}
+              {/* Pagination */}
+            </div>
           </div>
 
           {/* TAB 2 - NEW COMPANIES */}
           <div id="New-Companies" className="tab-pane fade">
-            {loadingNew ? (
-              <div className="d-flex justify-content-center py-5">
-                <div className="spinner-border text-primary"></div>
+            <div className="data-export-btn-info">
+              <button
+                className="data-export-btn"
+                onClick={() => exportAllCompanies("new")}
+              >
+                Export Data
+              </button>
+            </div>
+
+            {loadingNew && (
+              <div className="d-flex justify-content-center py-2">
+                <div className="spinner-border spinner-border-sm text-primary"></div>
               </div>
-            ) : (
-              <>
-                <div className="data-export-btn-info">
-                  <button
-                    className="data-export-btn"
-                    onClick={() => exportAllCompanies("new")}
-                  >
-                    Export Data
-                  </button>
-                </div>
-
-                <TableView
-                  columns={columns2}
-                  data={newEmployer}
-                  limit={limit}
-                  setLimit={(val) => {
-                    setLimit(val);
-                    setNewPage(1);
-                  }}
-                  globalFilter={newSearch}
-                  setGlobalFilter={(val) => {
-                    setNewSearch(val);
-                    setNewPage(1); // reset page
-                  }}
-                />
-
-                {/* Pagination */}
-              </>
             )}
+
+            <TableView
+              columns={columns2}
+              data={newEmployer}
+              page={newPage}
+              setPage={setNewPage}
+              limit={limit}
+              setLimit={(val) => {
+                setLimit(val);
+                setNewPage(1);
+              }}
+              totalPages={newTotalPages}
+              globalFilter={newSearch}
+              setGlobalFilter={(val) => {
+                setNewSearch(val || "");
+              }}
+            />
+
+            {/* Pagination */}
           </div>
         </div>
       </div>

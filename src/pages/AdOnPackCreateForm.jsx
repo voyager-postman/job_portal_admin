@@ -50,6 +50,7 @@ function AdOnPackCreateForm() {
     price: "",
     currency: "",
     paymentMode: "",
+    searchBoostScore: "",
   });
 
   /* =========================
@@ -73,6 +74,9 @@ function AdOnPackCreateForm() {
         price: addOnData.price || "",
         currency: addOnData.currency || "",
         paymentMode: addOnData.paymentMode || "",
+        searchBoostScore: addOnData.searchBoostScore
+          ? String(addOnData.searchBoostScore)
+          : "",
       });
     }
   }, [addOnData]);
@@ -91,6 +95,7 @@ function AdOnPackCreateForm() {
         ...prev,
         jobPostingCredits: "",
         dailyJobPostingLimit: "",
+        searchBoostScore: "",
       }));
     }
   }, [formData.type]);
@@ -131,6 +136,11 @@ function AdOnPackCreateForm() {
               ? Number(formData.profileViewingCredits)
               : 0,
 
+          searchBoostScore:
+            formData.type === "JOB" || formData.type === "BOTH"
+              ? Number(formData.searchBoostScore) || 1
+              : 1,
+
           validityValue: Number(formData.validityValue),
           validityUnit: formData.validityUnit,
           price: Number(formData.price),
@@ -152,7 +162,9 @@ function AdOnPackCreateForm() {
           : "Add-On Pack created successfully 🎉",
       );
 
-      navigate("/admin/super-admin-add-on-pack-created-list");
+      setTimeout(() => {
+        navigate("/admin/super-admin-add-on-pack-created-list");
+      }, 1500);
     } catch (error) {
       console.error(error);
       toast.error(
@@ -228,6 +240,26 @@ function AdOnPackCreateForm() {
                         onChange={handleChange}
                         placeholder="Enter Job Posting Credits"
                       />
+                    </div>
+                  </div>
+
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group">
+                      <label>Search Boost Score</label>
+                      <select
+                        className="form-select form-control"
+                        name="searchBoostScore"
+                        value={formData.searchBoostScore}
+                        onChange={handleChange}
+                      >
+                        <option value="">Select boost level</option>
+                        <option value="1">x1 — Standard priority</option>
+                        <option value="2">x2 — Higher priority</option>
+                        <option value="3">x3 — Highest priority</option>
+                      </select>
+                      <small className="text-muted">
+                        Applied on /jobs search when job credits are used
+                      </small>
                     </div>
                   </div>
                 </>

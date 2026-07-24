@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
 import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
@@ -39,7 +39,22 @@ const CompanyCompleteDetails = () => {
     jobsUsedToday: 0,
     profilesViewedToday: 0,
     expiresAt: null,
+    welcomePackGranted: false,
   });
+
+  const isWelcomePackExpired = (expiresAt) => {
+    if (!expiresAt) return false;
+    const expiryDate = new Date(expiresAt);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    expiryDate.setHours(0, 0, 0, 0);
+    return expiryDate < today;
+  };
+
+  const isWelcomePackActive =
+    (companyDetailsData?.companyId?.welcomePackGranted ||
+      creditStatus.welcomePackGranted) &&
+    !isWelcomePackExpired(creditStatus.expiresAt);
   const [managePack, setManagePack] = useState({
     companyPackId: "",
     addJobCredits: 0,
@@ -50,14 +65,85 @@ const CompanyCompleteDetails = () => {
     cancelExpiry: false,
     dailyJobPostingLimit: 0,
     dailyProfileViewingLimit: 0,
+    featuredJobsAvailable: false,
+    maxFeaturedJobs: 0,
+    maxActiveFeaturedJobs: 0,
+    featuredJobDurationDays: 0,
+    featuredJobLocations: [],
+    searchBoostScore: 1,
+    companyProfileHighlightEnabled: false,
   });
+  const initialCancelExpiryRef = useRef(false);
+  const [jobPage, setJobPage] = useState(1);
+  const [jobLimit, setJobLimit] = useState(10);
+  const [creditPage, setCreditPage] = useState(1);
+  const [creditLimit, setCreditLimit] = useState(10);
+  const [jobTotalPages, setJobTotalPages] = useState(1);
+  const [creditTotalPages, setCreditTotalPages] = useState(1);
+  const companyEmail =
+    selectedSubscriber?.email ||
+    selectedSubscriber?.companyEmail ||
+    selectedSubscriber?.companyId?.email ||
+    companyDetailsData?.email ||
+    companyDetailsData?.companyId?.email ||
+    "Not Provided";
+
+  const getCompanyDashboard = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const { data } = await axios.get(`${API_BASE_URL}getCompanyDashboard`, {
+        params: {
+          companyId: companyProfileId,
+          jobPage,
+          jobLimit,
+          creditPage,
+          creditLimit,
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      const payload = data?.data || {};
+      setDashboardData(payload);
+
+      const jobPagination =
+        payload.jobPagination || data?.jobPagination || {};
+      const creditPagination =
+        payload.creditPagination || data?.creditPagination || {};
+
+      setJobTotalPages(
+        jobPagination.totalPages ||
+          payload.jobTotalPages ||
+          data?.jobTotalPages ||
+          1,
+      );
+      setCreditTotalPages(
+        creditPagination.totalPages ||
+          payload.creditTotalPages ||
+          data?.creditTotalPages ||
+          1,
+      );
+    } catch (error) {
+      console.error("Error fetching company dashboard:", error);
+      toast.error("Failed to load company dashboard");
+    } finally {
+      setLoading(false);
+    }
+  }, [companyProfileId, jobPage, jobLimit, creditPage, creditLimit]);
 
   useEffect(() => {
     if (companyProfileId) {
       fetchCreditStatus();
-      getCompanyDashboard();
     }
   }, [companyProfileId]);
+
+  useEffect(() => {
+    if (companyProfileId) {
+      getCompanyDashboard();
+    }
+  }, [companyProfileId, getCompanyDashboard]);
   const fetchCreditStatus = async () => {
     try {
       if (!companyProfileId) return;
@@ -81,6 +167,10 @@ const CompanyCompleteDetails = () => {
         jobsUsedToday: data?.jobsUsedToday ?? 0,
         profilesViewedToday: data?.profilesViewedToday ?? 0,
         expiresAt: data?.welcomePack?.expiresAt ?? null,
+        welcomePackGranted:
+          data?.welcomePackGranted ??
+          data?.welcomePack?.granted ??
+          Boolean(data?.welcomePack),
       });
     } catch (err) {
       console.error(err);
@@ -285,6 +375,11 @@ const CompanyCompleteDetails = () => {
         return;
       }
 
+      const isNoExpiry =
+        pack.cancelExpiry === true || pack.endDate === null;
+
+      initialCancelExpiryRef.current = isNoExpiry;
+
       setManagePack({
         companyPackId: pack.companyPackId,
         addJobCredits: 0,
@@ -292,9 +387,16 @@ const CompanyCompleteDetails = () => {
         removeJobCredits: 0,
         removeProfileCredits: 0,
         extendDays: 0,
-        cancelExpiry: false,
+        cancelExpiry: isNoExpiry,
         dailyJobPostingLimit: pack.dailyJobLimit || 0,
         dailyProfileViewingLimit: pack.dailyProfileLimit || 0,
+        featuredJobsAvailable: pack.features?.featuredJobsAvailable ?? pack.featuredJobsAvailable ?? false,
+        maxFeaturedJobs: pack.features?.maxFeaturedJobs ?? pack.maxFeaturedJobs ?? 0,
+        maxActiveFeaturedJobs: pack.features?.maxActiveFeaturedJobs ?? pack.maxActiveFeaturedJobs ?? 0,
+        featuredJobDurationDays: pack.features?.featuredJobDurationDays ?? pack.featuredJobDurationDays ?? 0,
+        featuredJobLocations: pack.features?.featuredJobLocations ?? pack.featuredJobLocations ?? [],
+        searchBoostScore: pack.features?.searchBoostScore ?? pack.searchBoostScore ?? 1,
+        companyProfileHighlightEnabled: pack.features?.companyProfileHighlightEnabled ?? pack.features?.hasProfileHighlight ?? pack.companyProfileHighlightEnabled ?? false,
       });
 
       setSelectedSubscriber(pack); // open modal
@@ -310,9 +412,36 @@ const CompanyCompleteDetails = () => {
         return;
       }
 
-      await axios.post(
+      const addJob = Number(managePack.addJobCredits) || 0;
+      const removeJob = Number(managePack.removeJobCredits) || 0;
+      const addProfile = Number(managePack.addProfileCredits) || 0;
+      const removeProfile = Number(managePack.removeProfileCredits) || 0;
+      const extendDays = Number(managePack.extendDays) || 0;
+
+      const payload = {
+        addJobCredits: addJob || undefined,
+        removeJobCredits: removeJob || undefined,
+        addProfileCredits: addProfile || undefined,
+        removeProfileCredits: removeProfile || undefined,
+        extendDays: extendDays || undefined,
+        dailyJobPostingLimit: Number(managePack.dailyJobPostingLimit),
+        dailyProfileViewingLimit: Number(managePack.dailyProfileViewingLimit),
+        featuredJobsAvailable: managePack.featuredJobsAvailable,
+        maxFeaturedJobs: Number(managePack.maxFeaturedJobs),
+        maxActiveFeaturedJobs: Number(managePack.maxActiveFeaturedJobs),
+        featuredJobDurationDays: Number(managePack.featuredJobDurationDays),
+        featuredJobLocations: managePack.featuredJobLocations,
+        searchBoostScore: Number(managePack.searchBoostScore),
+        companyProfileHighlightEnabled: managePack.companyProfileHighlightEnabled,
+      };
+
+      if (managePack.cancelExpiry !== initialCancelExpiryRef.current) {
+        payload.cancelExpiry = managePack.cancelExpiry;
+      }
+
+      const { data } = await axios.post(
         `${API_BASE_URL}updateCompanyPackAdmin/${managePack.companyPackId}`,
-        managePack,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -320,9 +449,22 @@ const CompanyCompleteDetails = () => {
         },
       );
 
+      const updatedPack =
+        data?.data?.purchasedPack ?? data?.data ?? data?.purchasedPack;
+      const isNoExpiry = updatedPack?.endDate === null;
+
+      if (updatedPack) {
+        initialCancelExpiryRef.current = isNoExpiry;
+        setManagePack((prev) => ({
+          ...prev,
+          cancelExpiry: isNoExpiry,
+        }));
+      }
+
       toast.success("Subscription updated successfully");
       setSelectedSubscriber(null);
       fetchCreditStatus();
+      getCompanyDashboard();
     } catch (error) {
       console.error(error);
       toast.error("Failed to update subscription");
@@ -473,6 +615,7 @@ const CompanyCompleteDetails = () => {
 
       toast.success("Welcome Pack updated successfully");
       setShowWelcomeModal(false);
+      fetchCreditStatus();
     } catch (err) {
       console.error(err);
       toast.error("Failed to update Welcome Pack");
@@ -481,7 +624,7 @@ const CompanyCompleteDetails = () => {
     }
   };
 
-  const DEFAULT_IMAGE = "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  const DEFAULT_IMAGE = `${process.env.PUBLIC_URL}/assets/images/companyImg/partner-logo-2.png`;
   const cleanImageUrl = (url) => {
     // ✅ If no logo → show default image
     if (!url) return DEFAULT_IMAGE;
@@ -504,23 +647,43 @@ const CompanyCompleteDetails = () => {
     // ✅ Local uploaded image
     return `${API_IMAGE_URL}${url}`;
   };
-  const getCompanyDashboard = async () => {
-    try {
-      setLoading(true);
 
-      const { data } = await axios.get(`${API_BASE_URL}getCompanyDashboard`, {
-        params: { companyId: companyProfileId }, // ✅ query parameter
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+  const renderPagination = (page, totalPages, onPageChange) => {
+    if (totalPages <= 1) return null;
 
-      setDashboardData(data?.data || {});
-    } catch (error) {
-      console.error("Error fetching company dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
+    return (
+      <div className="d-flex justify-content-center mt-2">
+        <button
+          type="button"
+          className="btn btn-sm btn-primary mx-1"
+          disabled={page === 1 || loading}
+          onClick={() => onPageChange(page - 1)}
+        >
+          Prev
+        </button>
+        {[...Array(totalPages)].map((_, index) => (
+          <button
+            key={index}
+            type="button"
+            className={`btn btn-sm mx-1 ${
+              page === index + 1 ? "btn-primary" : "btn-outline-primary"
+            }`}
+            disabled={loading}
+            onClick={() => onPageChange(index + 1)}
+          >
+            {index + 1}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="btn btn-sm btn-primary mx-1"
+          disabled={page === totalPages || loading}
+          onClick={() => onPageChange(page + 1)}
+        >
+          Next
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -546,12 +709,16 @@ const CompanyCompleteDetails = () => {
                   crossOrigin="anonymous"
                   src={cleanImageUrl(companyDetailsData?.companyId?.logo)}
                   alt="logo"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = DEFAULT_IMAGE;
+                  }}
                 />
                 &nbsp; Company Details
               </h5>
             </div>
             <div className="company-button-info-area">
-              {companyDetailsData?.companyId?.welcomePackGranted && (
+              {isWelcomePackActive && (
                 <a
                   href="#"
                   onClick={(e) => {
@@ -738,7 +905,26 @@ const CompanyCompleteDetails = () => {
             </div>
             <div className="col-lg-6 col-md-6 col-sm-12">
               <div className="job-offer-dwm-time-table">
-                <h5>Job Offers Summary</h5>
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <h5 className="mb-0">Job Offers Summary</h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <small>Show</small>
+                    <select
+                      className="form-select form-select-sm"
+                      style={{ width: "80px" }}
+                      value={jobLimit}
+                      onChange={(e) => {
+                        setJobLimit(Number(e.target.value));
+                        setJobPage(1);
+                      }}
+                    >
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                    <small>entries</small>
+                  </div>
+                </div>
                 <table className="table table-bordered">
                   <thead>
                     <tr>
@@ -751,12 +937,25 @@ const CompanyCompleteDetails = () => {
                   </thead>
 
                   <tbody>
-                    {dashboardData?.jobSummary?.length > 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-3">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : dashboardData?.jobSummary?.length > 0 ? (
                       dashboardData.jobSummary.map((job, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
-                          <td>{job.jobTitle}</td>
-                          <td>{job.recruiter || "-"}</td>
+                        <tr key={job._id || job.id || index}>
+                          <td>{(jobPage - 1) * jobLimit + index + 1}</td>
+                          <td className="table-text-truncate" title={job.jobTitle}>
+                            {job.jobTitle}
+                          </td>
+                          <td
+                            className="table-text-truncate"
+                            title={job.recruiter || "-"}
+                          >
+                            {job.recruiter || "-"}
+                          </td>
                           <td>
                             {new Date(job.createdDate).toLocaleDateString()}
                           </td>
@@ -777,13 +976,14 @@ const CompanyCompleteDetails = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="text-center">
+                        <td colSpan="5" className="text-center">
                           No Jobs Found
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                {renderPagination(jobPage, jobTotalPages, setJobPage)}
               </div>
             </div>
           </div>
@@ -812,7 +1012,26 @@ const CompanyCompleteDetails = () => {
 
             <div className="col-lg-6 col-md-6 col-sm-12">
               <div className="job-offer-dwm-time-table">
-                <h5>Credit Usage History</h5>
+                <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                  <h5 className="mb-0">Credit Usage History</h5>
+                  <div className="d-flex align-items-center gap-2">
+                    <small>Show</small>
+                    <select
+                      className="form-select form-select-sm"
+                      style={{ width: "80px" }}
+                      value={creditLimit}
+                      onChange={(e) => {
+                        setCreditLimit(Number(e.target.value));
+                        setCreditPage(1);
+                      }}
+                    >
+                      <option value="10">10</option>
+                      <option value="20">20</option>
+                      <option value="50">50</option>
+                    </select>
+                    <small>entries</small>
+                  </div>
+                </div>
                 <table className="table table-bordered">
                   <thead>
                     <tr>
@@ -824,25 +1043,39 @@ const CompanyCompleteDetails = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {dashboardData?.creditUsageHistory?.length > 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="5" className="text-center py-3">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : dashboardData?.creditUsageHistory?.length > 0 ? (
                       dashboardData.creditUsageHistory.map((item, index) => (
-                        <tr key={index}>
-                          <td>{index + 1}</td>
+                        <tr key={item._id || item.id || index}>
+                          <td>{(creditPage - 1) * creditLimit + index + 1}</td>
                           <td>{new Date(item.date).toLocaleDateString()}</td>
-                          <td>{item.activity}</td>
-                          <td>{item.description}</td>
+                          <td className="table-text-truncate" title={item.activity}>
+                            {item.activity}
+                          </td>
+                          <td
+                            className="table-text-truncate"
+                            title={item.description}
+                          >
+                            {item.description}
+                          </td>
                           <td>{item.creditsUsed}</td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="4" className="text-center">
+                        <td colSpan="5" className="text-center">
                           No Credit Usage Found
                         </td>
                       </tr>
                     )}
                   </tbody>
                 </table>
+                {renderPagination(creditPage, creditTotalPages, setCreditPage)}
               </div>
             </div>
           </div>
@@ -1037,7 +1270,7 @@ const CompanyCompleteDetails = () => {
                 {/* HEADER */}
 
                 <div className="modal-header bg-primary text-white">
-                  <h5 className="modal-title">Manage Subscription</h5>
+                  <h5 className="modal-title text-white" >Manage Subscription</h5>
 
                   <button
                     className="btn-close btn-close-white"
@@ -1051,7 +1284,7 @@ const CompanyCompleteDetails = () => {
                     <div className="row">
                       <div className="col-md-6">
                         <p>
-                          <strong>Email:</strong> {selectedSubscriber?.email}
+                          <strong>Email:</strong> {companyEmail}
                         </p>
 
                         <p>
@@ -1070,6 +1303,14 @@ const CompanyCompleteDetails = () => {
                         <p>
                           <strong>Daily Job Limit:</strong>{" "}
                           {selectedSubscriber?.dailyJobLimit}
+                        </p>
+                        <p>
+                          <strong>Search Boost Score:</strong>{" "}
+                          x{selectedSubscriber?.features?.searchBoostScore ?? selectedSubscriber?.searchBoostScore ?? 1}
+                        </p>
+                        <p>
+                          <strong>Profile Highlight:</strong>{" "}
+                          {(selectedSubscriber?.features?.companyProfileHighlightEnabled ?? selectedSubscriber?.features?.hasProfileHighlight ?? selectedSubscriber?.companyProfileHighlightEnabled) ? "Enabled" : "Disabled"}
                         </p>
                       </div>
 
@@ -1101,10 +1342,24 @@ const CompanyCompleteDetails = () => {
                           <strong>Daily Profile Limit:</strong>{" "}
                           {selectedSubscriber?.dailyProfileLimit}
                         </p>
+                        <p>
+                          <strong>Featured Jobs:</strong>{" "}
+                          {(selectedSubscriber?.features?.featuredJobsAvailable ?? selectedSubscriber?.featuredJobsAvailable) ? "Available" : "Not Available"}
+                        </p>
+                        {(selectedSubscriber?.features?.featuredJobsAvailable ?? selectedSubscriber?.featuredJobsAvailable) && (
+                          <>
+                            <p>
+                              <strong>Max Featured (Cap / Active):</strong>{" "}
+                              {selectedSubscriber?.features?.maxFeaturedJobs ?? selectedSubscriber?.maxFeaturedJobs ?? 0} / {selectedSubscriber?.features?.maxActiveFeaturedJobs ?? selectedSubscriber?.maxActiveFeaturedJobs ?? 0}
+                            </p>
+                            <p>
+                              <strong>Featured Duration / Locations:</strong>{" "}
+                              {selectedSubscriber?.features?.featuredJobDurationDays ?? selectedSubscriber?.featuredJobDurationDays ?? 0} Days / {(selectedSubscriber?.features?.featuredJobLocations ?? selectedSubscriber?.featuredJobLocations)?.join(", ") || "None"}
+                            </p>
+                          </>
+                        )}
                       </div>
                     </div>
-
-                    {/* Daily Limits */}
                   </div>
                   <div className="card mb-4 shadow-sm border-0">
                     <div className="card-body">
@@ -1228,7 +1483,7 @@ const CompanyCompleteDetails = () => {
 
                   {/* DAILY LIMITS */}
 
-                  <div className="card shadow-sm border-0">
+                  <div className="card shadow-sm border-0 mb-4">
                     <div className="card-body">
                       <h6 className="text-primary mb-3">Daily Limits</h6>
 
@@ -1261,6 +1516,178 @@ const CompanyCompleteDetails = () => {
                               })
                             }
                           />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FEATURED JOBS & SEARCH BOOST SETTINGS */}
+                  <div className="card shadow-sm border-0">
+                    <div className="card-body">
+                      <h6 className="text-primary mb-3">Featured Jobs & Search Boost Settings</h6>
+
+                      <div className="form-check mb-3">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          id="featuredJobsAvailable"
+                          checked={managePack.featuredJobsAvailable}
+                          onChange={(e) => {
+                            const isChecked = e.target.checked;
+                            setManagePack((prev) => ({
+                              ...prev,
+                              featuredJobsAvailable: isChecked,
+                              ...(isChecked ? {} : {
+                                maxFeaturedJobs: 0,
+                                maxActiveFeaturedJobs: 0,
+                                featuredJobDurationDays: 0,
+                                featuredJobLocations: [],
+                              })
+                            }));
+                          }}
+                        />
+                        <label className="form-check-label" htmlFor="featuredJobsAvailable">
+                          Featured Jobs Available (Master Switch)
+                        </label>
+                      </div>
+
+                      <div className="row mb-3">
+                        <div className="col-md-4">
+                          <label>Max Featured Jobs (Cap)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.maxFeaturedJobs}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setManagePack((prev) => {
+                                const nextVal = Number(val) || 0;
+                                return {
+                                  ...prev,
+                                  maxFeaturedJobs: val,
+                                  featuredJobsAvailable: prev.featuredJobsAvailable || nextVal > 0,
+                                };
+                              });
+                            }}
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label>Max Active Featured Jobs</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.maxActiveFeaturedJobs}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setManagePack((prev) => {
+                                const nextVal = Number(val) || 0;
+                                return {
+                                  ...prev,
+                                  maxActiveFeaturedJobs: val,
+                                  featuredJobsAvailable: prev.featuredJobsAvailable || nextVal > 0,
+                                };
+                              });
+                            }}
+                          />
+                        </div>
+
+                        <div className="col-md-4">
+                          <label>Featured Duration (Days)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={managePack.featuredJobDurationDays}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setManagePack((prev) => {
+                                const nextVal = Number(val) || 0;
+                                return {
+                                  ...prev,
+                                  featuredJobDurationDays: val,
+                                  featuredJobsAvailable: prev.featuredJobsAvailable || nextVal > 0,
+                                };
+                              });
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="form-label d-block">Featured Job Locations</label>
+                        {["Homepage", "SearchResults", "Highlighted"].map((location) => {
+                          const isChecked = managePack.featuredJobLocations.includes(location);
+                          return (
+                            <div className="form-check form-check-inline" key={location}>
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                id={`loc-${location}`}
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setManagePack((prev) => {
+                                    let updatedLocations = [...prev.featuredJobLocations];
+                                    if (checked) {
+                                      if (!updatedLocations.includes(location)) {
+                                        updatedLocations.push(location);
+                                      }
+                                    } else {
+                                      updatedLocations = updatedLocations.filter((l) => l !== location);
+                                    }
+                                    return {
+                                      ...prev,
+                                      featuredJobLocations: updatedLocations,
+                                      featuredJobsAvailable: prev.featuredJobsAvailable || (checked && updatedLocations.length > 0),
+                                    };
+                                  });
+                                }}
+                              />
+                              <label className="form-check-label" htmlFor={`loc-${location}`}>
+                                {location}
+                              </label>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="row">
+                        <div className="col-md-6">
+                          <label>Search Boost Score</label>
+                          <select
+                            className="form-select"
+                            value={managePack.searchBoostScore}
+                            onChange={(e) =>
+                              setManagePack({
+                                ...managePack,
+                                searchBoostScore: Number(e.target.value),
+                              })
+                            }
+                          >
+                            <option value={1}>x1 — Standard priority</option>
+                            <option value={2}>x2 — Higher priority</option>
+                            <option value={3}>x3 — Highest priority</option>
+                          </select>
+                        </div>
+
+                        <div className="col-md-6 d-flex align-items-end">
+                          <div className="form-check mb-2">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              id="companyProfileHighlightEnabled"
+                              checked={managePack.companyProfileHighlightEnabled}
+                              onChange={(e) =>
+                                setManagePack({
+                                  ...managePack,
+                                  companyProfileHighlightEnabled: e.target.checked,
+                                })
+                              }
+                            />
+                            <label className="form-check-label" htmlFor="companyProfileHighlightEnabled">
+                              Highlight Company Profile
+                            </label>
+                          </div>
                         </div>
                       </div>
                     </div>

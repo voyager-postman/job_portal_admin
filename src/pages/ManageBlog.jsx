@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import Swal from "sweetalert2";
 import * as XLSX from "xlsx";
+import { ensureAuthRequestConfig } from "../utils/authToken";
 
 function ManageBlog() {
   const [loadingAll, setLoadingAll] = useState(true);
@@ -331,16 +332,12 @@ function ManageBlog() {
         const currentStatus = row.original.isActive;
 
         const handleStatusChange = async (e) => {
-          const newStatus = e.target.checked ? true : false;
+          const newStatus = e.target.checked;
           try {
             const response = await axios.post(
               `${API_BASE_URL}toggleBlog/${id}`,
               { isActive: newStatus },
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              },
+              await ensureAuthRequestConfig(),
             );
             if (response.data.success) {
               toast.success(response.data.message);
@@ -349,7 +346,7 @@ function ManageBlog() {
               toast.error("Something went wrong!");
             }
           } catch (error) {
-            toast.error(error.response.data.message);
+            toast.error(error.response?.data?.message || "Failed to update status");
           }
         };
 
@@ -360,6 +357,48 @@ function ManageBlog() {
                 type="checkbox"
                 checked={currentStatus === true}
                 onChange={handleStatusChange}
+              />
+              <span className="slider round"></span>
+            </label>
+          </div>
+        );
+      },
+    },
+    {
+      Header: "Popular",
+      id: "popular",
+      Cell: ({ row }) => {
+        const id = row.original._id;
+        const isPopular = row.original.isPopular === true;
+
+        const handlePopularChange = async (e) => {
+          const newPopular = e.target.checked;
+          try {
+            const response = await axios.post(
+              `${API_BASE_URL}setBlogPopular/${id}`,
+              { isPopular: newPopular },
+              await ensureAuthRequestConfig(),
+            );
+            if (response.data.success) {
+              toast.success(response.data.message);
+              fetchBlogList();
+            } else {
+              toast.error(response.data.message || "Something went wrong!");
+            }
+          } catch (error) {
+            toast.error(
+              error.response?.data?.message || "Failed to update popular status",
+            );
+          }
+        };
+
+        return (
+          <div className="super-admin-toggle-switch">
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={isPopular}
+                onChange={handlePopularChange}
               />
               <span className="slider round"></span>
             </label>
@@ -386,11 +425,7 @@ function ManageBlog() {
               try {
                 const response = await axios.delete(
                   `${API_BASE_URL}delete/${id}`,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                  },
+                  await ensureAuthRequestConfig(),
                 );
                 if (response.data.success) {
                   toast.success(response.data.message);

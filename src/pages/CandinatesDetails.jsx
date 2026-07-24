@@ -2,17 +2,150 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
 import { useLocation, Link } from "react-router-dom";
+import {
+  getCandidateFileList,
+  openProtectedFile,
+} from "../utils/openProtectedFile";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+const formatLabel = (value, fallback = "Not Provided") => {
+  if (value == null || value === "") return fallback;
+  if (Array.isArray(value)) {
+    const joined = value
+      .map((item) => formatLabel(item, ""))
+      .filter(Boolean)
+      .join(", ");
+    return joined || fallback;
+  }
+  if (typeof value === "object") {
+    const extracted =
+      value.name ?? value.title ?? value.label ?? value.jobTitle ?? value.value;
+    return extracted != null ? formatLabel(extracted, fallback) : fallback;
+  }
+  const str = String(value).trim();
+  if (!str) return fallback;
+  return str.toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+};
+
+const formatMonthYear = (value, fallback = "Not Provided") => {
+  if (!value) return fallback;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return fallback;
+  return `${date.toLocaleString("default", { month: "short" })} ${date.getFullYear()}`;
+};
 
 const CandinatesDetails = () => {
   const location = useLocation();
   const candidateProfileId = location?.state?.candidateProfileId;
   const [loading, setLoading] = useState(false);
   const [candidate, setCandidate] = useState(null);
+  const [openingFile, setOpeningFile] = useState(null);
 
-  console.log("Received ID:", candidateProfileId);
+  const resumeFiles = getCandidateFileList(candidate, "resume");
+  const coverLetterFiles = getCandidateFileList(candidate, "coverLetter");
+
+  const formatUploadedAt = (value) => {
+    if (!value) return null;
+    return new Date(value).toLocaleString();
+  };
+
+  const getFileIcon = (filename) => {
+    const ext = filename?.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return "fa-file-pdf";
+    if (["doc", "docx"].includes(ext)) return "fa-file-word";
+    return "fa-file-lines";
+  };
+
+  const handleViewFile = async (type, file) => {
+    if (!file?.filename) return;
+
+    // Only pre-open a tab for PDFs (view in browser). Docx downloads directly.
+    const isPdf = file.filename.toLowerCase().endsWith(".pdf");
+    const previewWindow = isPdf
+      ? window.open("about:blank", "_blank", "noopener,noreferrer")
+      : null;
+    const openingKey = `${type}:${file.id}`;
+
+    try {
+      setOpeningFile(openingKey);
+      await openProtectedFile(type, file.filename, null, previewWindow);
+    } catch (err) {
+      previewWindow?.close();
+      if (err.status === 429) {
+        toast.warn(err.message, { autoClose: 6000 });
+      } else if (err.status === 404) {
+        toast.error(err.message, { autoClose: 5000 });
+      } else {
+        toast.error(err.message || "Failed to open file");
+      }
+    } finally {
+      setOpeningFile(null);
+    }
+  };
+
+  const renderFileList = (files, type, emptyLabel) => {
+    if (!files.length) {
+      return <p className="mb-0">{emptyLabel}</p>;
+    }
+
+    return (
+      <ul className="list-unstyled mb-0">
+        {files.map((file, index) => {
+          const openingKey = `${type}:${file.id}`;
+          const isOpening = openingFile === openingKey;
+
+          return (
+            <li
+              key={file.id}
+              className="d-flex flex-wrap align-items-center justify-content-between gap-2 py-2 border-bottom"
+            >
+              <div>
+                <strong>
+                  {type === "resume" ? "Resume" : "Cover Letter"} {index + 1}
+                </strong>
+                <br />
+                <small className="text-muted">{file.filename}</small>
+                {file.uploadedAt && (
+                  <>
+                    <br />
+                    <small className="text-muted">
+                      Uploaded: {formatUploadedAt(file.uploadedAt)}
+                    </small>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                disabled={isOpening}
+                onClick={() => handleViewFile(type, file)}
+              >
+                {isOpening ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm me-1"
+                      role="status"
+                    />
+                    Opening...
+                  </>
+                ) : (
+                  <>
+                    <i className={`fa-solid ${getFileIcon(file.filename)} me-1`} />
+                    {file.filename?.toLowerCase().endsWith(".pdf")
+                      ? "View"
+                      : "Download"}
+                  </>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    );
+  };
+
   useEffect(() => {
-    console.log("useEffect triggered:", candidateProfileId);
-
     if (candidateProfileId) {
       fetchCandidateDetails(candidateProfileId);
     }
@@ -21,11 +154,10 @@ const CandinatesDetails = () => {
   const fetchCandidateDetails = async (id) => {
     try {
       setLoading(true);
-      // ✔ GET request
-      // ✔ No headers
+      // GET request
+      // No headers
       const res = await axios.post(`${API_BASE_URL}admin/jobseekers/${id}`);
 
-      console.log("API Response:", res.data?.data?.[0]);
       setCandidate(res.data?.data?.[0]);
     } catch (err) {
       console.error("Error fetching candidate details:", err);
@@ -57,6 +189,7 @@ const CandinatesDetails = () => {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={3000} />
       {loading ? (
         <div className="d-flex justify-content-center py-5">
           <div className="spinner-border text-primary" role="status">
@@ -76,11 +209,11 @@ const CandinatesDetails = () => {
               Manage Candidate Details
             </h5>
           </div>
-          <div className="super-admin-candidate-profile-detail">
+          <div className="super-admin-candidate-profile-detail candidate-details-page">
             <div className="super-admin-candidate-img-short-detail">
               <div className="super-admin-candidate-img">
                 <img
-                  crossorigin="anonymous"
+                  crossOrigin="anonymous"
                   src={getImageUrl(candidate?.userId?.profileImage)}
                   alt="Candidate"
                 />
@@ -88,20 +221,12 @@ const CandinatesDetails = () => {
               <div className="super-admin-candidate-short-detail">
                 <h3>
                   <strong>Name:</strong>
-                  {candidate?.userId?.first_name
-                    ?.toLowerCase()
-                    .replace(/^\w/, (c) => c.toUpperCase()) ||
-                    "Not Provided"}{" "}
-                  {candidate?.userId?.last_name
-                    ?.toLowerCase()
-                    .replace(/^\w/, (c) => c.toUpperCase())}
+                  {formatLabel(candidate?.userId?.first_name)}{" "}
+                  {formatLabel(candidate?.userId?.last_name, "")}
                 </h3>
                 <h3>
                   <strong>Position:</strong>{" "}
-                  {candidate?.aboutRole?.jobTitle
-                    ?.toLowerCase()
-                    .replace(/^\w/, (c) => c.toUpperCase()) ||
-                    "Not Provided"}{" "}
+                  {formatLabel(candidate?.aboutRole?.jobTitle)}{" "}
                 </h3>
                 <h3>
                   <strong>Email:</strong>{" "}
@@ -113,16 +238,15 @@ const CandinatesDetails = () => {
                 </h3>
                 <h3>
                   <strong>Address:</strong>{" "}
-                  {candidate?.userId?.city
-                    ?.toLowerCase()
-                    .replace(/^\w/, (c) => c.toUpperCase()) ||
-                    "Not Provided"}{" "}
+                  {formatLabel(candidate?.userId?.city)}{" "}
                 </h3>
               </div>
             </div>
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Professional Summary</h4>
-              <p>{candidate?.professionalSummary}</p>
+              <p className="candidate-detail-text">
+                {candidate?.professionalSummary || "Not Provided"}
+              </p>
             </div>
             {/* <div className="super-admin-candidate-profile-summary">
               <h4>Career Goals</h4>
@@ -156,9 +280,9 @@ const CandinatesDetails = () => {
                 </li>
               </ul>
             </div> */}
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Career Goals</h4>
-              <ul>
+              <ul className="candidate-info-grid">
                 <li>
                   <h5>Desired Job Title</h5>
                   <p>
@@ -194,30 +318,24 @@ const CandinatesDetails = () => {
                 </li>
               </ul>
             </div>
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>About your role</h4>
-              <ul>
+              <ul className="candidate-info-grid">
                 <li>
                   <h5>Job title</h5>
-                  <p>
-                    {candidate?.aboutRole?.jobTitle
-                      ?.toLowerCase()
-                      .replace(/^\w/, (c) => c.toUpperCase()) ||
-                      "Not Provided"}{" "}
-                  </p>
+                  <p>{formatLabel(candidate?.aboutRole?.jobTitle)}</p>
                 </li>
                 <li>
                   <h5>Years of experience</h5>
-                  <p>{candidate?.aboutRole?.yearOfExperience} Years</p>
+                  <p>
+                    {candidate?.aboutRole?.yearOfExperience != null
+                      ? `${candidate.aboutRole.yearOfExperience} Years`
+                      : "Not Provided"}
+                  </p>
                 </li>
                 <li>
                   <h5>Job category</h5>
-                  <p>
-                    {candidate?.aboutRole?.jobCategory
-                      ?.toLowerCase()
-                      .replace(/^\w/, (c) => c.toUpperCase()) ||
-                      "Not Provided"}{" "}
-                  </p>
+                  <p>{formatLabel(candidate?.aboutRole?.jobCategory)}</p>
                 </li>
               </ul>
             </div>
@@ -238,127 +356,86 @@ const CandinatesDetails = () => {
     </li>
    </ul>
    </div> */}
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Work Experience</h4>
 
               {candidate?.workHistory && candidate.workHistory.length > 0 ? (
-                candidate.workHistory.map((work) => {
-                  const startDate = new Date(work.startDate);
-                  const endDate = work.currentlyWorkingHere
-                    ? "Until now"
-                    : new Date(work.endDate);
+                <div className="candidate-experience-list">
+                  {candidate.workHistory.map((work) => {
+                    const formattedStart = formatMonthYear(work.startDate);
+                    const formattedEnd = work.currentlyWorkingHere
+                      ? "Until now"
+                      : formatMonthYear(work.endDate);
 
-                  // Format date
-                  const formattedStart = `${startDate.toLocaleString(
-                    "default",
-                    {
-                      month: "short",
-                    },
-                  )} ${startDate.getFullYear()}`;
+                    return (
+                      <div key={work._id} className="candidate-experience-card">
+                        <div className="candidate-experience-header">
+                          <div>
+                            <h5>{formatLabel(work.jobTitle)}</h5>
+                            <p>{formattedStart} - {formattedEnd}</p>
+                          </div>
 
-                  const formattedEnd = work.currentlyWorkingHere
-                    ? "Until now"
-                    : `${endDate.toLocaleString("default", {
-                        month: "short",
-                      })} ${endDate.getFullYear()}`;
+                          {!work.keep_employer_anonymous && (
+                            <div>
+                              <h5>
+                                {work.companyName || "Company Not Provided"}
+                              </h5>
+                              <p>
+                                {work.workLocation || "Location not specified"}
+                                {" | "}
+                                {work.EmploymentType ||
+                                  "Employment type not specified"}
+                              </p>
+                            </div>
+                          )}
+                        </div>
 
-                  return (
-                    <div key={work._id} className="work-history-block">
-                      <ul>
-                        {/* Job Title */}
-                        <li>
-                          <h5>
-                            {work.jobTitle
-                              ?.toLowerCase()
-                              .replace(/^\w/, (c) => c.toUpperCase()) ||
-                              "Not Provided"}
-                          </h5>
-
-                          {/* Duration */}
-                          <p>
-                            {formattedStart} - {formattedEnd}
-                          </p>
-                        </li>
-
-                        {/* Company + Location + Type (Only if NOT anonymous) */}
-                        {!work.keep_employer_anonymous && (
-                          <li>
-                            <h5>
-                              {work.companyName || "Company Not Provided"}
-                            </h5>
-                            <p>
-                              {work.workLocation || "Location not specified"},{" "}
-                              {work.EmploymentType ||
-                                "Employment type not specified"}
-                            </p>
-                          </li>
-                        )}
-
-                        <li />
-                      </ul>
-
-                      {/* Description */}
-                      {work.Description && (
-                        <>
+                        <div className="candidate-description-block">
                           <h5>Description</h5>
-                          <p>{work.Description}</p>
-                        </>
-                      )}
-
-                      {/* Salary Section */}
-                      {/* {work.currentSalary && (
-                      <>
-                        <h5>Position Salary (Gross)</h5>
-
-                        <p>
-                          <strong>Salary:</strong> {work.currentSalary.amount}{" "}
-                          {work.currentSalary.currency}
-                        </p>
-
-                        <p>
-                          <strong>Payroll Frequency:</strong>{" "}
-                          {work.currentSalary.payrollFrequency}
-                        </p>
-                      </>
-                    )} */}
-                    </div>
-                  );
-                })
+                          <p className="candidate-detail-text">
+                            {work.Description || "Not Provided"}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               ) : (
-                <p>No work experience available</p>
+                <p className="candidate-empty-text">No work experience available</p>
               )}
             </div>
 
-            {/* 🟢 Salary Section (Dynamic) */}
-            <div className="super-admin-candidate-profile-summary">
+            {/* Salary Section (Dynamic) */}
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Position Salary (Gross)</h4>
 
               {candidate?.workHistory?.length > 0 ? (
-                candidate.workHistory.map((work, idx) => (
-                  <ul
-                    key={idx}
-                    style={{ display: "flex", justifyContent: "space-between" }}
-                  >
-                    <li>
-                      <h5>Salary</h5>
+                <ul className="candidate-info-grid candidate-salary-grid">
+                  {candidate.workHistory.map((work, idx) => (
+                    <li key={idx}>
+                      <h5>{formatLabel(work?.jobTitle, `Position ${idx + 1}`)}</h5>
                       <p>
-                        {work?.currentSalary?.amount}{" "}
-                        {work?.currentSalary?.currency}
+                        <strong>Salary:</strong>{" "}
+                        {work?.currentSalary?.amount
+                          ? `${work.currentSalary.amount} ${
+                              work.currentSalary.currency || ""
+                            }`
+                          : "Not Provided"}
+                      </p>
+                      <p>
+                        <strong>Payroll Frequency:</strong>{" "}
+                        {work?.currentSalary?.payrollFrequency ||
+                          "Not Provided"}
                       </p>
                     </li>
-
-                    <li>
-                      <h5>Payroll Frequency</h5>
-                      <p>{work?.currentSalary?.payrollFrequency}</p>
-                    </li>
-                  </ul>
-                ))
+                  ))}
+                </ul>
               ) : (
-                <p>No work history available</p>
+                <p className="candidate-empty-text">No work history available</p>
               )}
             </div>
 
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Education</h4>
 
               {candidate?.education && candidate.education.length > 0 ? (
@@ -371,21 +448,12 @@ const CandinatesDetails = () => {
                       ? null
                       : new Date(edu.endDate);
 
-                  const formattedDegree = edu.degree
-                    ? edu.degree
-                        .toLowerCase()
-                        .replace(/^\w/, (c) => c.toUpperCase())
-                    : "Not Provided";
-
-                  const formattedUniversity = edu.University
-                    ? edu.University.toLowerCase().replace(/^\w/, (c) =>
-                        c.toUpperCase(),
-                      )
-                    : "Not Provided";
+                  const formattedDegree = formatLabel(edu.degree);
+                  const formattedUniversity = formatLabel(edu.University);
 
                   return (
                     <div key={edu._id} className="education-item">
-                      <ul>
+                      <ul className="candidate-info-grid">
                         <li>
                           <h5>Degree</h5>
                           <p>{formattedDegree}</p>
@@ -435,7 +503,7 @@ const CandinatesDetails = () => {
               )}
             </div>
 
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Skills &amp; Technologies</h4>
 
               <div className="super-admin-candidate-profile-tags">
@@ -451,10 +519,10 @@ const CandinatesDetails = () => {
               </div>
             </div>
 
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Languages</h4>
 
-              <ul>
+              <ul className="candidate-info-grid">
                 {candidate?.languages && candidate.languages.length > 0 ? (
                   candidate.languages.map((lang) => (
                     <li key={lang._id}>
@@ -468,18 +536,28 @@ const CandinatesDetails = () => {
               </ul>
             </div>
 
-            <div className="super-admin-candidate-profile-summary">
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
+              <h4>Resumes / CVs</h4>
+              {renderFileList(resumeFiles, "resume", "No resumes uploaded")}
+            </div>
+
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
+              <h4>Cover Letters</h4>
+              {renderFileList(
+                coverLetterFiles,
+                "coverLetter",
+                "No cover letters uploaded",
+              )}
+            </div>
+
+            <div className="super-admin-candidate-profile-summary candidate-summary-card">
               <h4>Certificates</h4>
 
-              <ul>
+              <ul className="candidate-info-grid">
                 {candidate?.certificates &&
                 candidate.certificates.length > 0 ? (
                   candidate.certificates.map((cert) => {
-                    const formattedTitle = cert.title
-                      ? cert.title
-                          .toLowerCase()
-                          .replace(/^\w/, (c) => c.toUpperCase())
-                      : "Not Provided";
+                    const formattedTitle = formatLabel(cert.title);
 
                     const issueYear = cert.issueDate
                       ? new Date(cert.issueDate).getFullYear()

@@ -320,7 +320,7 @@ const AboutContent = () => {
                 <div className="upload-company-info-area">
                   <div className="upload-company-img-preview">
                     <img
-                      crossorigin="anonymous"
+                      crossOrigin="anonymous"
                       src={imagePreview}
                       className="main-logo"
                       id="preview"
@@ -667,7 +667,7 @@ const AboutContent = () => {
                 <div className="col-lg-3 mb-3" key={member._id}>
                   <div className="card p-2 text-center">
                     <img
-                      crossorigin="anonymous"
+                      crossOrigin="anonymous"
                       src={`${API_IMAGE_URL}${member.image}`}
                       height="120"
                       style={{ objectFit: "cover" }}

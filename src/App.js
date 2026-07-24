@@ -73,6 +73,12 @@ import ContactMessage from "./pages/ContactMessage";
 import EmployeerHomeContent from "./pages/CmsPages/EmployeerHomeContent";
 import AdminAISettings from "./pages/AdminAISettings";
 import AdminCurrencySettings from "./pages/AdminCurrencySettings";
+import AdminSecurity from "./pages/AdminSecurity";
+import AdminAuthProviderSettings from "./pages/AdminAuthProviderSettings";
+import AdminServiceSettings from "./pages/AdminServiceSettings";
+import AdminGoogleMarketingSettings from "./pages/AdminGoogleMarketingSettings";
+import AdminHomePageSeoSettings from "./pages/AdminHomePageSeoSettings";
+import AdminJobsListingSeoSettings from "./pages/AdminJobsListingSeoSettings";
 import Remote from "./pages/Remote";
 import SearchQuotes from "./pages/SearchQuotes";
 function App() {
@@ -104,6 +110,27 @@ function App() {
           <Route path="company-active-job" element={<CompanyActiveJob />} />
           <Route path="ai-settings" element={<AdminAISettings />} />{" "}
           <Route path="currency-settings" element={<AdminCurrencySettings />} />{" "}
+          <Route path="security-dashboard" element={<AdminSecurity />} />
+          <Route
+            path="oauth-settings"
+            element={<AdminAuthProviderSettings />}
+          />
+          <Route
+            path="service-settings"
+            element={<AdminServiceSettings />}
+          />
+          <Route
+            path="google-marketing-settings"
+            element={<AdminGoogleMarketingSettings />}
+          />
+          <Route
+            path="home-page-seo-settings"
+            element={<AdminHomePageSeoSettings />}
+          />
+          <Route
+            path="jobs-listing-seo-settings"
+            element={<AdminJobsListingSeoSettings />}
+          />
           <Route
             path="employer-subscription"
             element={<EmployerSubscription />}
@@ -116,7 +143,7 @@ function App() {
             path="company-purchase-history"
             element={<PurchaseHistory />}
           />
-          <Route path="manage-blog" element={<ManageBlog />} />
+          <Route path="manage-blog" element={<ManageBlog />} />credit-management
           <Route path="contact-messages" element={<ContactMessage />} />
           <Route path="manage-faq" element={<ManageFaq />} />
           <Route path="all-invoice-list" element={<InvoiceManagement />} />

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url.js";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
 const Companydatails = () => {
@@ -9,6 +9,9 @@ const Companydatails = () => {
   const companyProfileId = location?.state?.companyProfileId;
   const [loading, setLoading] = useState(false);
   const [company, setCompany] = useState(null);
+  const careerDetailRef = useRef(null);
+  const defaultCoverImage = `${process.env.PUBLIC_URL}/assets/images/companyImg/company-img-1.jpg`;
+  const defaultLogoImage = `${process.env.PUBLIC_URL}/assets/images/companyImg/partner-logo-2.png`;
 
   console.log("Received Company Id:", companyProfileId);
   useEffect(() => {
@@ -33,9 +36,9 @@ const Companydatails = () => {
     }
   };
 
-  const getImageUrl = (url) => {
+  const getImageUrl = (url, fallback = defaultCoverImage) => {
     if (!url || url === "undefined" || url === null) {
-      return "assets/images/company/company-img-1.jpg"; 
+      return fallback;
     }
     // Fix broken: /uploads/https...
     if (url.includes("uploads/https")) {
@@ -50,19 +53,119 @@ const Companydatails = () => {
     return `${API_IMAGE_URL}${url}`;
   };
 
+  const getVideoUrl = (url) => {
+    if (!url || url === "undefined" || url === null) return "";
+    if (url.startsWith("http")) return url;
+    return `${API_IMAGE_URL}${url}`;
+  };
+
+  const getYoutubeEmbedUrl = (url) => {
+    if (!url) return "";
+
+    try {
+      const parsedUrl = new URL(url);
+      const host = parsedUrl.hostname.replace("www.", "");
+
+      if (host === "youtube.com" || host === "m.youtube.com") {
+        const videoId = parsedUrl.pathname.startsWith("/shorts/")
+          ? parsedUrl.pathname.split("/shorts/")[1]?.split("/")[0]
+          : parsedUrl.searchParams.get("v");
+
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+      }
+
+      if (host === "youtu.be") {
+        const videoId = parsedUrl.pathname.replace("/", "").split("/")[0];
+        return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+      }
+    } catch (error) {
+      return "";
+    }
+
+    return "";
+  };
+
+  const isVideoFile = (url) => /\.(mp4|webm|ogg)$/i.test(url?.split("?")[0] || "");
+
   const decodeHtml = (html) => {
     const txt = document.createElement("textarea");
     txt.innerHTML = html;
     return txt.value;
   };
 
-  const decodedHtml = decodeHtml(decodeHtml(company?.aboutCompany || ""));
-  const decodedHtml1 = decodeHtml1(decodeHtml1(company?.careerDetail || ""));
-  function decodeHtml1(html) {
-    const txt = document.createElement("textarea");
-    txt.innerHTML = html;
-    return txt.value;
-  }
+  const normalizeRichTextImageUrl = (src) => {
+    if (!src || src === "undefined" || src === null) return "";
+    if (src.includes("uploads/https")) return src.substring(src.indexOf("https"));
+    if (src.startsWith("http")) return src;
+    if (src.startsWith("/job_portal/uploads/")) return `https://sisccltd.com${src}`;
+    if (src.startsWith("uploads/")) {
+      return `${API_IMAGE_URL.replace(/uploads\/?$/, "")}${src}`;
+    }
+    return getImageUrl(src);
+  };
+
+  const prepareRichTextHtml = (html) => {
+    const decoded = decodeHtml(decodeHtml(html || ""));
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = decoded;
+
+    wrapper.querySelectorAll("img").forEach((img) => {
+      img.src = normalizeRichTextImageUrl(img.getAttribute("src"));
+      img.alt = img.getAttribute("alt") || "Company";
+      img.loading = "lazy";
+      img.style.maxWidth = "100%";
+      img.style.height = "auto";
+      img.style.display = "block";
+    });
+
+    return wrapper.innerHTML;
+  };
+
+  const hasRichTextContent = (html) => {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html || "";
+    const hasText = wrapper.textContent.trim().length > 0;
+    const hasMedia = wrapper.querySelector("img, video, iframe");
+    return hasText || Boolean(hasMedia);
+  };
+
+  const decodedHtml = prepareRichTextHtml(company?.aboutCompany);
+  const decodedHtml1 = prepareRichTextHtml(company?.careerDetail);
+  const hasAboutContent = hasRichTextContent(decodedHtml);
+  const hasCareerContent = hasRichTextContent(decodedHtml1);
+
+  const EmptyState = ({ message }) => (
+    <div className="company-detail-empty-state">
+      <i className="fa-regular fa-file-lines" />
+      <p>{message}</p>
+    </div>
+  );
+
+  const renderLink = (label, value) =>
+    value ? (
+      <a href={value} target="_blank" rel="noreferrer" style={{ wordBreak: "break-all" }}>
+        {value}
+      </a>
+    ) : (
+      <span className="text-muted">Not Provided</span>
+    );
+
+  useEffect(() => {
+    const container = careerDetailRef.current;
+    if (!container) return;
+
+    const images = Array.from(container.querySelectorAll("img"));
+    const cleanup = images.map((img) => {
+      const handleError = () => {
+        img.style.display = "none";
+      };
+
+      img.addEventListener("error", handleError);
+      return () => img.removeEventListener("error", handleError);
+    });
+
+    return () => cleanup.forEach((removeListener) => removeListener());
+  }, [decodedHtml1]);
 
   return (
     <>
@@ -89,24 +192,24 @@ const Companydatails = () => {
             <div className="super-admin-company-img-short-detail">
               <div className="super-admin-company-img">
                 <img
-                  crossorigin="anonymous"
+                  crossOrigin="anonymous"
                   src={getImageUrl(company?.coverPhoto)}
                   alt="Image"
                   onError={(e) => {
-                    e.currentTarget.src =
-                      "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = defaultCoverImage;
                   }}
                 />
               </div>
               <div className="super-admin-company-short-detail">
                 <div className="super-admin-company-logo">
                   <img
-                    crossorigin="anonymous"
-                    src={getImageUrl(company?.logo)}
+                    crossOrigin="anonymous"
+                    src={getImageUrl(company?.logo, defaultLogoImage)}
                     alt="Image"
                     onError={(e) => {
-                      e.currentTarget.src =
-                        "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = defaultLogoImage;
                     }}
                   />
                 </div>
@@ -281,10 +384,14 @@ const Companydatails = () => {
                     </div>
                   </div>
                   <div className="super-admin-company-profile-description">
-                    <div
-                      className="company-profile-description"
-                      dangerouslySetInnerHTML={{ __html: decodedHtml }}
-                    />
+                    {hasAboutContent ? (
+                      <div
+                        className="company-profile-description"
+                        dangerouslySetInnerHTML={{ __html: decodedHtml }}
+                      />
+                    ) : (
+                      <EmptyState message="No company description available." />
+                    )}
                   </div>
                 </div>
                 <div id="menu2" className="tab-pane fade" role="tabpanel">
@@ -337,17 +444,23 @@ const Companydatails = () => {
                   <div className="super-admin-company-detail-third-tab">
                     <h5>Office Photos</h5>
                     <div className="row">
-                      {company?.photos?.map((photo) => (
-                        <div className="col-lg-3 col-md-4" key={photo._id}>
-                          <div className="super-admin-company-office-photos-box">
-                            <img
-                              crossorigin="anonymous"
-                              src={getImageUrl(photo.url)}
-                              alt="Company"
-                            />
+                      {company?.photos?.length ? (
+                        company.photos.map((photo) => (
+                          <div className="col-lg-3 col-md-4" key={photo._id}>
+                            <div className="super-admin-company-office-photos-box">
+                              <img
+                                crossOrigin="anonymous"
+                                src={getImageUrl(photo.url)}
+                                alt="Company"
+                              />
+                            </div>
                           </div>
+                        ))
+                      ) : (
+                        <div className="col-12">
+                          <EmptyState message="No office photos available." />
                         </div>
-                      ))}
+                      )}
                       {/* <div className="col-lg-3 col-md-4">
                         <div className="super-admin-company-office-photos-box">
                           <img
@@ -363,17 +476,46 @@ const Companydatails = () => {
                   <div className="super-admin-company-detail-fourth-tab">
                     <h5>Office Videos</h5>
                     <div className="row">
-                      {company?.videos?.map((video) => (
-                        <div className="col-lg-3 col-md-4" key={video._id}>
-                          <div className="super-admin-company-office-photos-box">
-                            <img
-                              crossorigin="anonymous"
-                              src={getImageUrl(video.url)}
-                              alt="Company"
-                            />
-                          </div>
+                      {company?.videos?.length ? (
+                        company.videos.map((video) => {
+                          const videoUrl = getVideoUrl(video.url);
+                          const youtubeEmbedUrl = getYoutubeEmbedUrl(videoUrl);
+
+                          return (
+                            <div className="col-lg-3 col-md-4" key={video._id}>
+                              <div className="super-admin-company-office-video-box">
+                                {youtubeEmbedUrl ? (
+                                  <iframe
+                                    width="100%"
+                                    height={150}
+                                    src={youtubeEmbedUrl}
+                                    title="Company office video"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                    allowFullScreen
+                                  />
+                                ) : isVideoFile(videoUrl) ? (
+                                  <video width="100%" height={150} controls>
+                                    <source src={videoUrl} />
+                                  </video>
+                                ) : (
+                                  <a
+                                    href={videoUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    Open video
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="col-12">
+                          <EmptyState message="No office videos available." />
                         </div>
-                      ))}
+                      )}
                       {/* <div className="col-lg-3 col-md-4">
                         <div className="super-admin-company-office-video-box">
                           <video width="100%" height={150} controls>
@@ -390,10 +532,15 @@ const Companydatails = () => {
                 <div id="menu5" className="tab-pane fade" role="tabpanel">
                   <div className="super-admin-company-detail-fifth-tab">
                     <h5>Career Details</h5>
-                    <div
-                      className="career-detail-display"
-                      dangerouslySetInnerHTML={{ __html: decodedHtml1 }}
-                    />
+                    {hasCareerContent ? (
+                      <div
+                        ref={careerDetailRef}
+                        className="career-detail-display"
+                        dangerouslySetInnerHTML={{ __html: decodedHtml1 }}
+                      />
+                    ) : (
+                      <EmptyState message="No career details available." />
+                    )}
                   </div>
                 </div>
                 <div id="menu6" className="tab-pane fade" role="tabpanel">
@@ -405,12 +552,17 @@ const Companydatails = () => {
                         website
                       </h4>
                       <h5>
-                        <a
-                          href={company?.links?.officialWebsite}
-                          target="_blank"
-                        >
-                          {company?.brandName || "Not Provided"}
-                        </a>
+                        {company?.links?.officialWebsite ? (
+                          <a
+                            href={company.links.officialWebsite}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            {company?.brandName || company.links.officialWebsite}
+                          </a>
+                        ) : (
+                          <span className="text-muted">Not Provided</span>
+                        )}
                       </h5>
                     </div>
                     <div className="super-admin-company-detail-social-link">
@@ -418,57 +570,25 @@ const Companydatails = () => {
                         <h4>
                           <i className="fa-brands fa-linkedin" /> Linkedin
                         </h4>
-                        <a
-                          href={company?.links?.linkedin || "Not Provided"}
-                          target="_blank"
-                          style={{
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {company?.links?.linkedin || "Not Provided"}
-                        </a>
+                        {renderLink("Linkedin", company?.links?.linkedin)}
                       </div>
                       <div className="super-admin-company-detail-social-box">
                         <h4>
                           <i className="fa-brands fa-facebook-f" /> facebook
                         </h4>
-                        <a
-                          href={company?.links?.facebook || "Not Provided"}
-                          target="_blank"
-                          style={{
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {company?.links?.facebook || "Not Provided"}
-                        </a>
+                        {renderLink("facebook", company?.links?.facebook)}
                       </div>
                       <div className="super-admin-company-detail-social-box">
                         <h4>
                           <i className="fa-brands fa-instagram" /> Instagram
                         </h4>
-                        <a
-                          href={company?.links?.instagram || "Not Provided"}
-                          target="_blank"
-                          style={{
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {company?.links?.instagram || "Not Provided"}
-                        </a>
+                        {renderLink("Instagram", company?.links?.instagram)}
                       </div>
                       <div className="super-admin-company-detail-social-box">
                         <h4>
                           <i className="fa-brands fa-x-twitter" /> Twitter
                         </h4>
-                        <a
-                          href={company?.links?.twitter || "Not Provided"}
-                          target="_blank"
-                          style={{
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {company?.links?.twitter || "Not Provided"}
-                        </a>
+                        {renderLink("Twitter", company?.links?.twitter)}
                       </div>
                     </div>
                   </div>

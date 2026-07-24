@@ -4,6 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url";
+import FreelancerSectionForm from "./FreelancerSectionForm";
 
 const HomePageContent = () => {
   const [formData, setFormData] = useState({
@@ -24,16 +25,14 @@ const HomePageContent = () => {
   const [fourthSection, setFourthSection] = useState({
     mainTitle: "",
     shortParagraph: "",
+    limit: 8,
+    jobDisplayType: "featured",
   });
   const [fifthSection, setFifthSection] = useState({
     mainTitle: "",
     mainTitleDescription: "",
   });
   const [sixthSection, setSixthSection] = useState({
-    mainTitle: "",
-    shortParagraph: "",
-  });
-  const [seventhSection, setSeventhSection] = useState({
     mainTitle: "",
     shortParagraph: "",
   });
@@ -45,9 +44,10 @@ const HomePageContent = () => {
     mainTitle: "",
     shortParagraph: "",
   });
-  const [fifthImagePreview, setFifthImagePreview] = useState([]);
   const [fifthImages, setFifthImages] = useState([]);
   const [fifthExistingPhotos, setFifthExistingPhotos] = useState([]);
+  const [sixthCompanyLogos, setSixthCompanyLogos] = useState([]);
+  const [sixthExistingLogos, setSixthExistingLogos] = useState([]);
   const [keywordInput, setKeywordInput] = useState("");
   const [images, setImages] = useState([]);
   const [existingPhotos, setExistingPhotos] = useState([]);
@@ -74,6 +74,17 @@ const HomePageContent = () => {
     }));
 
     setFifthImages((prev) => [...prev, ...newImages]);
+  };
+  const handleSixthLogoChange = (e) => {
+    const files = Array.from(e.target.files);
+
+    const newLogos = files.map((file) => ({
+      id: Date.now() + Math.random(),
+      file: file,
+      preview: URL.createObjectURL(file),
+    }));
+
+    setSixthCompanyLogos((prev) => [...prev, ...newLogos]);
   };
   const handleFileChangeMultiple = (e) => {
     const files = Array.from(e.target.files);
@@ -162,9 +173,15 @@ const HomePageContent = () => {
       }
       // FOURTH SECTION
       if (data?.fourthSection) {
+        const jobsConfig = data.fourthSection.jobsConfig || {};
         setFourthSection({
           mainTitle: data.fourthSection.mainTitle || "",
           shortParagraph: data.fourthSection.shortParagraph || "",
+          limit: jobsConfig.limit ?? data.fourthSection.limit ?? 8,
+          jobDisplayType:
+            jobsConfig.jobDisplayType ||
+            data.fourthSection.jobDisplayType ||
+            "latest",
         });
       }
       if (data?.fifthSection) {
@@ -187,14 +204,25 @@ const HomePageContent = () => {
       if (data?.sixthSection) {
         setSixthSection({
           mainTitle: data.sixthSection.mainTitle || "",
-          shortParagraph: data.sixthSection.shortParagraph || "",
+          shortParagraph:
+            data.sixthSection.shortParagraph ||
+            data.sixthSection.mainTitleDescription ||
+            "",
         });
-      }
-      if (data?.seventhSection) {
-        setSeventhSection({
-          mainTitle: data.seventhSection.mainTitle || "",
-          shortParagraph: data.seventhSection.shortParagraph || "",
-        });
+
+        if (data.sixthSection.companyLogos?.length) {
+          const formattedLogos = data.sixthSection.companyLogos.map(
+            (logo, i) => ({
+              id: i,
+              preview: `${API_IMAGE_URL}${logo}`,
+              path: logo,
+            }),
+          );
+
+          setSixthExistingLogos(formattedLogos);
+        } else {
+          setSixthExistingLogos([]);
+        }
       }
       if (data?.eighthSection) {
         setEighthSection({
@@ -252,26 +280,6 @@ const HomePageContent = () => {
       toast.error("Update failed");
     }
   };
-  const handleSeventhChange = (e) => {
-    setSeventhSection({
-      ...seventhSection,
-      [e.target.name]: e.target.value,
-    });
-  };
-  const handleSeventhSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      const res = await axios.post(`${API_BASE_URL}updateSeventhSection`, {
-        mainTitle: seventhSection.mainTitle,
-        shortParagraph: seventhSection.shortParagraph,
-      });
-
-      toast.success(res.data.message || "Seventh section updated successfully");
-    } catch (error) {
-      toast.error("Update failed");
-    }
-  };
   const handleSixthChange = (e) => {
     setSixthSection({
       ...sixthSection,
@@ -282,12 +290,39 @@ const HomePageContent = () => {
     e.preventDefault();
 
     try {
-      const res = await axios.post(`${API_BASE_URL}updateSixthSection`, {
-        mainTitle: sixthSection.mainTitle,
-        shortParagraph: sixthSection.shortParagraph,
+      const formData = new FormData();
+
+      formData.append("mainTitle", sixthSection.mainTitle);
+      formData.append("shortParagraph", sixthSection.shortParagraph);
+
+      for (let logo of sixthExistingLogos) {
+        const file = await urlToFile(
+          `${API_IMAGE_URL}${logo.path}`,
+          logo.path.split("/").pop(),
+        );
+
+        formData.append("companyLogos", file);
+      }
+
+      sixthCompanyLogos.forEach((logo) => {
+        if (logo.file) {
+          formData.append("companyLogos", logo.file);
+        }
       });
 
+      const res = await axios.post(
+        `${API_BASE_URL}updateSixthSection`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
       toast.success(res.data.message || "Sixth section updated");
+      setSixthCompanyLogos([]);
+      getHomePageContent();
     } catch (error) {
       toast.error("Update failed");
     }
@@ -339,23 +374,46 @@ const HomePageContent = () => {
     }
   };
   const handleFourthChange = (e) => {
+    const { name, value, type } = e.target;
     setFourthSection({
       ...fourthSection,
-      [e.target.name]: e.target.value,
+      [name]: type === "number" ? Number(value) : value,
     });
   };
   const handleFourthSubmit = async (e) => {
     e.preventDefault();
 
+    const limit = Math.max(1, Number(fourthSection.limit) || 8);
+    const jobsConfig = {
+      jobDisplayType: fourthSection.jobDisplayType,
+      limit,
+    };
+
+    const payload = {
+      jobsConfig,
+      jobDisplayType: fourthSection.jobDisplayType,
+      limit,
+    };
+
+    if (fourthSection.jobDisplayType === "featured") {
+      if (!fourthSection.mainTitle.trim()) {
+        toast.error("Main title is required for featured jobs");
+        return;
+      }
+      payload.mainTitle = fourthSection.mainTitle.trim();
+      payload.shortParagraph = fourthSection.shortParagraph.trim();
+    } else if (fourthSection.mainTitle.trim()) {
+      payload.mainTitle = fourthSection.mainTitle.trim();
+      payload.shortParagraph = fourthSection.shortParagraph.trim();
+    }
+
     try {
-      const res = await axios.post(`${API_BASE_URL}fourthSectionHome`, {
-        mainTitle: fourthSection.mainTitle,
-        shortParagraph: fourthSection.shortParagraph,
-      });
+      const res = await axios.post(`${API_BASE_URL}fourthSectionHome`, payload);
 
       toast.success(res.data.message || "Fourth section updated");
+      getHomePageContent();
     } catch (error) {
-      toast.error("Update failed");
+      toast.error(error.response?.data?.message || "Update failed");
     }
   };
   const handleThirdChange = (e) => {
@@ -383,6 +441,13 @@ const HomePageContent = () => {
       setFifthExistingPhotos((prev) => prev.filter((img) => img.id !== id));
     } else {
       setFifthImages((prev) => prev.filter((img) => img.id !== id));
+    }
+  };
+  const handleRemoveSixthLogo = (id, isExisting = false) => {
+    if (isExisting) {
+      setSixthExistingLogos((prev) => prev.filter((logo) => logo.id !== id));
+    } else {
+      setSixthCompanyLogos((prev) => prev.filter((logo) => logo.id !== id));
     }
   };
   const handleChange = (e) => {
@@ -761,14 +826,52 @@ const HomePageContent = () => {
       </div>
       <div>
         <div className="super-dashboard-common-heading">
-          <h5>Home Page Fourth Section Content Update Here</h5>
+          <h5>Home Page Fourth Section — Jobs Display</h5>
         </div>
 
         <div className="super-dashboard-cms-content-form">
           <div className="container">
             <form onSubmit={handleFourthSubmit}>
               <div className="row">
-                <div className="col-lg-12 col-md-12">
+                <div className="col-lg-6 col-md-6">
+                  <div className="form-group">
+                    <label>Job Display Type</label>
+                    <select
+                      className="form-select form-control"
+                      name="jobDisplayType"
+                      value={fourthSection.jobDisplayType}
+                      onChange={handleFourthChange}
+                    >
+                      <option value="featured">Featured Jobs</option>
+                      <option value="latest">Latest Jobs</option>
+                    </select>
+                    <small className="text-muted">
+                      Featured uses promoted jobs; latest shows newest published
+                      jobs.
+                    </small>
+                  </div>
+                </div>
+
+                <div className="col-lg-6 col-md-6">
+                  <div className="form-group">
+                    <label>Jobs Limit</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      name="limit"
+                      min={1}
+                      max={50}
+                      value={fourthSection.limit}
+                      onChange={handleFourthChange}
+                      placeholder="8"
+                    />
+                    <small className="text-muted">
+                      Number of jobs to show (e.g. 8 featured, 10 latest).
+                    </small>
+                  </div>
+                </div>
+
+                <div className="col-lg-12 col-md-12 mt-3">
                   <div className="form-group">
                     <label>Main Title</label>
                     <input
@@ -777,7 +880,7 @@ const HomePageContent = () => {
                       name="mainTitle"
                       value={fourthSection.mainTitle}
                       onChange={handleFourthChange}
-                      placeholder="Main Title"
+                      placeholder="Find Your Best Jobs"
                     />
                   </div>
                 </div>
@@ -791,8 +894,13 @@ const HomePageContent = () => {
                       name="shortParagraph"
                       value={fourthSection.shortParagraph}
                       onChange={handleFourthChange}
-                      placeholder="Main Title Short Paragraph"
+                      placeholder="Section description"
                     />
+                    {fourthSection.jobDisplayType === "featured" && (
+                      <small className="text-muted">
+                        Required when display type is Featured Jobs.
+                      </small>
+                    )}
                   </div>
                 </div>
 
@@ -946,7 +1054,7 @@ const HomePageContent = () => {
       </div>
       <div>
         <div className="super-dashboard-common-heading">
-          <h5>Home Page Sixth Section Content Update Here</h5>
+          <h5>Home Page Sixth Content Update Here</h5>
         </div>
 
         <div className="super-dashboard-cms-content-form">
@@ -967,7 +1075,7 @@ const HomePageContent = () => {
                   </div>
                 </div>
 
-                <div className="col-lg-12 col-md-12">
+                <div className="col-lg-12 col-md-12 mt-3">
                   <div className="form-group">
                     <label>Main Title Short Paragraph</label>
                     <input
@@ -981,7 +1089,79 @@ const HomePageContent = () => {
                   </div>
                 </div>
 
-                <div className="col-lg-12 col-md-12">
+                <div className="col-lg-12 mt-3">
+                  <label>Company Logos</label>
+
+                  <div className="upload-company-info-area d-flex align-items-center gap-3">
+                    <input
+                      type="file"
+                      id="sixthCompanyLogos"
+                      accept="image/*"
+                      multiple
+                      onChange={handleSixthLogoChange}
+                      style={{ display: "none" }}
+                    />
+
+                    <div className="upload-company-file-name">
+                      <span className="file-name">
+                        {sixthCompanyLogos.length > 0
+                          ? `${sixthCompanyLogos.length} new logo(s)`
+                          : sixthExistingLogos.length > 0
+                            ? `${sixthExistingLogos.length} existing logo(s)`
+                            : "No file selected"}
+                      </span>
+                    </div>
+
+                    <div className="upload-company-file-btn">
+                      <label
+                        htmlFor="sixthCompanyLogos"
+                        className="custom-upload default-btn btn"
+                      >
+                        Choose Logos
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="preview-container mt-3">
+                    {sixthExistingLogos.map((logo) => (
+                      <div key={logo.id} className="preview-box">
+                        <img
+                          crossOrigin="anonymous"
+                          src={logo.preview}
+                          alt="existing logo"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSixthLogo(logo.id, true)}
+                          className="remove-btn"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+
+                    {sixthCompanyLogos.map((logo) => (
+                      <div key={logo.id} className="preview-box">
+                        <img
+                          crossOrigin="anonymous"
+                          src={logo.preview}
+                          alt="new logo"
+                        />
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveSixthLogo(logo.id)}
+                          className="remove-btn"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="col-lg-12 mt-4">
                   <div className="super-dashboard-content-btn-info">
                     <button
                       type="submit"
@@ -998,53 +1178,12 @@ const HomePageContent = () => {
       </div>
       <div>
         <div className="super-dashboard-common-heading">
-          <h5>Home Page Seventh Content Update Here</h5>
+          <h5>Home Page Seventh Section — Freelancers</h5>
         </div>
 
         <div className="super-dashboard-cms-content-form">
           <div className="container">
-            <form onSubmit={handleSeventhSubmit}>
-              <div className="row">
-                <div className="col-lg-12 col-md-12">
-                  <div className="form-group">
-                    <label>Main Title</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="mainTitle"
-                      placeholder="Main Title"
-                      value={seventhSection.mainTitle}
-                      onChange={handleSeventhChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-lg-12 col-md-12">
-                  <div className="form-group">
-                    <label>Main Title Short Paragraph</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      name="shortParagraph"
-                      placeholder="Main Title Short Paragraph"
-                      value={seventhSection.shortParagraph}
-                      onChange={handleSeventhChange}
-                    />
-                  </div>
-                </div>
-
-                <div className="col-lg-12 col-md-12">
-                  <div className="super-dashboard-content-btn-info">
-                    <button
-                      type="submit"
-                      className="super-dashboard-content-btn"
-                    >
-                      Update Content
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
+            <FreelancerSectionForm />
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
-import React, { use } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE_URL, API_IMAGE_URL } from "../../Url/Url.js";
+import { API_BASE_URL } from "../../Url/Url.js";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { ensureAuthRequestConfig } from "../../utils/authToken";
 import {
   Chart as ChartJS,
   BarElement,
@@ -13,7 +13,34 @@ import {
   Title,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
-import { TableView } from "../DataTable.jsx";
+
+const formatRevenueDate = (date) => {
+  if (!date) return "-";
+  const parsed = new Date(date);
+  return Number.isNaN(parsed.getTime())
+    ? date
+    : parsed.toLocaleDateString("en-GB");
+};
+
+const truncateText = (value, maxLength = 28) => {
+  if (!value) return "-";
+  const text = String(value);
+  return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+};
+
+const getRevenueStatusClass = (status) => {
+  const normalized = status?.toLowerCase();
+  if (normalized === "success") {
+    return "revenue-status-badge revenue-status-success";
+  }
+  if (normalized === "pending") {
+    return "revenue-status-badge revenue-status-pending";
+  }
+  if (normalized === "failed") {
+    return "revenue-status-badge revenue-status-failed";
+  }
+  return "revenue-status-badge revenue-status-default";
+};
 
 // Register chart.js components
 ChartJS.register(
@@ -29,14 +56,14 @@ const DashboardContent = ({ isSidebarHidden }) => {
   const [stats, setStats] = useState(false);
   const [chartData, setChartData] = useState(null);
   const [revenueChartData, setRevenueChartData] = useState(null);
-  const [revenueYear, setRevenueYear] = useState("");
+  const [revenueYear, setRevenueYear] = useState(new Date().getFullYear());
   const [yearData, setYearData] = useState(null);
   const [analyticTable, setAnalyticTable] = useState([]);
   const [revenueTable, setRevenueTable] = useState([]);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(5);
-  const [totalPages, setTotalPages] = useState(1);
-
+  const [revenuePage, setRevenuePage] = useState(1);
+  const [revenueLimit, setRevenueLimit] = useState(10);
+  const [revenueTotalPages, setRevenueTotalPages] = useState(1);
+  const [revenueLoading, setRevenueLoading] = useState(false);
   const options = {
     responsive: true,
     plugins: {
@@ -83,9 +110,8 @@ const DashboardContent = ({ isSidebarHidden }) => {
       },
       title: {
         display: true,
-        text: `Total Revenue Analytics Report (${revenueYear || "—"})`,
-      },
-    },
+        text: `Total Revenue Analytics Report (${revenueYear})`,
+      },    },
     scales: {
       y: {
         beginAtZero: true,
@@ -103,55 +129,30 @@ const DashboardContent = ({ isSidebarHidden }) => {
     },
   };
 
-  const columns = [
-    {
-      accessorKey: "id",
-      header: "S.No",
-      cell: ({ row }) => (page - 1) * limit + row.index + 1,
-    },
-    {
-      accessorKey: "month",
-      header: "Month",
-      accessorFn: (row) => (row.month || "").toLowerCase(),
-      cell: ({ row }) => row.original.month || "Not Provided",
-    },
-    {
-      accessorKey: "totalJobSeekers",
-      header: "JobSeekers",
-      accessorFn: (row) => (row.totalJobSeekers || "").toLowerCase(),
-      cell: ({ row }) => row.original.totalJobSeekers || "Not Provided",
-    },
-    {
-      accessorKey: "totalRecruiters",
-      header: "Recruiters",
-      accessorFn: (row) => (row.totalRecruiters || "").toLowerCase(),
-      cell: ({ row }) => row.original.totalRecruiters || "Not Provided",
-    },
-  ];
-
-  const fetchCompanyStats = async () => {
+  const fetchCompanyStats = async (signal) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}getDashboardStats`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      console.log("API Response:", response.data);
+      const response = await axios.get(
+        `${API_BASE_URL}getDashboardStats`,
+        await ensureAuthRequestConfig({ skipGlobalLoader: true, signal }),
+      );
       setStats(response.data.data);
     } catch (error) {
+      if (
+        axios.isCancel(error) ||
+        error.code === "ERR_CANCELED" ||
+        error.code === "ECONNABORTED"
+      ) {
+        return;
+      }
       console.error("Error While fetching Header Details:", error);
     }
   };
 
-  const fetchCompanyAnalytics = async () => {
+  const fetchCompanyAnalytics = async (signal) => {
     try {
       const response = await axios.get(
         `${API_BASE_URL}getJobseekerCompanyAnalytics`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
+        await ensureAuthRequestConfig({ skipGlobalLoader: true, signal }),
       );
       const graphData = response.data.data.graphData;
       const graphYear = response.data;
@@ -173,46 +174,80 @@ const DashboardContent = ({ isSidebarHidden }) => {
         ],
       });
     } catch (error) {
+      if (
+        axios.isCancel(error) ||
+        error.code === "ERR_CANCELED" ||
+        error.code === "ECONNABORTED"
+      ) {
+        return;
+      }
       console.error("Error while fetching analytics:", error);
     }
   };
 
-  const fetchCompanyRevenu = async () => {
+  const fetchCompanyRevenue = useCallback(async (signal) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}getRevenueAnalytics`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      setRevenueLoading(true);
+      const response = await axios.get(
+        `${API_BASE_URL}getRevenueAnalytics`,
+        await ensureAuthRequestConfig({
+          skipGlobalLoader: true,
+          signal,
+          params: {
+            year: revenueYear,
+            page: revenuePage,
+            limit: revenueLimit,
+          },
+        }),
+      );
 
-      const { graphData } = response.data.data;
-      const year = response.data.year;
+      const payload = response.data?.data || {};
+      const graphData = payload.graphData || { months: [], revenue: [] };
 
-      setRevenueTable(response.data.data.listData);
-      setRevenueYear(year);
+      setRevenueTable(payload.listData || []);
+      setRevenueTotalPages(
+        response.data?.totalPages || payload.totalPages || 1,
+      );
 
       setRevenueChartData({
-        labels: graphData.months,
+        labels: graphData.months || [],
         datasets: [
           {
             label: "Revenue ($)",
-            data: graphData.revenue,
+            data: graphData.revenue || [],
             backgroundColor: "#42a5f5",
             borderRadius: 6,
           },
         ],
       });
     } catch (error) {
+      if (
+        axios.isCancel(error) ||
+        error.code === "ERR_CANCELED" ||
+        error.code === "ECONNABORTED"
+      ) {
+        return;
+      }
       console.error("Error while fetching Revenue:", error);
+      setRevenueTable([]);
+      setRevenueChartData(null);
+    } finally {
+      setRevenueLoading(false);
     }
-  };
+  }, [revenueYear, revenuePage, revenueLimit]);
 
   useEffect(() => {
-    fetchCompanyStats();
-    fetchCompanyAnalytics();
-    fetchCompanyRevenu();
+    const controller = new AbortController();
+    fetchCompanyStats(controller.signal);
+    fetchCompanyAnalytics(controller.signal);
+    return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchCompanyRevenue(controller.signal);
+    return () => controller.abort();
+  }, [fetchCompanyRevenue]);
   return (
     <section
       className={`main-dashboard-content ${
@@ -309,8 +344,8 @@ const DashboardContent = ({ isSidebarHidden }) => {
               setPage(1);
             }}
           /> */}
-          <div className="Recruiter-analytics-table">
-            <table className="table table-bordered">
+          <div className="revenue-report-table-wrap">
+            <table className="table revenue-report-table">
               <thead>
                 <tr>
                   <th>Month</th>
@@ -333,52 +368,168 @@ const DashboardContent = ({ isSidebarHidden }) => {
       </div>
 
       {/* Revenue */}
-      <div className="super-dashboard-common-heading">
-        <h5>Total Revenue Report</h5>
+      <div className="super-dashboard-common-heading d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 className="mb-0">Total Revenue Report</h5>
+        <div className="d-flex align-items-center gap-2">
+          <label htmlFor="revenue-year" className="mb-0 small text-muted">
+            Year
+          </label>
+          <select
+            id="revenue-year"
+            className="form-select form-select-sm"
+            style={{ width: "100px" }}
+            value={revenueYear}
+            onChange={(e) => {
+              setRevenueYear(Number(e.target.value));
+              setRevenuePage(1);
+            }}
+          >
+            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(
+              (year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ),
+            )}
+          </select>
+        </div>
       </div>
       <div className="super-dashboard-total-revenue-report my-4">
         <div className="total-revenue-report-chart">
-          <h5>Total Revenue Analytics Report {revenueYear?.year}</h5>
-          {revenueChartData ? (
-            <Bar data={revenueChartData} options={options2} />
-          ) : (
-            <p>Loading revenue analytics...</p>
-          )}
+          <h5>Total Revenue Analytics Report {revenueYear}</h5>
+          <div className="revenue-chart-container">
+            {revenueLoading ? (
+              <p>Loading revenue analytics...</p>
+            ) : revenueChartData ? (
+              <Bar data={revenueChartData} options={options2} />
+            ) : (
+              <p>No revenue analytics available.</p>
+            )}
+          </div>
         </div>
-        <div className="total-revenue-report-tabel">
-          <h5>Total Revenue Analytics Report Data</h5>
-          <div className="Recruiter-analytics-table">
-            <table className="transaction-table table table-bordered">
+        <div className="total-revenue-report-tabel revenue-report-data-panel">
+          <div className="revenue-report-header">
+            <div>
+              <h5>Total Revenue Analytics Report Data</h5>
+              <p className="revenue-report-subtitle mb-0">
+                Transaction history for {revenueYear}
+              </p>
+            </div>
+            <div className="revenue-report-controls">
+              <label htmlFor="revenue-limit" className="revenue-report-control-label">
+                Show
+              </label>
+              <select
+                id="revenue-limit"
+                className="form-select form-select-sm revenue-report-limit-select"
+                value={revenueLimit}
+                onChange={(e) => {
+                  setRevenueLimit(Number(e.target.value));
+                  setRevenuePage(1);
+                }}
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span className="revenue-report-control-label">entries</span>
+            </div>
+          </div>
+          <div className="revenue-report-table-wrap">
+            <table className="table revenue-report-table">
               <thead>
                 <tr>
                   <th>Date</th>
                   <th>Name</th>
-                  <th>User Type</th>
-                  <th>Subscription Plans</th>
-                  <th>Transaction ID</th>
-                  <th>Amount ($)</th>
-                  <th>Status</th>
+                  <th>Plan</th>
+                  <th className="text-end">Amount</th>
+                  <th className="text-center">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {revenueTable.map((data, e) => (
-                  <tr key={e}>
-                    <td>{data.date}</td>
-                    <td>{data.name}</td>
-                    <td>{data.userType}</td>
-                    <td>{data.subscriptionPlan}</td>
-                    <td>{data.transactionId}</td>
-                    <td>$ {data.amount}</td>
-                    <td className="status-success">{data.status}</td>
+                {revenueLoading ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4">
+                      Loading...
+                    </td>
                   </tr>
-                ))}
+                ) : revenueTable.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="text-center py-4 text-muted">
+                      No revenue records found.
+                    </td>
+                  </tr>
+                ) : (
+                  revenueTable.map((data, index) => (
+                    <tr key={data.transactionId || index}>
+                      <td className="revenue-report-cell-date">
+                        {formatRevenueDate(data.date)}
+                      </td>
+                      <td
+                        className="revenue-report-cell-truncate"
+                        title={data.name || "-"}
+                      >
+                        {truncateText(data.name, 22)}
+                      </td>
+                      <td
+                        className="revenue-report-cell-truncate"
+                        title={data.subscriptionPlan || "-"}
+                      >
+                        {truncateText(data.subscriptionPlan, 24)}
+                      </td>
+                      <td className="text-end revenue-report-cell-amount">
+                        $ {data.amount ?? "-"}
+                      </td>
+                      <td className="text-center">
+                        <span className={getRevenueStatusClass(data.status)}>
+                          {data.status || "-"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
+          {revenueTotalPages > 1 && (
+            <div className="revenue-report-pagination">
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={revenuePage === 1 || revenueLoading}
+                onClick={() => setRevenuePage((p) => p - 1)}
+              >
+                Prev
+              </button>
+              <div className="revenue-report-page-list">
+                {[...Array(revenueTotalPages)].map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`btn btn-sm ${
+                      revenuePage === i + 1 ? "btn-primary" : "btn-outline-primary"
+                    }`}
+                    disabled={revenueLoading}
+                    onClick={() => setRevenuePage(i + 1)}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                type="button"
+                className="btn btn-sm btn-primary"
+                disabled={revenuePage === revenueTotalPages || revenueLoading}
+                onClick={() => setRevenuePage((p) => p + 1)}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
-
 export default DashboardContent;

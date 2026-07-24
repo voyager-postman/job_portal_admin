@@ -1,14 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+
+const ACTIVATION_STATUSES = ["Pending", "Active", "Rejected", "Expired"];
+const REQUEST_STATUSES = [
+  "Pending",
+  "Contacted",
+  "Invoice Sent",
+  "Payment Received",
+  "Completed",
+  "Rejected",
+];
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import Swal from "sweetalert2";
 import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
 import { TableView } from "../components/DataTable";
+import { useDebounce } from "../hooks/useDebounce";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Tooltip } from "antd";
 const PlanSubscriberList = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedRequest, setSelectedRequest] = useState(null);
 
   const [subscribers, setSubscribers] = useState([]);
@@ -35,6 +47,15 @@ const PlanSubscriberList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [pendingPage, setPendingPage] = useState(1);
+  const [pendingLimit, setPendingLimit] = useState(10);
+  const [pendingTotalPages, setPendingTotalPages] = useState(1);
+  const [inquiryPage, setInquiryPage] = useState(1);
+  const [inquiryLimit, setInquiryLimit] = useState(10);
+  const [inquiryTotalPages, setInquiryTotalPages] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const [statusFilter, setStatusFilter] = useState("");
   const getImageUrl = (url) => {
     if (!url || url === "undefined") {
       return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -42,13 +63,31 @@ const PlanSubscriberList = () => {
     if (url.startsWith("http")) return url;
     return `${API_IMAGE_URL}${url}`;
   };
+
+  const getActivationStatusBadge = (status, isActive) => {
+    const displayStatus =
+      status || (isActive === false ? "Expired" : isActive ? "Active" : "-");
+    switch (displayStatus) {
+      case "Pending":
+        return <span className="badge bg-warning text-dark">Pending</span>;
+      case "Active":
+        return <span className="badge bg-success">Active</span>;
+      case "Rejected":
+        return <span className="badge bg-danger">Rejected</span>;
+      case "Expired":
+        return <span className="badge bg-secondary">Expired</span>;
+      default:
+        return <span className="badge bg-secondary">{displayStatus}</span>;
+    }
+  };
+
   /* ================= TABLE COLUMNS ================= */
 
   const columns = [
     {
       Header: "S.No",
       id: "serial",
-      Cell: ({ row }) => row.index + 1,
+      Cell: ({ row }) => (page - 1) * limit + row.index + 1,
     },
     {
       Header: "Recruiter Name",
@@ -85,21 +124,13 @@ const PlanSubscriberList = () => {
     {
       Header: "Status",
       accessor: "status",
-      Cell: ({ value }) =>
-        value ? (
-          <span className="badge bg-success">Active</span>
-        ) : (
-          <span className="badge bg-secondary">Inactive</span>
+      Cell: ({ row }) =>
+        getActivationStatusBadge(
+          row.original.status,
+          row.original.isActive,
         ),
     },
   ];
-  const getStatusBadge1 = (status) => {
-    return status ? (
-      <span className="badge bg-success">Active</span>
-    ) : (
-      <span className="badge bg-secondary">Inactive</span>
-    );
-  };
   const updateCompanyRequestStatus = async (requestId, status) => {
     try {
       const res = await axios.post(
@@ -165,7 +196,10 @@ const PlanSubscriberList = () => {
         setShowManualModal(false);
 
         navigate(`/admin/view-invoice/${invoiceId}`, {
-          state: { from: "/admin/super-admin-plan-subscriber-list" },
+          state: {
+            from: "/admin/super-admin-plan-subscriber-list",
+            activeTab,
+          },
         });
       }
     } catch (error) {
@@ -176,11 +210,18 @@ const PlanSubscriberList = () => {
       );
     }
   };
-  const fetchPendingPacks = async () => {
+  const fetchPendingPacks = useCallback(async () => {
     try {
-      setPendingLoading(true);
+      const params = {
+        page: pendingPage,
+        limit: pendingLimit,
+      };
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+      const status = statusFilter || "Pending";
+      if (status !== "all") params.status = status;
 
       const res = await axios.get(`${API_BASE_URL}getPendingPacks`, {
+        params,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -188,6 +229,7 @@ const PlanSubscriberList = () => {
 
       if (res.data.success) {
         setPendingPacks(res.data.data || []);
+        setPendingTotalPages(res.data.pagination?.totalPages || 1);
       }
     } catch (error) {
       console.error(error);
@@ -195,19 +237,20 @@ const PlanSubscriberList = () => {
     } finally {
       setPendingLoading(false);
     }
-  };
-  /* ================= FETCH SUBSCRIBERS ================= */
-  const fetchSubscribers = async () => {
+  }, [pendingPage, pendingLimit, debouncedSearch, statusFilter]);
+
+  const fetchSubscribers = useCallback(async () => {
     try {
-      setLoading(true);
-      const res = await axios.get(
-        `${API_BASE_URL}/getPlanSubscribers?page=${page}&limit=${limit}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+      const params = { page, limit };
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+
+      const res = await axios.get(`${API_BASE_URL}getPlanSubscribers`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      );
+      });
 
       setSubscribers(res.data.data || []);
       setTotalPages(res.data.pagination?.totalPages || 1);
@@ -217,7 +260,38 @@ const PlanSubscriberList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, limit, debouncedSearch, statusFilter]);
+
+  const fetchPackInquiries = useCallback(async () => {
+    try {
+      const params = {
+        page: inquiryPage,
+        limit: inquiryLimit,
+      };
+      if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
+      if (statusFilter && statusFilter !== "all") params.status = statusFilter;
+
+      const res = await axios.get(`${API_BASE_URL}Pack/requests`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (res.data.success) {
+        setPackInquiries(res.data.packRequests || []);
+        setInquiryTotalPages(
+          res.data.totalPages || res.data.pagination?.totalPages || 1,
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load pack inquiries");
+    } finally {
+      setInquiryLoading(false);
+    }
+  }, [inquiryPage, inquiryLimit, debouncedSearch, statusFilter]);
+
   const updateCredits = async (type) => {
     if (!creditAmount || creditAmount <= 0) {
       toast.error("Please enter valid credit amount");
@@ -250,11 +324,51 @@ const PlanSubscriberList = () => {
       toast.error("Failed to update credits");
     }
   };
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
   useEffect(() => {
-    fetchSubscribers();
-    fetchPendingPacks();
-    fetchPackInquiries(); // 👈 add this
-  }, [page, limit]);
+    setPage(1);
+    setPendingPage(1);
+    setInquiryPage(1);
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.key]);
+
+  useEffect(() => {
+    if (activeTab === "subscribers") {
+      fetchSubscribers();
+    } else if (activeTab === "pending") {
+      fetchPendingPacks();
+    } else if (activeTab === "inquiry") {
+      fetchPackInquiries();
+    }
+  }, [
+    activeTab,
+    fetchSubscribers,
+    fetchPendingPacks,
+    fetchPackInquiries,
+  ]);
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setStatusFilter("");
+    setSearchQuery("");
+    setPage(1);
+    setPendingPage(1);
+    setInquiryPage(1);
+  };
+
+  const statusOptions =
+    activeTab === "inquiry"
+      ? REQUEST_STATUSES
+      : ACTIVATION_STATUSES;
+
   const updatePackStatus = async (companyPackId, status) => {
     try {
       const res = await axios.post(
@@ -282,12 +396,11 @@ const PlanSubscriberList = () => {
     }
   };
 
-
   const inquiryColumns = [
     {
       Header: "#",
       id: "serial",
-      Cell: ({ row }) => row.index + 1,
+      Cell: ({ row }) => (inquiryPage - 1) * inquiryLimit + row.index + 1,
     },
 
     // ✅ Company (Merged)
@@ -310,13 +423,24 @@ const PlanSubscriberList = () => {
     {
       Header: "Contact",
       id: "contact",
-      Cell: ({ row }) => (
-        <div>
-          <strong>{row.original.contactPersonName || "-"}</strong>
-          <br />
-          <small>{row.original.contactEmail || "-"}</small>
-        </div>
-      ),
+      Cell: ({ row }) => {
+        const name = row.original.contactPersonName;
+        const email = row.original.contactEmail;
+
+        const validName =
+          name &&
+          name !== "null undefined" &&
+          name !== "null" &&
+          name !== "undefined";
+
+        return (
+          <div>
+            {validName && <strong>{name}</strong>}
+            {validName && email && <br />}
+            {email && <small>{email}</small>}
+          </div>
+        );
+      },
     },
 
     // ✅ Pack
@@ -327,28 +451,27 @@ const PlanSubscriberList = () => {
     },
 
     // ✅ Credits (Short)
-   {
-  Header: "Credits",
-  id: "credits",
-  Cell: ({ row }) => {
-    const jobCredits = row.original.jobCreditsRequested ?? 0;
-    const profileCredits = row.original.profileCreditsRequested ?? 0;
+    {
+      Header: "Credits",
+      id: "credits",
+      Cell: ({ row }) => {
+        const jobCredits = row.original.jobCreditsRequested ?? 0;
+        const profileCredits = row.original.profileCreditsRequested ?? 0;
 
-    const jobDisplay = jobCredits === -1 ? "∞" : jobCredits;
-    const profileDisplay = profileCredits === -1 ? "∞" : profileCredits;
+        const jobDisplay = jobCredits === -1 ? "∞" : jobCredits;
+        const profileDisplay = profileCredits === -1 ? "∞" : profileCredits;
 
-    return (
-      <Tooltip
-        title={`Job Credits: ${jobCredits === -1 ? "Unlimited" : jobCredits} | Profile Credits: ${profileCredits === -1 ? "Unlimited" : profileCredits}`}
-      >
-        <span style={{ cursor: "pointer" }}>
-          {jobDisplay}J / {profileDisplay}P
-        </span>
-      </Tooltip>
-    );
-  },
-}
-,
+        return (
+          <Tooltip
+            title={`Job Credits: ${jobCredits === -1 ? "Unlimited" : jobCredits} | Profile Credits: ${profileCredits === -1 ? "Unlimited" : profileCredits}`}
+          >
+            <span style={{ cursor: "pointer" }}>
+              {jobDisplay}J / {profileDisplay}P
+            </span>
+          </Tooltip>
+        );
+      },
+    },
     // ✅ Message (Short + Tooltip)
     {
       Header: "Message",
@@ -400,6 +523,7 @@ const PlanSubscriberList = () => {
                       navigate(`/admin/view-invoice/${req.invoiceId}`, {
                         state: {
                           from: "/admin/super-admin-plan-subscriber-list",
+                          activeTab,
                         },
                       })
                     }
@@ -731,7 +855,10 @@ const PlanSubscriberList = () => {
         toast.success("Invoice Generated");
 
         navigate(`/admin/view-invoice/${res.data.data._id}`, {
-          state: { from: "/admin/super-admin-plan-subscriber-list" },
+          state: {
+            from: "/admin/super-admin-plan-subscriber-list",
+            activeTab,
+          },
         });
       }
     } catch (err) {
@@ -769,7 +896,7 @@ const PlanSubscriberList = () => {
     {
       Header: "S.No",
       id: "serial",
-      Cell: ({ row }) => row.index + 1,
+      Cell: ({ row }) => (pendingPage - 1) * pendingLimit + row.index + 1,
     },
 
     {
@@ -836,7 +963,10 @@ const PlanSubscriberList = () => {
       Header: "Status",
       accessor: "status",
       Cell: ({ row }) =>
-        getStatusBadge(row.original.activationStatus || "Pending"),
+        getActivationStatusBadge(
+          row.original.activationStatus || row.original.status,
+          row.original.isActive,
+        ),
     },
 
     {
@@ -1083,26 +1213,6 @@ const PlanSubscriberList = () => {
       }
     });
   };
-  const fetchPackInquiries = async () => {
-    try {
-      setInquiryLoading(true);
-
-      const res = await axios.get(`${API_BASE_URL}Pack/requests`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-
-      if (res.data.success) {
-        setPackInquiries(res.data.packRequests || []); // ✅ FIXED
-      }
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to load pack inquiries");
-    } finally {
-      setInquiryLoading(false);
-    }
-  };
   const updateSubscription = async () => {
     if (!selectedSubscriber) return;
 
@@ -1131,6 +1241,40 @@ const PlanSubscriberList = () => {
     }
   };
 
+  const filterToolbar = (
+    <div className="d-flex gap-2 align-items-center flex-wrap w-100 justify-content-end">
+      <input
+        type="search"
+        placeholder={
+          activeTab === "inquiry"
+            ? "Search by company, email, pack..."
+            : "Search by name, email, company..."
+        }
+        value={searchQuery}
+        onChange={handleSearchChange}
+      />
+      <select
+        value={statusFilter}
+        onChange={(e) => {
+          setStatusFilter(e.target.value);
+          setPage(1);
+          setPendingPage(1);
+          setInquiryPage(1);
+        }}
+      >
+        <option value="">
+          {activeTab === "pending" ? "Pending (default)" : "All Status"}
+        </option>
+        <option value="all">All</option>
+        {statusOptions.map((status) => (
+          <option key={status} value={status}>
+            {status}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <>
       <section className="super-dashboard-content-wrapper">
@@ -1155,7 +1299,7 @@ const PlanSubscriberList = () => {
                   className={`nav-link ${
                     activeTab === "subscribers" ? "active" : ""
                   }`}
-                  onClick={() => setActiveTab("subscribers")}
+                  onClick={() => handleTabChange("subscribers")}
                 >
                   All Subscriptions
                 </button>
@@ -1166,7 +1310,7 @@ const PlanSubscriberList = () => {
                   className={`nav-link ${
                     activeTab === "pending" ? "active" : ""
                   }`}
-                  onClick={() => setActiveTab("pending")}
+                  onClick={() => handleTabChange("pending")}
                 >
                   Approval Requests
                 </button>
@@ -1176,125 +1320,136 @@ const PlanSubscriberList = () => {
                   className={`nav-link ${
                     activeTab === "inquiry" ? "active" : ""
                   }`}
-                  onClick={() => setActiveTab("inquiry")}
+                  onClick={() => handleTabChange("inquiry")}
                 >
                   Pack Inquiries
                 </button>
               </li>
             </ul>
           </div>
+
           {activeTab === "subscribers" && (
             <div className="table-responsive">
-              {/* <div className="data-export-btn-info">
-                <button
-                  className="data-export-btn"
-                  onClick={() => exportAllCompanies("all")}
-                >
-                  Export Data
-                </button>
-              </div> */}
+              <TableView
+                columns={columns}
+                data={subscribers}
+                hideSearch
+                hidePagination
+                toolbarExtra={filterToolbar}
+                limit={limit}
+                setLimit={(value) => {
+                  setLimit(value);
+                  setPage(1);
+                }}
+                page={page}
+                setPage={setPage}
+                totalPages={totalPages}
+              />
 
-              {loading ? (
+              {loading && subscribers.length === 0 && (
                 <div className="d-flex justify-content-center py-5">
                   <div className="spinner-border text-primary" />
                 </div>
-              ) : subscribers.length === 0 ? (
+              )}
+
+              {!loading && subscribers.length === 0 && (
                 <div className="text-center py-4">
                   <h6>No plan subscribers found</h6>
                 </div>
-              ) : (
-                <>
-                  <TableView
-                    columns={columns}
-                    data={subscribers}
-                    limit={limit}
-                    setLimit={(value) => {
-                      setLimit(value);
-                      setPage(1);
-                    }}
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                    loading={loading}
-                  />
+              )}
 
-                  {/* PAGINATION */}
-                  <div className="d-flex justify-content-center mt-3">
+              {subscribers.length > 0 && (
+                <div className="d-flex justify-content-center mt-3">
+                  <button
+                    className="btn btn-sm btn-primary mx-1"
+                    disabled={page === 1}
+                    onClick={() => setPage(page - 1)}
+                  >
+                    Prev
+                  </button>
+
+                  {[...Array(totalPages)].map((_, index) => (
                     <button
-                      className="btn btn-sm btn-primary mx-1"
-                      disabled={page === 1}
-                      onClick={() => setPage(page - 1)}
+                      key={index}
+                      className={`btn btn-sm mx-1 ${
+                        page === index + 1
+                          ? "btn-primary"
+                          : "btn-outline-primary"
+                      }`}
+                      onClick={() => setPage(index + 1)}
                     >
-                      Prev
+                      {index + 1}
                     </button>
+                  ))}
 
-                    {[...Array(totalPages)].map((_, index) => (
-                      <button
-                        key={index}
-                        className={`btn btn-sm mx-1 ${
-                          page === index + 1
-                            ? "btn-primary"
-                            : "btn-outline-primary"
-                        }`}
-                        onClick={() => setPage(index + 1)}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
-
-                    <button
-                      className="btn btn-sm btn-primary mx-1"
-                      disabled={page === totalPages}
-                      onClick={() => setPage(page + 1)}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </>
+                  <button
+                    className="btn btn-sm btn-primary mx-1"
+                    disabled={page === totalPages}
+                    onClick={() => setPage(page + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           )}
           {activeTab === "pending" && (
             <div className="table-responsive">
-              {pendingLoading ? (
+              <TableView
+                columns={pendingColumns}
+                data={pendingPacks}
+                hideSearch
+                toolbarExtra={filterToolbar}
+                limit={pendingLimit}
+                setLimit={(value) => {
+                  setPendingLimit(value);
+                  setPendingPage(1);
+                }}
+                page={pendingPage}
+                setPage={setPendingPage}
+                totalPages={pendingTotalPages}
+              />
+
+              {pendingLoading && pendingPacks.length === 0 && (
                 <div className="d-flex justify-content-center py-5">
                   <div className="spinner-border text-primary" />
                 </div>
-              ) : pendingPacks.length === 0 ? (
+              )}
+
+              {!pendingLoading && pendingPacks.length === 0 && (
                 <div className="text-center py-4">
                   <h6>No pending pack requests found</h6>
                 </div>
-              ) : (
-                <TableView
-                  columns={pendingColumns}
-                  data={pendingPacks}
-                  limit={10}
-                  page={1}
-                  totalPages={1}
-                  loading={pendingLoading}
-                />
               )}
             </div>
           )}
           {activeTab === "inquiry" && (
             <div className="table-responsive">
-              {inquiryLoading ? (
+              <TableView
+                columns={inquiryColumns}
+                data={packInquiries}
+                hideSearch
+                toolbarExtra={filterToolbar}
+                limit={inquiryLimit}
+                setLimit={(value) => {
+                  setInquiryLimit(value);
+                  setInquiryPage(1);
+                }}
+                page={inquiryPage}
+                setPage={setInquiryPage}
+                totalPages={inquiryTotalPages}
+              />
+
+              {inquiryLoading && packInquiries.length === 0 && (
                 <div className="d-flex justify-content-center py-5">
                   <div className="spinner-border text-primary" />
                 </div>
-              ) : packInquiries.length === 0 ? (
+              )}
+
+              {!inquiryLoading && packInquiries.length === 0 && (
                 <div className="text-center py-4">
                   <h6>No pack inquiries found</h6>
                 </div>
-              ) : (
-                <TableView
-                  columns={inquiryColumns}
-                  data={packInquiries}
-                  limit={10}
-                  page={1}
-                  totalPages={1}
-                  loading={inquiryLoading}
-                />
               )}
             </div>
           )}
@@ -1340,7 +1495,10 @@ const PlanSubscriberList = () => {
                         </p>
                         <p>
                           <strong>Status:</strong>{" "}
-                          {selectedSubscriber.status ? "Active" : "Inactive"}
+                          {selectedSubscriber.status ||
+                            (selectedSubscriber.isActive
+                              ? "Active"
+                              : "Inactive")}
                         </p>
                       </div>
                     </div>

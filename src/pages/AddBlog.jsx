@@ -161,7 +161,7 @@ const AddBlog = () => {
                     <div className="upload-company-img-preview">
                       <img
                         src={imagePreview}
-                        crossorigin="anonymous"
+                        crossOrigin="anonymous"
                         className="main-logo"
                         id="preview"
                         alt="Image Preview"

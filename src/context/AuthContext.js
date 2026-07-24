@@ -1,11 +1,14 @@
 import React, { createContext, useState, useEffect } from "react";
+import {
+  clearStoredToken,
+  persistAuthToken,
+} from "../utils/authToken";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [admin, setAdmin] = useState(null);
 
-  // Load admin from localStorage on refresh
   useEffect(() => {
     const storedAdmin = localStorage.getItem("admin");
     if (storedAdmin) {
@@ -14,7 +17,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const loginAdmin = (adminData, token) => {
-    localStorage.setItem("token", token);
+    clearStoredToken();
+
+    if (token) {
+      persistAuthToken(token);
+    }
+
     localStorage.setItem("admin", JSON.stringify(adminData));
     setAdmin(adminData);
   };
@@ -25,7 +33,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem("token");
+    localStorage.removeItem("admin");
+    localStorage.removeItem("authMode");
     setAdmin(null);
   };
 

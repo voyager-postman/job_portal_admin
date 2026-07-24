@@ -84,7 +84,7 @@ const Companydatails = () => {
             <div className="super-admin-company-img-short-detail">
               <div className="super-admin-company-img">
                 <img
-                  crossorigin="anonymous"
+                  crossOrigin="anonymous"
                   src={getImageUrl(company?.coverPhoto)}
                   alt="Image"
                 />
@@ -92,7 +92,7 @@ const Companydatails = () => {
               <div className="super-admin-company-short-detail">
                 <div className="super-admin-company-logo">
                   <img
-                    crossorigin="anonymous"
+                    crossOrigin="anonymous"
                     src={getImageUrl(company?.logo)}
                     alt="Image"
                   />
@@ -464,7 +464,7 @@ const Companydatails = () => {
                         <div className="col-lg-3 col-md-4" key={photo._id}>
                           <div className="super-admin-company-office-photos-box">
                             <img
-                              crossorigin="anonymous"
+                              crossOrigin="anonymous"
                               src={getImageUrl(photo.url)}
                               alt="Company"
                             />
@@ -490,7 +490,7 @@ const Companydatails = () => {
                         <div className="col-lg-3 col-md-4" key={video._id}>
                           <div className="super-admin-company-office-photos-box">
                             <img
-                              crossorigin="anonymous"
+                              crossOrigin="anonymous"
                               src={getImageUrl(video.url)}
                               alt="Company"
                             />

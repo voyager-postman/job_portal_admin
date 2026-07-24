@@ -7,17 +7,24 @@ import * as XLSX from "xlsx";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
+import { useDebounce } from "../hooks/useDebounce";
 
 function ManageCandidates() {
   const [jobSeeker, setJobSeeker] = useState([]);
   const [search, setSearch] = useState("");
-
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 400);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+
+  const getTotalPages = (responseData) =>
+    responseData?.pagination?.totalPages || responseData?.totalPages || 1;
+
+  const getTotal = (responseData) =>
+    responseData?.pagination?.total || responseData?.total || 0;
+
   const getImageUrl = (url) => {
     if (!url || url === "undefined") {
       return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
@@ -385,13 +392,19 @@ function ManageCandidates() {
   const fetchCandidates = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}admin/jobseekers?page=${page}&limit=${limit}&search=${debouncedSearch}`,
-      );
+      const response = await axios.get(`${API_BASE_URL}admin/jobseekers`, {
+        params: {
+          page,
+          limit,
+          ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       setJobSeeker(response.data.data || []);
-      setTotalPages(response.data.totalPages || 1);
-      setTotal(response.data.total || 0);
-      setLimit(response.data.total || 0);
+      setTotalPages(getTotalPages(response.data));
+      setTotal(getTotal(response.data));
     } catch (error) {
       console.log(error);
     } finally {
@@ -462,13 +475,6 @@ function ManageCandidates() {
       toast.error("Failed to export all data!");
     }
   };
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 400);
-
-    return () => clearTimeout(timer);
-  }, [search]);
   return (
     <>
       <ToastContainer />
@@ -503,24 +509,28 @@ function ManageCandidates() {
           </div>
 
           <div className="table-responsive-data-table">
-            {loading ? (
-              <div className="d-flex justify-content-center py-5">
-                <div className="spinner-border text-primary"></div>
+            {loading && (
+              <div className="d-flex justify-content-center py-2">
+                <div className="spinner-border spinner-border-sm text-primary"></div>
               </div>
-            ) : (
-              <>
-                <TableView
-                  columns={columns}
-                  data={jobSeeker}
-                  page={page}
-                  setPage={setPage}
-                  limit={limit}
-                  setLimit={setLimit}
-                  totalPages={totalPages}
-                  total={total}
-                />
-              </>
             )}
+            <TableView
+              columns={columns}
+              data={jobSeeker}
+              page={page}
+              setPage={setPage}
+              limit={limit}
+              setLimit={(val) => {
+                setLimit(val);
+                setPage(1);
+              }}
+              totalPages={totalPages}
+              total={total}
+              globalFilter={search}
+              setGlobalFilter={(val) => {
+                setSearch(val || "");
+              }}
+            />
           </div>
         </div>
       </section>

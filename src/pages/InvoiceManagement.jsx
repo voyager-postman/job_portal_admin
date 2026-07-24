@@ -166,21 +166,26 @@ function InvoiceManagement() {
     {
       Header: "Invoice Number",
       id: "invoiceNumber",
+      accessor: (row) => row.invoiceNumber || "",
       Cell: ({ row }) => row.original.invoiceNumber || "-",
     },
     {
       Header: "Company",
       id: "company",
+      accessor: (row) => row.companyId?.brandName || "",
       Cell: ({ row }) => row.original.companyId?.brandName || "-",
     },
     {
       Header: "Item",
       id: "item",
+      accessor: (row) => row.itemName || "",
       Cell: ({ row }) => row.original.itemName || "-",
     },
     {
       Header: "Amount",
       id: "amount",
+      accessor: (row) =>
+        row.amount != null ? `${row.currency || ""} ${row.amount}` : "",
       Cell: ({ row }) =>
         row.original.amount != null
           ? `${row.original.currency || ""} ${row.original.amount}`
@@ -189,11 +194,14 @@ function InvoiceManagement() {
     {
       Header: "Payment Method",
       id: "paymentMethod",
+      accessor: (row) => row.paymentMethod || "",
       Cell: ({ row }) => row.original.paymentMethod || "-",
     },
     {
       Header: "Date",
       id: "date",
+      accessor: (row) =>
+        row.createdAt ? new Date(row.createdAt).toLocaleDateString() : "",
       Cell: ({ row }) =>
         row.original.createdAt
           ? new Date(row.original.createdAt).toLocaleDateString()
@@ -202,6 +210,7 @@ function InvoiceManagement() {
     {
       Header: "Status",
       id: "status",
+      accessor: (row) => row.status || "",
       Cell: ({ row }) => {
         const status = row.original.status || "-";
         return (
@@ -278,7 +287,8 @@ function InvoiceManagement() {
                 <div className="spinner-border text-primary"></div>
               </div>
             ) : invoices.length === 0 ? (
-              <div className="text-center py-5 text-muted">
+              <div className="simple-list-empty-state">
+                <i className="fa-solid fa-file-invoice" />
                 <h6>No invoice data found</h6>
               </div>
             ) : (

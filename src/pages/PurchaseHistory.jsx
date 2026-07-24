@@ -33,7 +33,11 @@ function PurchaseHistory() {
         },
       );
 
-      const allPayments = res.data?.data?.payments || [];
+      const allPayments = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data?.section?.rows)
+          ? res.data.section.rows
+          : res.data?.data?.payments || [];
 
       // client side pagination
       const start = (page - 1) * limit;
@@ -124,37 +128,60 @@ function PurchaseHistory() {
     {
       Header: "Plan",
       id: "planName",
+      accessor: (row) => row.planName || "",
       Cell: ({ row }) => row.original.planName || "N/A",
     },
     {
-      Header: "Amount",
-      id: "amount",
-      Cell: ({ row }) =>
-        row.original.amount != null
-          ? `${row.original.currency || ""} ${row.original.amount}`
-          : "N/A",
+      Header: "Type",
+      id: "type",
+      accessor: (row) => row.type || "",
+      Cell: ({ row }) => row.original.type || "N/A",
     },
     {
-      Header: "Payment Method",
-      id: "paymentMethod",
-      Cell: ({ row }) => row.original.paymentMethod || "N/A",
+      Header: "Jobs",
+      id: "jobs",
+      accessor: (row) => row.jobs ?? "",
+      Cell: ({ row }) => row.original.jobs ?? "N/A",
     },
     {
-      Header: "Status",
-      id: "status",
-      Cell: ({ row }) => row.original.status || "N/A",
+      Header: "CV Views",
+      id: "cvViews",
+      accessor: (row) => row.cvViews ?? "",
+      Cell: ({ row }) => row.original.cvViews ?? "N/A",
+    },
+    {
+      Header: "Daily Jobs",
+      id: "dailyJobs",
+      accessor: (row) => row.dailyJobs ?? "",
+      Cell: ({ row }) => row.original.dailyJobs ?? "N/A",
+    },
+    {
+      Header: "Daily CV",
+      id: "dailyCv",
+      accessor: (row) => row.dailyCv ?? "",
+      Cell: ({ row }) => row.original.dailyCv ?? "N/A",
     },
     {
       Header: "Date",
       id: "date",
-      Cell: ({ row }) =>
-        row.original.paymentDate
-          ? new Date(row.original.paymentDate).toLocaleDateString("en-GB")
-          : "N/A",
+      accessor: (row) => row.date || "",
+      Cell: ({ row }) => row.original.date || "N/A",
     },
     {
       Header: "Invoice",
       id: "invoice",
+      accessor: (row) =>
+        [
+          row.invoice?.invoiceNumber,
+          row.invoice?.itemName,
+          row.invoice?.status,
+          row.invoice?.paymentMethod,
+          row.invoice?.currency,
+          row.packStatus,
+          row.paymentTransactionId,
+        ]
+          .filter(Boolean)
+          .join(" "),
       Cell: ({ row }) => {
         const invoiceId = row.original.invoice?._id;
 
@@ -203,7 +230,8 @@ function PurchaseHistory() {
             <div className="spinner-border text-primary"></div>
           </div>
         ) : paymentsHistory.length === 0 ? (
-          <div className="text-center py-5 text-muted">
+          <div className="simple-list-empty-state">
+            <i className="fa-solid fa-receipt" />
             <h6>No purchase history found</h6>
           </div>
         ) : (

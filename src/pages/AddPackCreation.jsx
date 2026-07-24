@@ -37,9 +37,31 @@ function AddPackCreation() {
     featuredJobDurationDays: "",
     featuredJobLocations: [],
     maxActiveFeaturedJobs: "",
+    searchBoostScore: "",
     companyProfileHighlightEnabled: false,
-    addMoreFeature: false, // ✅ NEW
+    featuredJobsAvailable: false,
   });
+
+  const FEATURED_LOCATION_OPTIONS = [
+    {
+      value: "Homepage",
+      label: "Homepage",
+      description: "Job appears on the homepage featured section",
+    },
+    {
+      value: "SearchResults",
+      label: "Search Results",
+      description: "Higher rank on /jobs search (uses boost score)",
+    },
+    {
+      value: "Highlighted",
+      label: "Highlighted",
+      description: "Highlighted badge in job listings",
+    },
+  ];
+
+  const showFeaturedJobsConfig =
+    formData.type === "JOB" || formData.type === "BOTH";
   const [globalCurrency, setGlobalCurrency] = useState({
     code: "MAD",
     symbol: "DH",
@@ -139,11 +161,14 @@ function AddPackCreation() {
         featuredJobDurationDays: addOnData.featuredJobDurationDays || "",
 
         featuredJobLocations: addOnData.featuredJobLocations || [],
-        addMoreFeature: addOnData.featuredJobsAvailable || false,
+        featuredJobsAvailable: addOnData.featuredJobsAvailable || false,
         maxActiveFeaturedJobs:
           addOnData.maxActiveFeaturedJobs === -1
             ? ""
             : addOnData.maxActiveFeaturedJobs,
+        searchBoostScore: addOnData.searchBoostScore
+          ? String(addOnData.searchBoostScore)
+          : "",
 
         companyProfileHighlightEnabled:
           addOnData.companyProfileHighlightEnabled || false,
@@ -184,12 +209,13 @@ function AddPackCreation() {
   const handleLocationChange = (location) => {
     setFormData((prev) => {
       const exists = prev.featuredJobLocations.includes(location);
+      const featuredJobLocations = exists
+        ? prev.featuredJobLocations.filter((loc) => loc !== location)
+        : [...prev.featuredJobLocations, location];
 
       return {
         ...prev,
-        featuredJobLocations: exists
-          ? prev.featuredJobLocations.filter((loc) => loc !== location)
-          : [...prev.featuredJobLocations, location],
+        featuredJobLocations,
       };
     });
   };
@@ -287,25 +313,63 @@ function AddPackCreation() {
       }
     }
     // ---------------- FEATURED JOB VALIDATION ----------------
-    if (formData.maxFeaturedJobs && Number(formData.maxFeaturedJobs) < -1) {
-      toast.error("Max Featured Jobs must be -1 or greater");
-      return;
-    }
+    if (formData.featuredJobsAvailable) {
+      if (
+        !formData.maxFeaturedJobs ||
+        Number(formData.maxFeaturedJobs) <= 0
+      ) {
+        toast.error(
+          "Max Featured Jobs (lifetime cap) must be greater than 0",
+        );
+        return;
+      }
 
-    if (
-      formData.featuredJobDurationDays &&
-      Number(formData.featuredJobDurationDays) <= 0
-    ) {
-      toast.error("Featured Job Duration must be greater than 0");
-      return;
-    }
+      if (
+        !formData.maxActiveFeaturedJobs ||
+        Number(formData.maxActiveFeaturedJobs) <= 0
+      ) {
+        toast.error(
+          "Max Active Featured Jobs (simultaneous cap) must be greater than 0",
+        );
+        return;
+      }
 
-    if (
-      formData.maxActiveFeaturedJobs &&
-      Number(formData.maxActiveFeaturedJobs) < -1
-    ) {
-      toast.error("Max Active Featured Jobs must be -1 or greater");
-      return;
+      if (
+        Number(formData.maxActiveFeaturedJobs) >
+        Number(formData.maxFeaturedJobs)
+      ) {
+        toast.error(
+          "Max Active Featured Jobs cannot exceed Max Featured Jobs (lifetime cap)",
+        );
+        return;
+      }
+
+      if (
+        !formData.featuredJobDurationDays ||
+        Number(formData.featuredJobDurationDays) <= 0
+      ) {
+        toast.error("Featured Job Duration must be greater than 0");
+        return;
+      }
+
+      if (
+        !formData.featuredJobLocations ||
+        formData.featuredJobLocations.length === 0
+      ) {
+        toast.error("Please select at least one Featured Job location");
+        return;
+      }
+
+      if (
+        formData.featuredJobLocations.includes("SearchResults") &&
+        (!formData.searchBoostScore ||
+          ![1, 2, 3].includes(Number(formData.searchBoostScore)))
+      ) {
+        toast.error(
+          "Search Boost Score (x1, x2, or x3) is required when Search Results is enabled",
+        );
+        return;
+      }
     }
 
     // ---------------- VALIDITY VALIDATION ----------------
@@ -339,15 +403,6 @@ function AddPackCreation() {
 
     // ---------------- PAYMENT MODE ----------------
 
-    // ---------------- FEATURED LOCATION ----------------
-    if (
-      formData.maxFeaturedJobs > 0 &&
-      (!formData.featuredJobLocations ||
-        formData.featuredJobLocations.length === 0)
-    ) {
-      toast.error("Please select at least one Featured Job location");
-      return;
-    }
     if (!formData.validityValue) {
       toast.error("Validity value is required");
       return;
@@ -365,7 +420,7 @@ function AddPackCreation() {
     const payload = {
       packName: formData.name,
       isCustom: formData.isCustom,
-      featuredJobsAvailable: formData.addMoreFeature,
+      featuredJobsAvailable: formData.featuredJobsAvailable,
 
       // ✅ JOB
       jobPostingCredits: formData.jobPostingUnlimited
@@ -402,12 +457,24 @@ function AddPackCreation() {
         : Number(formData.monthlyProfileViewingLimit) || 0,
 
       // FEATURED
-      maxFeaturedJobs: Number(formData.maxFeaturedJobs) || 0,
-      featuredJobDurationDays: Number(formData.featuredJobDurationDays) || 0,
-      maxActiveFeaturedJobs: Number(formData.maxActiveFeaturedJobs) || 0,
-
-      featuredJobLocations: formData.featuredJobLocations,
-      companyProfileHighlightEnabled: formData.companyProfileHighlightEnabled,
+      maxFeaturedJobs: formData.featuredJobsAvailable
+        ? Number(formData.maxFeaturedJobs)
+        : 0,
+      featuredJobDurationDays: formData.featuredJobsAvailable
+        ? Number(formData.featuredJobDurationDays)
+        : 0,
+      maxActiveFeaturedJobs: formData.featuredJobsAvailable
+        ? Number(formData.maxActiveFeaturedJobs)
+        : 0,
+      featuredJobLocations: formData.featuredJobsAvailable
+        ? formData.featuredJobLocations
+        : [],
+      searchBoostScore: formData.featuredJobsAvailable
+        ? Number(formData.searchBoostScore) || 1
+        : 1,
+      companyProfileHighlightEnabled: formData.featuredJobsAvailable
+        ? formData.companyProfileHighlightEnabled
+        : false,
 
       // VALIDITY
       validityValue: formData.validityValue
@@ -439,7 +506,9 @@ function AddPackCreation() {
           : "Subscription Pack created successfully 🎉",
       );
 
-      navigate("/admin/super-admin-pack-creations");
+      setTimeout(() => {
+        navigate("/admin/super-admin-pack-creations");
+      }, 1500);
     } catch (error) {
       console.error(error);
       toast.error(
@@ -703,135 +772,6 @@ function AddPackCreation() {
                       </div>
                     </>
                   )}
-                  <div className="col-lg-6 col-md-6">
-                    <div className="form-group d-flex align-items-center justify-content-between">
-                      <label className="mb-0">
-                        Add More Featured{" "}
-                        <span>
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={formData.addMoreFeature}
-                            onChange={(e) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                addMoreFeature: e.target.checked,
-                              }))
-                            }
-                          />
-                        </span>
-                      </label>
-                    </div>
-                  </div>{" "}
-                  {formData.addMoreFeature && (
-                    <>
-                      <div className="col-lg-12  mt-3">
-                        <hr />
-                        <h5>Featured Jobs Configuration</h5>
-                      </div>
-                      {/* Max Featured Jobs */}
-                      <div className="col-lg-6 col-md-6">
-                        <div className="form-group">
-                          <label>Max Featured Jobs</label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={formData.maxFeaturedJobs}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                maxFeaturedJobs: e.target.value,
-                              })
-                            }
-                            placeholder="Enter max featured jobs (-1 for unlimited)"
-                          />
-                        </div>
-                      </div>
-                      {/* Duration */}
-                      <div className="col-lg-6 col-md-6">
-                        <div className="form-group">
-                          <label>Featured Job Duration (Days)</label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={formData.featuredJobDurationDays}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                featuredJobDurationDays: e.target.value,
-                              })
-                            }
-                            placeholder="Enter duration in days"
-                          />
-                        </div>
-                      </div>
-                      {/* Max Active Featured Jobs */}
-                      <div className="col-lg-6 col-md-6">
-                        <div className="form-group">
-                          <label>Max Active Featured Jobs</label>
-                          <input
-                            type="number"
-                            className="form-control"
-                            value={formData.maxActiveFeaturedJobs}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                maxActiveFeaturedJobs: e.target.value,
-                              })
-                            }
-                            placeholder="Enter active limit (-1 for unlimited)"
-                          />
-                        </div>
-                      </div>
-                      {/* Locations */}
-                      <div className="col-lg-6 col-md-6">
-                        <div className="form-group">
-                          <label>Featured Job Locations</label>
-
-                          {["Homepage", "SearchResults", "Highlighted"].map(
-                            (loc) => (
-                              <div key={loc} className="form-check">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  checked={formData.featuredJobLocations?.includes(
-                                    loc,
-                                  )}
-                                  onChange={() => handleLocationChange(loc)}
-                                />
-                                <label className="form-check-label ms-2">
-                                  {loc}
-                                </label>
-                              </div>
-                            ),
-                          )}
-                        </div>
-                      </div>
-                      {/* Company Highlight Toggle */}
-                      <div className="col-lg-6 col-md-6">
-                        <div className="form-group d-flex align-items-center justify-content-between">
-                          <label className="mb-0">
-                            Company Profile Highlight
-                          </label>
-
-                          <div className="form-check form-switch">
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={formData.companyProfileHighlightEnabled}
-                              onChange={(e) =>
-                                setFormData({
-                                  ...formData,
-                                  companyProfileHighlightEnabled:
-                                    e.target.checked,
-                                })
-                              }
-                            />
-                          </div>
-                        </div>
-                      </div>{" "}
-                    </>
-                  )}
                 </>
               ) : (
                 <>
@@ -910,6 +850,181 @@ function AddPackCreation() {
                             onChange={handleChange}
                             placeholder="Enter Daily Profile Viewing Limit"
                           />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+              {showFeaturedJobsConfig && (
+                <>
+                  <div className="col-lg-12 mt-3">
+                    <hr />
+                    <h5>Featured Jobs Configuration</h5>
+                    <p className="text-muted small mb-0">
+                      Control where featured jobs appear and how many a company
+                      can feature at once. Homepage only shows jobs when
+                      &quot;Homepage&quot; is selected. Search boost applies
+                      only when &quot;Search Results&quot; is selected.
+                    </p>
+                  </div>
+
+                  <div className="col-lg-6 col-md-6">
+                    <div className="form-group d-flex align-items-center justify-content-between">
+                      <label className="mb-0">Enable Featured Jobs</label>
+                      <div className="form-check form-switch">
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={formData.featuredJobsAvailable}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              featuredJobsAvailable: e.target.checked,
+                              ...(e.target.checked
+                                ? {}
+                                : {
+                                    maxFeaturedJobs: "",
+                                    maxActiveFeaturedJobs: "",
+                                    featuredJobDurationDays: "",
+                                    featuredJobLocations: [],
+                                    searchBoostScore: "",
+                                    companyProfileHighlightEnabled: false,
+                                  }),
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {formData.featuredJobsAvailable && (
+                    <>
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group">
+                          <label>
+                            Max Featured Jobs{" "}
+                            <small className="text-muted">(lifetime cap)</small>
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            name="maxFeaturedJobs"
+                            value={formData.maxFeaturedJobs}
+                            onChange={handleChange}
+                            min="1"
+                            placeholder="e.g. 20 — total times company can feature jobs"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group">
+                          <label>
+                            Max Active Featured Jobs{" "}
+                            <small className="text-muted">
+                              (simultaneous cap)
+                            </small>
+                          </label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            name="maxActiveFeaturedJobs"
+                            value={formData.maxActiveFeaturedJobs}
+                            onChange={handleChange}
+                            min="1"
+                            placeholder="e.g. 2 — max featured jobs active at once"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group">
+                          <label>Featured Job Duration (Days)</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            name="featuredJobDurationDays"
+                            value={formData.featuredJobDurationDays}
+                            onChange={handleChange}
+                            min="1"
+                            placeholder="e.g. 30 — days each placement stays active"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group">
+                          <label>Featured Job Locations</label>
+                          {FEATURED_LOCATION_OPTIONS.map(
+                            ({ value, label, description }) => (
+                              <div key={value} className="form-check mb-2">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  id={`featured-loc-${value}`}
+                                  checked={formData.featuredJobLocations?.includes(
+                                    value,
+                                  )}
+                                  onChange={() => handleLocationChange(value)}
+                                />
+                                <label
+                                  className="form-check-label ms-2"
+                                  htmlFor={`featured-loc-${value}`}
+                                >
+                                  <strong>{label}</strong>
+                                  <br />
+                                  <small className="text-muted">
+                                    {description}
+                                  </small>
+                                </label>
+                              </div>
+                            ),
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group">
+                          <label>Search Boost Score</label>
+                          <select
+                            className="form-select form-control"
+                            name="searchBoostScore"
+                            value={formData.searchBoostScore}
+                            onChange={handleChange}
+                          >
+                            <option value="">Select boost level</option>
+                            <option value="1">x1 — Standard priority</option>
+                            <option value="2">x2 — Higher priority</option>
+                            <option value="3">x3 — Highest priority</option>
+                          </select>
+                          <small className="text-muted">
+                            Applied on /jobs search when Search Results is
+                            enabled
+                          </small>
+                        </div>
+                      </div>
+
+                      <div className="col-lg-6 col-md-6">
+                        <div className="form-group d-flex align-items-center justify-content-between">
+                          <label className="mb-0">
+                            Company Profile Highlight
+                          </label>
+                          <div className="form-check form-switch">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={formData.companyProfileHighlightEnabled}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  companyProfileHighlightEnabled:
+                                    e.target.checked,
+                                }))
+                              }
+                            />
+                          </div>
                         </div>
                       </div>
                     </>

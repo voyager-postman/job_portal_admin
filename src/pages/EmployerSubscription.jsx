@@ -134,37 +134,45 @@ const EmployerSubscription = () => {
     {
       Header: "Pack Name",
       id: "packName",
+      accessor: (row) => row?.pack?.name || "",
       Cell: ({ row }) => row.original?.pack?.name || "N/A",
     },
     {
       Header: "Amount",
       id: "amount",
+      accessor: (row) =>
+        `${row?.pack?.amount || 0} ${row?.pack?.currency || ""}`,
       Cell: ({ row }) =>
         `${row.original?.pack?.amount || 0} ${row.original?.pack?.currency || ""}`,
     },
     {
       Header: "Total Job Credits",
       id: "totalJobCredits",
+      accessor: (row) => row?.credits?.totalJobPosting ?? 0,
       Cell: ({ row }) => row.original?.credits?.totalJobPosting ?? 0,
     },
     {
       Header: "Remaining Job Credits",
       id: "remainingJobCredits",
+      accessor: (row) => row?.credits?.remainingJobPosting ?? 0,
       Cell: ({ row }) => row.original?.credits?.remainingJobPosting ?? 0,
     },
     {
       Header: "Total Profile Credits",
       id: "totalProfileCredits",
+      accessor: (row) => row?.credits?.totalProfileViewing ?? 0,
       Cell: ({ row }) => row.original?.credits?.totalProfileViewing ?? 0,
     },
     {
       Header: "Remaining Profile Credits",
       id: "remainingProfileCredits",
+      accessor: (row) => row?.credits?.remainingProfileViewing ?? 0,
       Cell: ({ row }) => row.original?.credits?.remainingProfileViewing ?? 0,
     },
     {
       Header: "Approval Status",
       id: "approvalStatus",
+      accessor: (row) => row?.approval?.status || "Pending",
       Cell: ({ row }) => {
         const status = row.original?.approval?.status || "Pending";
         let badgeClass = "badge bg-secondary";
@@ -181,6 +189,7 @@ const EmployerSubscription = () => {
     {
       Header: "Payment Status",
       id: "paymentStatus",
+      accessor: (row) => row?.payment?.transaction?.status || "N/A",
       Cell: ({ row }) => {
         const status = row.original?.payment?.transaction?.status || "N/A";
         let badgeClass = "badge bg-secondary";
@@ -196,6 +205,10 @@ const EmployerSubscription = () => {
     {
       Header: "Start Date",
       id: "startDate",
+      accessor: (row) =>
+        row?.validity?.startDate
+          ? new Date(row.validity.startDate).toLocaleDateString()
+          : "N/A",
       Cell: ({ row }) =>
         row.original?.validity?.startDate
           ? new Date(row.original.validity.startDate).toLocaleDateString()
@@ -204,6 +217,10 @@ const EmployerSubscription = () => {
     {
       Header: "End Date",
       id: "endDate",
+      accessor: (row) =>
+        row?.validity?.endDate
+          ? new Date(row.validity.endDate).toLocaleDateString()
+          : "N/A",
       Cell: ({ row }) =>
         row.original?.validity?.endDate
           ? new Date(row.original.validity.endDate).toLocaleDateString()
@@ -248,11 +265,14 @@ const EmployerSubscription = () => {
               <TableView
                 columns={columns}
                 data={publishJob}
+                page={page}
+                setPage={setPage}
                 limit={limit}
                 setLimit={(val) => {
                   setLimit(val);
                   setPage(1);
                 }}
+                totalPages={totalPages}
               />
 
               {/* Pagination */}

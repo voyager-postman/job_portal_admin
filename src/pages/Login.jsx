@@ -1,13 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import image from "../assets/images/logo/connect-work-ma-login.png";
-import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 
 import { API_BASE_URL } from "../Url/Url";
+import { encryptPassword } from "../utils/passwordEncryption";
+import {
+  hasAdminSession,
+  resolveLoginToken,
+} from "../utils/authToken";
+
 export default function Login() {
   const navigate = useNavigate();
   const { loginAdmin } = useContext(AuthContext);
@@ -20,7 +25,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // ✅ Handle input change
+  useEffect(() => {
+    if (hasAdminSession()) {
+      navigate("/admin", { replace: true });
+    }
+  }, [navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -36,22 +46,25 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/login-admin`, {
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await axios.post(
+        `${API_BASE_URL}login-admin`,
+        {
+          email: formData.email,
+          password: await encryptPassword(formData.password),
+        },
+        { withCredentials: true, skipGlobalLoader: true },
+      );
 
       if (response.data.success) {
-        loginAdmin(response.data.data, response.data.token);
+        const token = resolveLoginToken(response.data, response.headers);
+
+        loginAdmin(response.data.data, token || null);
         toast.success("Login successful!");
-        navigate("/admin");
+        navigate("/admin", { replace: true });
+      } else if (response.data.message === "Access denied. Not an admin account") {
+        toast.error("Access denied — you do not have admin privileges.");
       } else {
-        // ✅ Handle specific message from backend
-        if (response.data.message === "Access denied. Not an admin account") {
-          toast.error("Access denied — you do not have admin privileges.");
-        } else {
-          toast.error(response.data.message || "Invalid credentials!");
-        }
+        toast.error(response.data.message || "Invalid credentials!");
       }
     } catch (error) {
       console.error(error);
@@ -63,7 +76,6 @@ export default function Login() {
       setLoading(false);
     }
   };
-
   return (
     <div className="login-container">
       <ToastContainer position="top-right" autoClose={2000} theme="colored" />

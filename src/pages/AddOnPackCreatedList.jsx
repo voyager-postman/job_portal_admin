@@ -172,13 +172,17 @@ function AddOnPackCreatedList() {
       Cell: ({ row }) => {
         const jobCredits = row.original?.jobPostingCredits ?? 0;
         const profileCredits = row.original?.profileViewingCredits ?? 0;
+        const boostScore = row.original?.searchBoostScore;
 
         return (
           <Tooltip
-            title={`Job Posting Credits: ${jobCredits} | CV Viewing Credits: ${profileCredits}`}
+            title={
+              `Job Posting Credits: ${jobCredits} | CV Viewing Credits: ${profileCredits}` +
+              (boostScore ? ` | Search Boost: x${boostScore}` : "")
+            }
           >
             <span style={{ cursor: "pointer", fontWeight: 500 }}>
-              {jobCredits}p / {profileCredits}v
+              {jobCredits}p / {profileCredits}v {boostScore ? `(x${boostScore})` : ""}
             </span>
           </Tooltip>
         );

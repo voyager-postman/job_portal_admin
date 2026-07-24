@@ -231,10 +231,7 @@ function SalaryRange() {
         <div className="responsive-content">
           <div className="my-profile-area">
             <div className="profile-form-content add-recruiters-btn-postion">
-              <div className="button-flex">
-                <div>
-                  <h3>Salary Range List</h3>
-                </div>
+              <div className="button-flex category-action-toolbar">
                 <div className="button-flex2">
                   <div className="add-recruiters-btn">
                     <button

@@ -158,7 +158,8 @@ function AllInvoiceList() {
               <div className="spinner-border text-primary"></div>
             </div>
           ) : allInvoices.length === 0 ? (
-            <div className="text-center py-5 text-muted">
+            <div className="simple-list-empty-state">
+              <i className="fa-solid fa-file-invoice" />
               <h6>No invoice data found</h6>
             </div>
           ) : (

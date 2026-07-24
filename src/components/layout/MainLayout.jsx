@@ -5,6 +5,8 @@ import { AiOutlineDashboard, AiOutlineUser } from "react-icons/ai";
 import { NavLink, useLocation } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 import { API_IMAGE_URL } from "../../Url/Url";
+import { hasAdminSession } from "../../utils/authToken";
+import { resetGlobalLoader } from "../../utils/loadingService";
 import { Outlet } from "react-router-dom";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +34,9 @@ import ImportContactsIcon from "@mui/icons-material/ImportContacts";
 import AddModeratorIcon from "@mui/icons-material/AddModerator";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import VpnKeyIcon from "@mui/icons-material/VpnKey";
+import EmailIcon from "@mui/icons-material/Email";
+import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
 import QuizIcon from "@mui/icons-material/Quiz";
 const { Header, Sider, Content } = Layout;
@@ -49,7 +54,24 @@ const MainLayout = () => {
     localStorage.clear();
     navigate("/");
   };
-  const aiKeys = ["ai-settings", "currency-settings"];
+
+  useEffect(() => {
+    if (!admin && !hasAdminSession()) {
+      navigate("/", { replace: true });
+    }
+  }, [admin, navigate]);
+
+  useEffect(() => {
+    resetGlobalLoader();
+  }, [location.pathname]);
+
+  const settingsKeys = [
+    "ai-settings",
+    "currency-settings",
+    "oauth-settings",
+    "service-settings",
+    "google-marketing-settings",
+  ];
   // ✅ Detect active key based on route
   const getActiveKey = () => {
     const path = location.pathname;
@@ -69,10 +91,22 @@ const MainLayout = () => {
   // ✅ Update selected and open submenu based on current route
   useEffect(() => {
     const key = getActiveKey();
-    setSelectedKey(key);
+    const paymentKeys = [
+      "payment-gateway-management",
+      "add-gateway-setup",
+      "payment-gateway-setup-form",
+    ];
+
+    setSelectedKey(
+      paymentKeys.includes(key) && key !== "payment-gateway-management"
+        ? "payment-gateway-management"
+        : key,
+    );
 
     const cmsKeys = [
       "home-page-content",
+      "home-page-seo-settings",
+      "jobs-listing-seo-settings",
       "employer-home-page-content",
       "employer_faq",
       "jobSeeker_faq",
@@ -90,9 +124,10 @@ const MainLayout = () => {
       "contact-messages",
       "notification-template",
       "notification-governance",
+      "security-dashboard",
     ];
 
-    const contentKeys = ["manage-blog","search-quotes"];
+    const contentKeys = ["manage-blog", "search-quotes"];
 
     const packageKeys = [
       "super-admin-pack-creations",
@@ -100,8 +135,6 @@ const MainLayout = () => {
     ];
 
     const billingKeys = ["invoice-list"];
-
-    const paymentKeys = ["payment-gateway-management"];
 
     const skillsKey = [
       "manage-skill-categories",
@@ -126,7 +159,7 @@ const MainLayout = () => {
     } else if (skillsKey.includes(key)) {
       setOpenKeys(["assessment"]);
     } // ✅ Add inside route openKeys logic
-    else if (aiKeys.includes(key)) {
+    else if (settingsKeys.includes(key)) {
       setOpenKeys(["settings"]);
     } else {
       setOpenKeys([]);
@@ -145,28 +178,30 @@ const MainLayout = () => {
   return (
     <>
       <Layout>
-        <Sider trigger={null} collapsible collapsed={collapsed}>
+        <Sider
+          className="admin-sidebar"
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          width={280}
+          collapsedWidth={72}
+        >
           <div className="logo">
-            <h2 className="text-white fs-5 text-center py-3 mb-0">
+            <h2 className="fs-5 text-center py-2 mb-0">
               <span className="sm-logo">
-                {" "}
                 <img
                   src={`${process.env.PUBLIC_URL}/assets/images/logo/connect-work-ma-login.png`}
-                  className="festabash-l0go mb-3"
+                  className="festabash-l0go"
                   style={{ width: "35px", height: "35px" }}
                   alt="logo"
                 />
               </span>
-              <span
-                className="lg-logo "
-                style={{ color: "#2e47cc", width: "150px", height: "70px" }}
-              >
-                {" "}
+              <span className="lg-logo d-inline-block">
                 <img
                   src={`${process.env.PUBLIC_URL}/assets/images/logo/connect-work-ma-login.png`}
-                  className="festabash-l0go mb-3"
-                  style={{ width: "50%" }}
-                  alt="logo"
+                  className="festabash-l0go"
+                  style={{ width: "140px", height: "auto", maxHeight: "56px" }}
+                  alt="ConnectWork"
                 />
               </span>
             </h2>
@@ -174,6 +209,7 @@ const MainLayout = () => {
           <Menu
             mode="inline"
             style={menuStyle}
+            inlineIndent={18}
             openKeys={openKeys}
             onOpenChange={handleOpenChange}
             selectedKeys={[selectedKey]}
@@ -208,16 +244,19 @@ const MainLayout = () => {
               </Menu.Item>
 
               <Menu.Item key="notification-template" icon={<AiOutlineRead />}>
-                Notifications Template
+                Notifications
               </Menu.Item>
               <Menu.Item key="notification-governance" icon={<SecurityIcon />}>
-                Notification Governance
+                Notification Rules
+              </Menu.Item>
+              <Menu.Item key="security-dashboard" icon={<AddModeratorIcon />}>
+                Admin Security
               </Menu.Item>
             </Menu.SubMenu>
             <Menu.SubMenu
               key="manage-category"
               icon={<WorkOutlineIcon className="fs-6" />}
-              title="Manage Category"
+              title="Categories"
             >
               <Menu.Item key="tech-stack" icon={<CodeIcon className="fs-6" />}>
                 Tech Stack
@@ -261,9 +300,9 @@ const MainLayout = () => {
               <Menu.Item key="manage-blog" icon={<AiOutlineRead />}>
                 Blog
               </Menu.Item>
-<Menu.Item key="search-quotes" icon={<LuEqualApproximately />}>
-  Search Quotes
-</Menu.Item>
+              <Menu.Item key="search-quotes" icon={<LuEqualApproximately />}>
+                Search Quotes
+              </Menu.Item>
               {/* <Menu.Item key="manage-faq" icon={<AiOutlineQuestionCircle />}>
                 FAQ
               </Menu.Item> */}
@@ -275,13 +314,25 @@ const MainLayout = () => {
                 title="CMS Pages"
               >
                 <Menu.Item key="home-page-content" icon={<ContactMailIcon />}>
-                  Home Page
+                  Home Content
+                </Menu.Item>
+                <Menu.Item
+                  key="home-page-seo-settings"
+                  icon={<TravelExploreIcon />}
+                >
+                  Home SEO
+                </Menu.Item>
+                <Menu.Item
+                  key="jobs-listing-seo-settings"
+                  icon={<TravelExploreIcon />}
+                >
+                  Jobs Listing SEO
                 </Menu.Item>
                 <Menu.Item
                   key="employer-home-page-content"
                   icon={<BusinessIcon />}
                 >
-                  Employer Home Page
+                  Employer Home
                 </Menu.Item>
 
                 <Menu.Item key="employer_faq" icon={<HelpOutlineIcon />}>
@@ -321,11 +372,11 @@ const MainLayout = () => {
                   key="term-condition-content"
                   icon={<AddModeratorIcon />}
                 >
-                  Term And Conditions
+                  Terms
                 </Menu.Item>
 
                 <Menu.Item key="privacy-policy-content" icon={<SecurityIcon />}>
-                  Privacy And Policy
+                  Privacy Policy
                 </Menu.Item>
               </Menu.SubMenu>
             </Menu.SubMenu>
@@ -368,6 +419,19 @@ const MainLayout = () => {
               <Menu.Item key="invoice-list" icon={<AiOutlineRead />}>
                 Invoice
               </Menu.Item>
+
+              <Menu.SubMenu
+                key="payment-gateway"
+                icon={<AccountBalanceIcon />}
+                title="Payment Gateway"
+              >
+                <Menu.Item
+                  key="payment-gateway-management"
+                  icon={<AccountBalanceIcon />}
+                >
+                  Gateway Management
+                </Menu.Item>
+              </Menu.SubMenu>
             </Menu.SubMenu>
             {/* ASSESSMENT */}
             <Menu.SubMenu
@@ -394,7 +458,7 @@ const MainLayout = () => {
             <Menu.SubMenu
               key="settings"
               icon={<SmartToyIcon />}
-              title="AI Settings"
+              title="Settings"
             >
               <Menu.Item key="ai-settings" icon={<SmartToyIcon />}>
                 AI Prompt Config
@@ -405,6 +469,21 @@ const MainLayout = () => {
                 icon={<MonetizationOnIcon className="fs-6" />}
               >
                 Currency Settings
+              </Menu.Item>
+
+              <Menu.Item key="oauth-settings" icon={<VpnKeyIcon />}>
+                OAuth / Social Login
+              </Menu.Item>
+
+              <Menu.Item key="service-settings" icon={<EmailIcon />}>
+                Email & Affinda
+              </Menu.Item>
+
+              <Menu.Item
+                key="google-marketing-settings"
+                icon={<SiGoogleanalytics />}
+              >
+                Google Marketing
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>
@@ -443,7 +522,7 @@ const MainLayout = () => {
                           ? `${API_IMAGE_URL}/${admin.profileImage}`
                           : `${process.env.PUBLIC_URL}/assets/images/userImg/candidate1.jpg`
                       }
-                      crossorigin="anonymous"
+                      crossOrigin="anonymous"
                       alt="User"
                       style={{
                         width: "40px",

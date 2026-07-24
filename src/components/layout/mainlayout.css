@@ -1,41 +1,96 @@
 .logo {
-  padding-left: 6px;
-  padding-top: 6px;
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid #f0f0f0;
 }
+
+.logo h2 {
+  margin: 0;
+  line-height: 1;
+}
+
 .sm-logo {
+  display: inline-block;
+}
+
+.admin-sidebar.ant-layout-sider-collapsed .sm-logo {
+  display: inline-block;
+}
+
+.admin-sidebar.ant-layout-sider-collapsed .lg-logo {
+  display: none !important;
+}
+
+.admin-sidebar:not(.ant-layout-sider-collapsed) .sm-logo {
   display: none;
 }
+
+.admin-sidebar.ant-layout-sider {
+  background: #fff !important;
+  border-right: 1px solid #eef1f6;
+  box-shadow: 2px 0 8px rgba(15, 23, 42, 0.04);
+}
+
+.admin-sidebar .ant-layout-sider-children {
+  height: 100vh !important;
+  margin-top: -0.1px !important;
+  padding-top: 0.1px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.admin-sidebar .ant-menu-root {
+  border-inline-end: none !important;
+  padding: 8px 0 24px;
+}
+
+.admin-sidebar:not(.ant-layout-sider-collapsed) .ant-menu-title-content {
+  white-space: normal;
+  line-height: 1.35;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.admin-sidebar:not(.ant-layout-sider-collapsed) .ant-menu-inline .ant-menu-item,
+.admin-sidebar:not(.ant-layout-sider-collapsed)
+  .ant-menu-inline
+  .ant-menu-submenu-title {
+  height: auto;
+  min-height: 42px;
+  line-height: 1.35;
+  align-items: flex-start;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+
+.admin-sidebar .ant-menu-item .ant-menu-item-icon,
+.admin-sidebar .ant-menu-submenu-title .ant-menu-item-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.admin-sidebar .ant-menu-submenu-arrow {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.admin-sidebar .ant-menu-item-selected {
+  background: #eef3ff !important;
+  color: #2e47cc !important;
+  font-weight: 600;
+}
+
+.admin-sidebar .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #2e47cc !important;
+}
+
 :where(.css-dev-only-do-not-override-ac2jek).ant-layout-sider {
   background: #fff !important;
 }
 
-/* :where(.css-1pg9a38).ant-layout .ant-layout-sider-children {
-  height: 100vh !important;
-  margin-top: -0.1px !important;
-  padding-top: 0.1px !important;
-  overflow-y: auto !important;
-} */
-
-.ant-layout-sider-children {
-    height: 100vh !important;
-    margin-top: -0.1px !important;
-    padding-top: 0.1px !important;
-    overflow-y: auto !important;
-}
-
-/* :where(.css-dev-only-do-not-override-ac2jek).ant-layout-sider
-  .ant-layout-sider-children {
-  height: 100vh !important;
-  margin-top: -0.1px !important;
-  padding-top: 0.1px !important;
-  overflow-y: auto !important;
-} */
 ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.css-dev-only-do-not-override-ac2jek {
-  /* overflow-y: auto; */
-  /* height: 100vh !important; */
-  /* margin-top: -0.1px !important;
-  padding-top: 0.1px !important; */
+  /* overflow handled on sider children */
 }
+
 .main_section {
   max-height: 90vh;
   overflow-x: hidden;
@@ -45,4 +100,12 @@ ul.ant-menu.ant-menu-root.ant-menu-inline.ant-menu-light.css-dev-only-do-not-ove
 
 footer.py-4.bg-white {
   margin-top: 20px;
+}
+
+@media (max-width: 991px) {
+  .admin-sidebar.ant-layout-sider {
+    position: fixed;
+    z-index: 1000;
+    height: 100vh;
+  }
 }

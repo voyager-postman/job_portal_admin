@@ -10,6 +10,12 @@ const ViewInvoice = () => {
   const { invoiceId } = useParams();
   const location = useLocation();
   const backPath = location.state?.from || "/admin/invoice-list";
+  const backState = {
+    companyActiveId: localStorage.getItem("companyProfileId"),
+  };
+  if (location.state?.activeTab) {
+    backState.activeTab = location.state.activeTab;
+  }
   const invoiceRef = useRef();
 
   const [invoiceData, setInvoiceData] = useState(null);
@@ -61,12 +67,7 @@ const ViewInvoice = () => {
       </div>
       <div className="super-dashboard-common-heading">
         <h5>
-          <Link
-            to={backPath}
-            state={{
-              companyActiveId: localStorage.getItem("companyProfileId"),
-            }}
-          >
+          <Link to={backPath} state={backState}>
             <i className="fa-solid fa-angles-left" />
           </Link>
           Invoice Details

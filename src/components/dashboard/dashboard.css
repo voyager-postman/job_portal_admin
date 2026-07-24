@@ -296,30 +296,186 @@ tr {
 .super-dashboard-total-revenue-report {
   display: flex;
   justify-content: space-between;
+  gap: 2%;
 }
 
 .total-revenue-report-chart {
   width: 49%;
   background: #fff;
-  padding: 20px 20px;
+  padding: 20px;
 }
 
 .total-revenue-report-chart h5 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
   font-size: 18px;
+}
+
+.revenue-chart-container {
+  min-height: 320px;
 }
 
 .total-revenue-report-tabel {
   width: 49%;
   background: #fff;
-  padding: 20px 20px;
+  padding: 20px;
 }
 
-.total-revenue-report-tabel h5 {
+.revenue-report-data-panel {
+  min-width: 0;
+}
+
+.revenue-report-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.revenue-report-header h5 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 4px;
   font-size: 18px;
+}
+
+.revenue-report-subtitle {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.revenue-report-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.revenue-report-control-label {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.revenue-report-limit-select {
+  width: 84px;
+}
+
+.revenue-report-table-wrap {
+  overflow: auto;
+  max-height: 50vh;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.revenue-report-table {
+  width: 100%;
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.revenue-report-table thead th {
+  background: #1e3a5f;
+  color: #fff;
+  white-space: nowrap;
+  padding: 12px 14px;
+  font-weight: 600;
+  border: none;
+  vertical-align: middle;
+}
+
+.revenue-report-table tbody td {
+  padding: 11px 14px;
+  vertical-align: middle;
+  border-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.revenue-report-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.revenue-report-cell-date {
+  white-space: nowrap;
+}
+
+.revenue-report-cell-truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.revenue-report-cell-id {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: Consolas, Monaco, monospace;
+  font-size: 12px;
+  color: #475569;
+}
+
+.revenue-report-cell-amount {
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.revenue-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.revenue-status-success {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.revenue-status-pending {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.revenue-status-failed {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.revenue-status-default {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.revenue-report-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.revenue-report-page-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+@media (max-width: 991px) {
+  .revenue-report-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .revenue-report-controls {
+    justify-content: flex-start;
+  }
 }
 
 /* Table Css Start here  */
@@ -384,6 +540,16 @@ tr {
   justify-content: space-around;
   width: 20%;
   /* margin-right: 20px; */
+}
+
+.category-action-toolbar {
+  justify-content: flex-end;
+  padding-bottom: 14px;
+}
+
+.category-action-toolbar .button-flex2 {
+  width: auto;
+  justify-content: flex-end;
 }
 
 /* .add-recruiters-btn .default-btn {

@@ -219,6 +219,21 @@ table.dataTable.display tbody tr:hover {
   width: 20%;
 }
 
+.parentProduceSearch .table-search-box-info--filters {
+  width: auto;
+  min-width: 50%;
+  max-width: 75%;
+}
+
+.parentProduceSearch .table-search-box-info--filters input[type="search"] {
+  min-width: 220px;
+  flex: 1;
+}
+
+.parentProduceSearch .table-search-box-info--filters select {
+  min-width: 160px;
+}
+
 tr {
   vertical-align: middle;
 }
@@ -242,27 +257,42 @@ aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
 
 .super-admin-company-img-short-detail {
   background: #fff;
-  padding: 15px 15px;
+  padding: 16px;
   margin: 0px 0px 0px 0px;
+}
+
+.super-admin-company-img {
+  width: 100%;
+  height: 240px;
+  background: linear-gradient(135deg, #eef4ff 0%, #f8fafc 100%);
+  border: 1px solid #e5eaf2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .super-admin-company-img img {
   width: 100%;
-  height: 300px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .super-admin-company-short-detail {
   display: flex;
-  margin-top: 25px;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
 }
 
 .super-admin-company-logo {
-  width: 150px;
-  height: 65px;
-  background: #eee;
-  padding: 0px 10px;
-  margin-right: 20px;
+  width: 120px;
+  height: 64px;
+  background: #f8fafc;
+  border: 1px solid #e5eaf2;
+  padding: 8px;
+  flex: 0 0 120px;
 }
 
 .super-admin-company-logo img {
@@ -273,6 +303,8 @@ aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
 
 .super-admin-company-about-short-info ul {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   list-style: none;
   margin: 10px 0px 0px 0px;
   padding: 0px 0px 0px 0px;
@@ -281,7 +313,7 @@ aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
 .super-admin-company-about-short-info ul li {
   font-size: 15px;
   margin: 0px 0px 0px 0px;
-  padding: 0px 20px 0px 0px;
+  padding: 0px;
 }
 
 .super-admin-company-about-short-info h4 {
@@ -325,6 +357,121 @@ aside.ant-layout-sider.ant-layout-sider-dark.css-ac2jek {
   margin-top: 15px;
   background: #fff;
   padding: 20px 15px;
+}
+
+.company-detail-empty-state {
+  min-height: 120px;
+  border: 1px dashed #d7dee8;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 20px;
+}
+
+.company-detail-empty-state i {
+  font-size: 24px;
+  color: #94a3b8;
+}
+
+.company-detail-empty-state p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.admin-table-empty-state {
+  min-height: 170px;
+  border: 1px dashed #d7dee8;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 28px 20px;
+  margin-top: 16px;
+}
+
+.admin-table-empty-state i {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: #0066cc;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.admin-table-empty-state h6 {
+  color: #1f2937;
+  margin: 4px 0 0;
+  font-size: 16px;
+}
+
+.admin-table-empty-state p {
+  margin: 0;
+  max-width: 360px;
+}
+
+.simple-list-empty-state {
+  min-height: 130px;
+  color: #1f2937;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.simple-list-empty-state i {
+  color: #555;
+  font-size: 24px;
+}
+
+.simple-list-empty-state h6 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.job-offer-dwm-time-table table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.job-offer-dwm-time-table th,
+.job-offer-dwm-time-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.job-offer-dwm-time-table th:first-child,
+.job-offer-dwm-time-table td:first-child {
+  width: 52px;
+}
+
+.job-offer-dwm-time-table .table-text-truncate {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-offer-dwm-time-table th:nth-child(4),
+.job-offer-dwm-time-table td:nth-child(4),
+.job-offer-dwm-time-table th:last-child,
+.job-offer-dwm-time-table td:last-child {
+  width: 96px;
 }
 
 .super-admin-company-profile-detail-info {

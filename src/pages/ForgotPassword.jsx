@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
 import axios from "axios";
 import { API_BASE_URL } from "../Url/Url";
+import { encryptPassword } from "../utils/passwordEncryption";
 import OtpInput from "react-otp-input";
 
 export default function AdminForgotPassword() {
@@ -56,7 +57,7 @@ export default function AdminForgotPassword() {
       const res = await axios.post(`${API_BASE_URL}resetPassword`, {
         email,
         otp,
-        newPassword,
+        newPassword: await encryptPassword(newPassword),
         role: "admin",
       });
 

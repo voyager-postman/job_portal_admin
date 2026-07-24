@@ -4,12 +4,22 @@ import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
+import { ensureAuthRequestConfig } from "../utils/authToken";
+
+const DEFAULT_POPULAR_LIMIT = 5;
+const MAX_POPULAR_LIMIT = 20;
 
 const UpdateBlog = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [fetchingBlog, setFetchingBlog] = useState(true);
+  const [popularLoading, setPopularLoading] = useState(false);
+  const [popularListLoading, setPopularListLoading] = useState(false);
+  const [isPopular, setIsPopular] = useState(false);
+  const [popularPosts, setPopularPosts] = useState([]);
+  const [popularLimit, setPopularLimit] = useState(5);
+  const [popularCount, setPopularCount] = useState(0);
   const [imagePreview, setImagePreview] = useState(
     `${process.env.PUBLIC_URL}/assets/images/Icon/dummy-img.png`,
   );
@@ -44,103 +54,148 @@ const UpdateBlog = () => {
     return `${API_IMAGE_URL}${url}`;
   };
 
-  // Fetch blog data on component mount
-  useEffect(() => {
-    const fetchBlogData = async () => {
+  const applyBlogDetails = (responseData, blogData) => {
+    let formattedDate = "";
+    if (blogData.publishDate) {
+      const dateObj = new Date(blogData.publishDate);
+      if (!isNaN(dateObj.getTime())) {
+        formattedDate = dateObj.toISOString().split("T")[0];
+      }
+    }
+
+    setFormData({
+      title: blogData.title || "",
+      authorName: blogData.authorName || "",
+      publishDate: formattedDate,
+      content: blogData.content || "",
+      bannerImage: blogData.bannerImage || null,
+    });
+    setIsPopular(
+      blogData.isPopular === true || blogData.is_popular === true,
+    );
+    setPopularPosts(responseData?.popularPosts || []);
+    setPopularLimit(responseData?.popularLimit ?? 5);
+    setPopularCount(
+      responseData?.popularCount ?? responseData?.popularPosts?.length ?? 0,
+    );
+
+    if (blogData.bannerImage) {
+      setImagePreview(cleanImageUrl(blogData.bannerImage));
+    }
+  };
+
+  const fetchBlogData = async (
+    requestedPopularLimit = popularLimit,
+    { refreshPopularOnly = false } = {},
+  ) => {
+    if (refreshPopularOnly) {
+      setPopularListLoading(true);
+    } else {
       setFetchingBlog(true);
+    }
+
+    const safePopularLimit = Math.min(
+      Math.max(Number(requestedPopularLimit) || DEFAULT_POPULAR_LIMIT, 1),
+      MAX_POPULAR_LIMIT,
+    );
+
+    try {
+      let blogData = null;
+      let responseData = null;
+
       try {
-        let blogData = null;
+        const response = await axios.get(
+          `${API_BASE_URL}getBlog/${id}`,
+          await ensureAuthRequestConfig({
+            skipGlobalLoader: true,
+            params: { popularLimit: safePopularLimit },
+          }),
+        );
 
-        // Attempt 1: Fetch single blog by ID
-        console.log("Fetch blog attempt 1: ID", id);
+        if (response.data.success) {
+          responseData = response.data;
+          const rawData = response.data.data;
+          if (Array.isArray(rawData) && rawData.length > 0) {
+            blogData = rawData[0];
+          } else if (rawData && !Array.isArray(rawData)) {
+            blogData = rawData;
+          }
+        }
+      } catch (singleFetchError) {
+        console.warn(
+          "Blog details fetch failed, trying fallback...",
+          singleFetchError,
+        );
+      }
+
+      if (!blogData) {
         try {
-          const response = await axios.get(`${API_BASE_URL}blog/${id}`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+          const allDocsResponse = await axios.get(`${API_BASE_URL}allBlog`, {
+            params: { limit: 1000 },
           });
 
-          if (response.data.success) {
-            console.log("Single fetch success:", response.data);
-            const rawData = response.data.data;
-            if (Array.isArray(rawData) && rawData.length > 0) {
-              blogData = rawData[0];
-            } else if (rawData && !Array.isArray(rawData)) {
-              blogData = rawData;
-            }
+          if (allDocsResponse.data?.data) {
+            blogData = allDocsResponse.data.data.find(
+              (b) => String(b._id) === String(id),
+            );
           }
-        } catch (singleFetchError) {
-          console.warn(
-            "Single blog fetch failed, trying fallback...",
-            singleFetchError,
-          );
+        } catch (fallbackError) {
+          console.error("Fallback fetch also failed:", fallbackError);
         }
+      }
 
-        // Attempt 2: Fallback to fetching all blogs if single fetch failed or returned no data
-        if (!blogData) {
-          console.log("Using fallback: fetching all blogs to find ID:", id);
-          try {
-            const allDocsResponse = await axios.get(`${API_BASE_URL}allBlog`, {
-              params: { limit: 1000 },
-            });
-
-            if (allDocsResponse.data?.data) {
-              const allBlogs = allDocsResponse.data.data;
-              // Ensure type safety during comparison (ids can be strings or numbers)
-              blogData = allBlogs.find((b) => String(b._id) === String(id));
-            }
-          } catch (fallbackError) {
-            console.error("Fallback fetch also failed:", fallbackError);
-          }
-        }
-
-        if (blogData) {
-          console.log("Blog Data Found & Loading:", blogData);
-          let formattedDate = "";
-          if (blogData.publishDate) {
-            const dateObj = new Date(blogData.publishDate);
-            if (!isNaN(dateObj.getTime())) {
-              formattedDate = dateObj.toISOString().split("T")[0];
-            }
-          }
-
-          setFormData({
-            title: blogData.title || "",
-            authorName: blogData.authorName || "",
-            publishDate: formattedDate,
-            content: blogData.content || "",
-            bannerImage: blogData.bannerImage || null,
-          });
-
-          // Set image preview to existing banner image
-          if (blogData.bannerImage) {
-            if (blogData.bannerImage.startsWith("http")) {
-              setImagePreview(blogData.bannerImage);
-            } else {
-              // setImagePreview(`${API_IMAGE_URL}${blogData.bannerImage}}`);
-              setImagePreview(cleanImageUrl(blogData.bannerImage));
-            }
-          }
-        } else {
-          console.error(
-            "Could not find blog details via single fetch or fallback.",
-          );
-          toast.error(
-            "Could not load blog details. Please check the connection.",
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching blog data:", error);
-        toast.error("Failed to fetch blog data");
-      } finally {
+      if (blogData) {
+        applyBlogDetails(responseData, blogData);
+      } else {
+        toast.error(
+          "Could not load blog details. Please check the connection.",
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching blog data:", error);
+      toast.error("Failed to fetch blog data");
+    } finally {
+      if (refreshPopularOnly) {
+        setPopularListLoading(false);
+      } else {
         setFetchingBlog(false);
       }
-    };
+    }
+  };
 
+  // Fetch blog data on component mount
+  useEffect(() => {
     if (id) {
       fetchBlogData();
     }
   }, [id]);
+
+  const handlePopularToggle = async (e) => {
+    const newPopular = e.target.checked;
+    setPopularLoading(true);
+    try {
+      const response = await axios.post(
+        `${API_BASE_URL}setBlogPopular/${id}`,
+        { isPopular: newPopular },
+        await ensureAuthRequestConfig(),
+      );
+
+      if (response.data.success) {
+        toast.success(response.data.message);
+        await fetchBlogData();
+      } else {
+        toast.error(response.data.message || "Failed to update popular status");
+        setIsPopular(!newPopular);
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Failed to update popular status",
+      );
+      setIsPopular(!newPopular);
+    } finally {
+      setPopularLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
@@ -182,11 +237,9 @@ const UpdateBlog = () => {
       const response = await axios.put(
         `${API_BASE_URL}updateBlog/${id}`,
         formDataToSend,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
+        await ensureAuthRequestConfig({
+          headers: { "Content-Type": "multipart/form-data" },
+        }),
       );
       if (response.data.success) {
         toast.success(response.data.message);
@@ -204,6 +257,7 @@ const UpdateBlog = () => {
 
   return (
     <>
+      <ToastContainer position="top-right" autoClose={2500} />
       <section className="super-dashboard-content-wrapper">
         <div className="super-dashboard-breadcrumb-info">
           <h4>Update Blog Page Content Form</h4>
@@ -218,8 +272,15 @@ const UpdateBlog = () => {
         </div>
         <div className="super-dashboard-cms-content-form">
           <div className="container">
-            <form onSubmit={handleSubmit}>
+            {fetchingBlog ? (
+              <div className="d-flex justify-content-center py-5">
+                <div className="spinner-border text-primary" />
+              </div>
+            ) : (
               <div className="row">
+                <div className="col-lg-8">
+                  <form onSubmit={handleSubmit}>
+                    <div className="row">
                 <div className="col-lg-12 col-md-12">
                   <div className="form-group">
                     <label>Article Title</label>
@@ -269,7 +330,7 @@ const UpdateBlog = () => {
                   <div className="upload-company-info-area">
                     <div className="upload-company-img-preview">
                       <img
-                        crossorigin="anonymous"
+                        crossOrigin="anonymous"
                         src={imagePreview}
                         className="main-logo"
                         id="preview"
@@ -333,8 +394,120 @@ const UpdateBlog = () => {
                     </button>
                   </div>
                 </div>
+                    </div>
+                  </form>
+                </div>
+
+                <div className="col-lg-4">
+                  <div className="super-admin-white-bg p-3 rounded border mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h6 className="mb-0">Popular Post</h6>
+                      <span className="badge bg-primary">
+                        {popularCount}/{popularLimit}
+                      </span>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label small mb-1">
+                        Popular posts to load (max {MAX_POPULAR_LIMIT})
+                      </label>
+                      <select
+                        className="form-select form-select-sm"
+                        value={popularLimit}
+                        onChange={(e) => {
+                          const nextLimit = Number(e.target.value);
+                          setPopularLimit(nextLimit);
+                          fetchBlogData(nextLimit, { refreshPopularOnly: true });
+                        }}
+                        disabled={popularListLoading}
+                      >
+                        {[5, 10, 15, 20].map((value) => (
+                          <option key={value} value={value}>
+                            {value}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-muted small mb-3">
+                      Mark this blog as popular to show it in the popular posts
+                      section on the public site.
+                    </p>
+                    <div className="d-flex justify-content-between align-items-center p-3 bg-light rounded">
+                      <strong>Mark as Popular</strong>
+                      <div className="super-admin-toggle-switch">
+                        <label className="switch">
+                          <input
+                            type="checkbox"
+                            checked={isPopular}
+                            onChange={handlePopularToggle}
+                            disabled={popularLoading}
+                          />
+                          <span className="slider round"></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="super-admin-white-bg p-3 rounded border">
+                    <h6 className="mb-3">Current Popular Posts</h6>
+                    {popularListLoading ? (
+                      <div className="d-flex justify-content-center py-3">
+                        <div className="spinner-border spinner-border-sm text-primary" />
+                      </div>
+                    ) : popularPosts.length === 0 ? (
+                      <p className="text-muted small mb-0">
+                        No popular posts yet.
+                      </p>
+                    ) : (
+                      <div className="d-flex flex-column gap-3">
+                        {popularPosts.map((post) => (
+                          <div
+                            key={post._id}
+                            className="d-flex gap-2 align-items-start border-bottom pb-3"
+                          >
+                            <img
+                              crossOrigin="anonymous"
+                              src={cleanImageUrl(post.bannerImage)}
+                              alt={post.title}
+                              width={48}
+                              height={48}
+                              style={{
+                                borderRadius: "6px",
+                                objectFit: "cover",
+                                flexShrink: 0,
+                              }}
+                              onError={(e) => {
+                                e.currentTarget.src =
+                                  "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                              }}
+                            />
+                            <div className="flex-grow-1">
+                              <div className="fw-semibold small">
+                                {post.title || "Untitled"}
+                                {String(post._id) === String(id) && (
+                                  <span className="badge bg-success ms-2">
+                                    Current
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-muted small">
+                                {post.authorName || "Unknown author"}
+                              </div>
+                              <div className="text-muted small">
+                                {post.publishDate
+                                  ? new Date(
+                                      post.publishDate,
+                                    ).toLocaleDateString()
+                                  : "—"}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       </section>
