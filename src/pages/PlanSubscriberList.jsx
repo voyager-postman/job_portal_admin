@@ -1,4 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import Swal from "sweetalert2";
+import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
+import { TableView } from "../components/DataTable";
+import { useDebounce } from "../hooks/useDebounce";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Tooltip } from "antd";
 
 const ACTIVATION_STATUSES = ["Pending", "Active", "Rejected", "Expired"];
 const REQUEST_STATUSES = [
@@ -9,15 +17,7 @@ const REQUEST_STATUSES = [
   "Completed",
   "Rejected",
 ];
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
-import Swal from "sweetalert2";
-import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url";
-import { TableView } from "../components/DataTable";
-import { useDebounce } from "../hooks/useDebounce";
-import { Link } from "react-router-dom";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Tooltip } from "antd";
+
 const PlanSubscriberList = () => {
   const navigate = useNavigate();
   const location = useLocation();
