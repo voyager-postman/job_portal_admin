@@ -79,6 +79,7 @@ import AdminServiceSettings from "./pages/AdminServiceSettings";
 import AdminGoogleMarketingSettings from "./pages/AdminGoogleMarketingSettings";
 import AdminHomePageSeoSettings from "./pages/AdminHomePageSeoSettings";
 import AdminJobsListingSeoSettings from "./pages/AdminJobsListingSeoSettings";
+import AdminCloudStorageSettings from "./pages/AdminCloudStorageSettings";
 import Remote from "./pages/Remote";
 import SearchQuotes from "./pages/SearchQuotes";
 function App() {
@@ -122,6 +123,10 @@ function App() {
           <Route
             path="google-marketing-settings"
             element={<AdminGoogleMarketingSettings />}
+          />
+          <Route
+            path="cloud-storage-settings"
+            element={<AdminCloudStorageSettings />}
           />
           <Route
             path="home-page-seo-settings"

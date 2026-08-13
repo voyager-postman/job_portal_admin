@@ -37,6 +37,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import EmailIcon from "@mui/icons-material/Email";
 import TravelExploreIcon from "@mui/icons-material/TravelExplore";
+import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
 import QuizIcon from "@mui/icons-material/Quiz";
 const { Header, Sider, Content } = Layout;
@@ -71,6 +72,7 @@ const MainLayout = () => {
     "oauth-settings",
     "service-settings",
     "google-marketing-settings",
+    "cloud-storage-settings",
   ];
   // ✅ Detect active key based on route
   const getActiveKey = () => {
@@ -484,6 +486,13 @@ const MainLayout = () => {
                 icon={<SiGoogleanalytics />}
               >
                 Google Marketing
+              </Menu.Item>
+
+              <Menu.Item
+                key="cloud-storage-settings"
+                icon={<CloudQueueIcon />}
+              >
+                Cloud Storage
               </Menu.Item>
             </Menu.SubMenu>
           </Menu>
