@@ -37,6 +37,24 @@ const Sidebar = ({ isSidebarHidden, isSidebarShown }) => {
 
             <li>
               <NavLink
+                to="/admin/manage-jobs"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                <i className="fa-solid fa-briefcase"></i> Manage Jobs
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink
+                to="/admin/job-reports"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                <i className="fa-solid fa-triangle-exclamation"></i> Job Reports
+              </NavLink>
+            </li>
+
+            <li>
+              <NavLink
                 to="/admin/manage-candidates"
                 className={({ isActive }) => (isActive ? "active" : "")}
               >
@@ -97,6 +115,15 @@ const Sidebar = ({ isSidebarHidden, isSidebarShown }) => {
                   </NavLink>
                 </li>
               </ul>
+            </li>
+
+            <li>
+              <NavLink
+                to="/admin/audit-logs"
+                className={({ isActive }) => (isActive ? "active" : "")}
+              >
+                <i className="fa-solid fa-clock-rotate-left"></i> Log Data
+              </NavLink>
             </li>
           </ul>
         </div>

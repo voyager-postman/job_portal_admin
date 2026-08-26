@@ -40,6 +40,8 @@ import TravelExploreIcon from "@mui/icons-material/TravelExplore";
 import CloudQueueIcon from "@mui/icons-material/CloudQueue";
 import { AiOutlineRead, AiOutlineQuestionCircle } from "react-icons/ai";
 import QuizIcon from "@mui/icons-material/Quiz";
+import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
+import ReportProblemIcon from "@mui/icons-material/ReportProblem";
 const { Header, Sider, Content } = Layout;
 
 const MainLayout = () => {
@@ -73,6 +75,8 @@ const MainLayout = () => {
     "service-settings",
     "google-marketing-settings",
     "cloud-storage-settings",
+    "system-monitoring",
+    "system-status",
   ];
   // ✅ Detect active key based on route
   const getActiveKey = () => {
@@ -99,14 +103,20 @@ const MainLayout = () => {
       "payment-gateway-setup-form",
     ];
 
-    setSelectedKey(
-      paymentKeys.includes(key) && key !== "payment-gateway-management"
-        ? "payment-gateway-management"
-        : key,
-    );
+    if (key === "log-data") {
+      setSelectedKey("audit-logs");
+    } else {
+      setSelectedKey(
+        paymentKeys.includes(key) && key !== "payment-gateway-management"
+          ? "payment-gateway-management"
+          : key,
+      );
+    }
 
     const cmsKeys = [
       "home-page-content",
+      "global-seo-settings",
+      "seo-global-settings",
       "home-page-seo-settings",
       "jobs-listing-seo-settings",
       "employer-home-page-content",
@@ -122,11 +132,19 @@ const MainLayout = () => {
 
     const managementKeys = [
       "manage-recruiter",
+      "manage-jobs",
+      "jobs",
+      "job-moderation",
+      "job-reports",
+      "moderation/job-reports",
+      "manage-reports",
       "manage-candidates",
       "contact-messages",
       "notification-template",
       "notification-governance",
       "security-dashboard",
+      "manage-tickets",
+      "tickets",
     ];
 
     const contentKeys = ["manage-blog", "search-quotes"];
@@ -144,8 +162,17 @@ const MainLayout = () => {
       "assessment-list",
     ];
 
+    const analyticsKeys = [
+      "analytics/visitor-conversion",
+      "visitor-conversion-analytics",
+      "analytics/offer-performance",
+      "offer-performance-analytics",
+    ];
+
     if (managementKeys.includes(key)) {
       setOpenKeys(["management"]);
+    } else if (analyticsKeys.includes(key)) {
+      setOpenKeys(["analytics"]);
     } else if (contentKeys.includes(key)) {
       setOpenKeys(["content"]);
     } else if (categoryKeys.includes(key)) {
@@ -228,6 +255,26 @@ const MainLayout = () => {
             <Menu.Item key="" icon={<AiOutlineDashboard className="fs-6" />}>
               Dashboard
             </Menu.Item>
+
+            {/* ANALYTICS */}
+            <Menu.SubMenu
+              key="analytics"
+              icon={<SiGoogleanalytics className="fs-6" />}
+              title="Analytics"
+            >
+              <Menu.Item
+                key="analytics/visitor-conversion"
+                icon={<TrendingUpIcon className="fs-6" />}
+              >
+                Visitor Conversion
+              </Menu.Item>
+              <Menu.Item
+                key="analytics/offer-performance"
+                icon={<WorkOutlineIcon className="fs-6" />}
+              >
+                Offer Performance
+              </Menu.Item>
+            </Menu.SubMenu>
             {/* MANAGEMENT */}
             <Menu.SubMenu
               key="management"
@@ -238,6 +285,14 @@ const MainLayout = () => {
                 Company
               </Menu.Item>
 
+              <Menu.Item key="manage-jobs" icon={<WorkOutlineIcon />}>
+                Manage Jobs
+              </Menu.Item>
+
+              <Menu.Item key="job-reports" icon={<ReportProblemIcon />}>
+                Job Reports
+              </Menu.Item>
+
               <Menu.Item key="manage-candidates" icon={<AiOutlineUser />}>
                 Candidates
               </Menu.Item>
@@ -245,6 +300,9 @@ const MainLayout = () => {
                 Contact Messages
               </Menu.Item>
 
+              <Menu.Item key="manage-tickets" icon={<QuestionAnswerIcon />}>
+                Support Tickets
+              </Menu.Item>
               <Menu.Item key="notification-template" icon={<AiOutlineRead />}>
                 Notifications
               </Menu.Item>
@@ -317,6 +375,12 @@ const MainLayout = () => {
               >
                 <Menu.Item key="home-page-content" icon={<ContactMailIcon />}>
                   Home Content
+                </Menu.Item>
+                <Menu.Item
+                  key="global-seo-settings"
+                  icon={<TravelExploreIcon />}
+                >
+                  Global SEO
                 </Menu.Item>
                 <Menu.Item
                   key="home-page-seo-settings"
@@ -494,7 +558,22 @@ const MainLayout = () => {
               >
                 Cloud Storage
               </Menu.Item>
+
+              <Menu.Item
+                key="system-monitoring"
+                icon={<CloudQueueIcon />}
+              >
+                System Health & Queues
+              </Menu.Item>
             </Menu.SubMenu>
+
+            {/* LOG DATA / AUDIT LOGS */}
+            <Menu.Item
+              key="audit-logs"
+              icon={<ManageHistoryIcon className="fs-6" />}
+            >
+              Log Data
+            </Menu.Item>
           </Menu>
         </Sider>
         <Layout className="site-layout">

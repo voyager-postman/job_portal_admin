@@ -79,9 +79,17 @@ import AdminServiceSettings from "./pages/AdminServiceSettings";
 import AdminGoogleMarketingSettings from "./pages/AdminGoogleMarketingSettings";
 import AdminHomePageSeoSettings from "./pages/AdminHomePageSeoSettings";
 import AdminJobsListingSeoSettings from "./pages/AdminJobsListingSeoSettings";
+import AdminGlobalSeoSettings from "./pages/AdminGlobalSeoSettings";
 import AdminCloudStorageSettings from "./pages/AdminCloudStorageSettings";
 import Remote from "./pages/Remote";
 import SearchQuotes from "./pages/SearchQuotes";
+import AuditLogs from "./pages/AuditLogs";
+import VisitorConversionAnalytics from "./pages/VisitorConversionAnalytics";
+import OfferPerformanceAnalytics from "./pages/OfferPerformanceAnalytics";
+import ManageTickets from "./pages/ManageTickets";
+import SystemMonitoring from "./pages/SystemMonitoring";
+import ManageJobs from "./pages/ManageJobs";
+import JobReports from "./pages/JobReports";
 function App() {
   return (
     <div className="App">
@@ -96,6 +104,12 @@ function App() {
           <Route path="my_profile" element={<MyProfile />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="manage-recruiter" element={<ManageUsers />} />
+          <Route path="manage-jobs" element={<ManageJobs />} />
+          <Route path="jobs" element={<ManageJobs />} />
+          <Route path="job-moderation" element={<ManageJobs />} />
+          <Route path="job-reports" element={<JobReports />} />
+          <Route path="moderation/job-reports" element={<JobReports />} />
+          <Route path="manage-reports" element={<JobReports />} />
           <Route path="add-employer" element={<AddEmployer />} />
           <Route path="notification-template" element={<NotificationsList />} />
           <Route
@@ -127,6 +141,14 @@ function App() {
           <Route
             path="cloud-storage-settings"
             element={<AdminCloudStorageSettings />}
+          />
+          <Route
+            path="global-seo-settings"
+            element={<AdminGlobalSeoSettings />}
+          />
+          <Route
+            path="seo-global-settings"
+            element={<AdminGlobalSeoSettings />}
           />
           <Route
             path="home-page-seo-settings"
@@ -240,6 +262,28 @@ function App() {
           <Route path="highlighted-job" element={<HighlightedJob />} />
           <Route path="home-visibility" element={<HomeVisibility />} />
           <Route path="job-promotions" element={<JobPromotions />} />
+          <Route path="audit-logs" element={<AuditLogs />} />
+          <Route path="log-data" element={<AuditLogs />} />
+          <Route
+            path="analytics/visitor-conversion"
+            element={<VisitorConversionAnalytics />}
+          />
+          <Route
+            path="visitor-conversion-analytics"
+            element={<VisitorConversionAnalytics />}
+          />
+          <Route
+            path="analytics/offer-performance"
+            element={<OfferPerformanceAnalytics />}
+          />
+          <Route
+            path="offer-performance-analytics"
+            element={<OfferPerformanceAnalytics />}
+          />
+          <Route path="manage-tickets" element={<ManageTickets />} />
+          <Route path="tickets" element={<ManageTickets />} />
+          <Route path="system-monitoring" element={<SystemMonitoring />} />
+          <Route path="system-status" element={<SystemMonitoring />} />
           {/* /admin/manage-users */}
         </Route>
       </Routes>

@@ -3,6 +3,7 @@ import { API_BASE_URL, API_IMAGE_URL } from "../Url/Url.js";
 import { TableView } from "../components/DataTable";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useDebounce } from "../hooks/useDebounce";
 
 const CompanyActiveJob = () => {
   const location = useLocation();
@@ -12,35 +13,68 @@ const CompanyActiveJob = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 400);
 
   console.log("Recieved Active company  Id:", companyActiveId);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, startDate, endDate]);
+
   useEffect(() => {
     console.log("useEffect Triggered:", companyActiveId);
     if (companyActiveId) {
       fetchCandidates(companyActiveId);
     }
-  }, [companyActiveId, page, limit]);
+  }, [companyActiveId, page, limit, debouncedSearch, startDate, endDate]);
 
   // Fetch Recruiter Data
   const fetchCandidates = async (companyId) => {
     try {
       setLoading(true);
-      const response = await axios.get(
-        `${API_BASE_URL}admin/jobs?company_id=${companyId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+      const params = {
+        ...(companyId ? { company_id: companyId } : {}),
+        page,
+        limit,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      };
+
+      const response = await axios.get(`${API_BASE_URL}admin/jobs`, {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      );
+      });
       console.log("API Response:", response.data.jobs);
-      setPublishJob(response.data.jobs || []);
-      setTotalPages(response.data.totalPages || 1);
+      setPublishJob(response.data.jobs || response.data.data || []);
+      setTotalPages(
+        response.data.totalPages ||
+        response.data.pagination?.totalPages ||
+        1,
+      );
+      setTotal(
+        response.data.total ||
+        response.data.pagination?.total ||
+        0,
+      );
     } catch (error) {
       console.log(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
   };
   const columns = [
     {
@@ -51,7 +85,7 @@ const CompanyActiveJob = () => {
     {
       Header: "Job Title",
       accessor: "jobTitle",
-      Cell: ({ row }) => row.original.jobTitle || "Not Provided",
+      Cell: ({ row }) => row.original?.jobTitle || "Not Provided",
     },
     {
       Header: "Job Category",
@@ -66,12 +100,12 @@ const CompanyActiveJob = () => {
     {
       Header: "Remote Type",
       accessor: "remote",
-      Cell: ({ row }) => row.original.remote || "Not Provided",
+      Cell: ({ row }) => row.original?.remote || "Not Provided",
     },
     {
       Header: "Applicant Count",
       accessor: "applicantCount",
-      Cell: ({ row }) => row.original.applicantCount ?? "Not Provided",
+      Cell: ({ row }) => row.original?.applicantCount ?? "Not Provided",
     },
     {
       Header: "Min Salary",
@@ -89,7 +123,7 @@ const CompanyActiveJob = () => {
       Header: "Action",
       id: "action",
       Cell: ({ row }) => {
-        const job = row.original;
+        const job = row?.original || {};
         const isPublished = job.status === "published";
 
         return (
@@ -99,7 +133,7 @@ const CompanyActiveJob = () => {
                 className="form-check-input"
                 type="checkbox"
                 checked={isPublished}
-                onChange={(e) => toggleJobStatus(job._id, e.target.checked)}
+                onChange={(e) => job._id && toggleJobStatus(job._id, e.target.checked)}
               />
             </div>
 
@@ -108,6 +142,18 @@ const CompanyActiveJob = () => {
             >
               {isPublished ? "Stop" : "Publish"}
             </span>
+
+            {(job.applicantCount > 0 || job.total_applicants > 0) && job._id && (
+              <a
+                href={`${API_BASE_URL}recruiter/jobs/${job._id}/download-resumes-zip`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-sm btn-outline-info px-2 py-1"
+                title="Download All Resumes (.ZIP)"
+              >
+                <i className="fa-solid fa-file-zipper me-1"></i> Resumes (.ZIP)
+              </a>
+            )}
           </div>
         );
       },
@@ -238,6 +284,39 @@ const CompanyActiveJob = () => {
         </div>
 
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
+          {/* Admin Date-Range Filter Toolbar */}
+          <div className="admin-filter-toolbar">
+            <div className="admin-filter-item">
+              <label>Start Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="admin-filter-item">
+              <label>End Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+
+            {(startDate || endDate || search) && (
+              <button
+                className="btn-filter-clear"
+                onClick={handleClearFilters}
+                title="Reset date filters"
+              >
+                <i className="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+              </button>
+            )}
+          </div>
+
           {loading ? (
             <div className="d-flex justify-content-center py-5">
               <div className="spinner-border text-primary"></div>
@@ -252,15 +331,20 @@ const CompanyActiveJob = () => {
               <TableView
                 columns={columns}
                 data={publishJob}
+                page={page}
+                setPage={setPage}
                 limit={limit}
                 setLimit={(val) => {
                   setLimit(val);
                   setPage(1);
                 }}
+                totalPages={totalPages}
+                total={total}
+                globalFilter={search}
+                setGlobalFilter={(val) => {
+                  setSearch(val || "");
+                }}
               />
-
-              {/* Pagination */}
-             
             </>
           )}
         </div>

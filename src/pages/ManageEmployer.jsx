@@ -8,11 +8,17 @@ import { toast, ToastContainer } from "react-toastify";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
 import { useDebounce } from "../hooks/useDebounce";
+import AdminChangePasswordModal from "../components/AdminChangePasswordModal";
 
 function ManageUsers() {
   const [employer, setEmployer] = useState([]);
+  const [passwordModalUser, setPasswordModalUser] = useState(null);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [newSearch, setNewSearch] = useState("");
+  const [newStartDate, setNewStartDate] = useState("");
+  const [newEndDate, setNewEndDate] = useState("");
   const [newEmployer, setNewEmployer] = useState([]);
   const [loadingAll, setLoadingAll] = useState(true);
   const [loadingNew, setLoadingNew] = useState(true);
@@ -37,17 +43,21 @@ function ManageUsers() {
   };
 
   // ------------------------------------------------------
-  // FETCH ALL COMPANIES (Pagination working)
+  // FETCH ALL COMPANIES (Pagination + Date Range working)
   // ------------------------------------------------------
   const fetchEmployerList = async () => {
     try {
       setLoadingAll(true);
+      const params = {
+        page,
+        limit,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      };
+
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: {
-          page,
-          limit,
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        },
+        params,
       });
 
       setEmployer(response.data.data || []);
@@ -60,18 +70,22 @@ function ManageUsers() {
   };
 
   // ------------------------------------------------------
-  // FETCH NEW COMPANIES (Pagination working)
+  // FETCH NEW COMPANIES (Pagination + Date Range working)
   // ------------------------------------------------------
   const fetchNewEmployerList = async () => {
     try {
       setLoadingNew(true);
+      const params = {
+        status: "new",
+        page: newPage,
+        limit,
+        ...(debouncedNewSearch ? { search: debouncedNewSearch } : {}),
+        ...(newStartDate ? { startDate: newStartDate } : {}),
+        ...(newEndDate ? { endDate: newEndDate } : {}),
+      };
+
       const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params: {
-          status: "new",
-          page: newPage,
-          limit,
-          ...(debouncedNewSearch ? { search: debouncedNewSearch } : {}),
-        },
+        params,
       });
 
       setNewEmployer(response.data.data || []);
@@ -82,21 +96,36 @@ function ManageUsers() {
       setLoadingNew(false);
     }
   };
+
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, startDate, endDate]);
 
   useEffect(() => {
     fetchEmployerList();
-  }, [page, limit, debouncedSearch]);
+  }, [page, limit, debouncedSearch, startDate, endDate]);
 
   useEffect(() => {
     setNewPage(1);
-  }, [debouncedNewSearch]);
+  }, [debouncedNewSearch, newStartDate, newEndDate]);
 
   useEffect(() => {
     fetchNewEmployerList();
-  }, [newPage, limit, debouncedNewSearch]);
+  }, [newPage, limit, debouncedNewSearch, newStartDate, newEndDate]);
+
+  const handleClearAllFilters = () => {
+    setSearch("");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+  };
+
+  const handleClearNewFilters = () => {
+    setNewSearch("");
+    setNewStartDate("");
+    setNewEndDate("");
+    setNewPage(1);
+  };
 
   // ------------------------------------------------------
   // COLUMNS FOR ALL COMPANIES (columns1)
@@ -143,7 +172,7 @@ function ManageUsers() {
       Cell: ({ row }) => (
         <img
           crossOrigin="anonymous"
-          src={getImageUrl(row.original.companyId?.logo)}
+          src={getImageUrl(row.original?.companyId?.logo)}
           alt="candidate"
           width={30}
           height={30}
@@ -158,19 +187,19 @@ function ManageUsers() {
     {
       id: "name",
       Header: "Company Name",
-      accessor: (row) => (row.companyId?.brandName || "").toLowerCase(),
+      accessor: (row) => (row?.companyId?.brandName || "").toLowerCase(),
       Cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
     },
     {
       id: "email",
       Header: "Email ID",
-      accessor: (row) => (row.email || "").toLowerCase(),
-      Cell: ({ row }) => row.original.email || "Not Provided",
+      accessor: (row) => (row?.email || "").toLowerCase(),
+      Cell: ({ row }) => row.original?.email || "Not Provided",
     },
     {
       id: "industry",
       Header: "Industry",
-      accessor: (row) => (row.industry?.name || "").toLowerCase(),
+      accessor: (row) => (row?.industry?.name || "").toLowerCase(),
       Cell: ({ row }) => row.original?.industry?.name || "Not Provided",
     },
     {
@@ -254,9 +283,9 @@ function ManageUsers() {
       id: "enterpriseCanCreateTests",
       Header: "Assessment",
       Cell: ({ row }) => {
-        const companyId = row.original.companyId._id;
+        const companyId = row.original?.companyId?._id || row.original?._id;
         const apiStatus =
-          row.original.companyId.enterpriseCanCreateTests == true;
+          row.original?.companyId?.enterpriseCanCreateTests === true;
 
         const handleStatusChange = async (e) => {
           const newStatus = e.target.checked;
@@ -288,8 +317,9 @@ function ManageUsers() {
             <label className="switch">
               <input
                 type="checkbox"
-                checked={apiStatus}
+                checked={Boolean(apiStatus)}
                 onChange={handleStatusChange}
+                disabled={!companyId}
               />
               <span className="slider round"></span>
             </label>
@@ -439,13 +469,34 @@ function ManageUsers() {
                 companyProfileId: row.original?.companyId?._id,
                 companyDetails: row.original,
               }}
+              title="View Details"
             >
               <i className="fa-solid fa-eye"></i>
             </Link>
 
             <i
+              className="fa-solid fa-key"
+              title="Change Password"
+              style={{
+                cursor: "pointer",
+                marginLeft: "8px",
+                marginRight: "8px",
+                color: "#2563eb",
+              }}
+              onClick={() =>
+                setPasswordModalUser({
+                  _id: row.original._id,
+                  name: row.original?.companyId?.brandName || "Company",
+                  email: row.original.email,
+                  role: "Employer / Recruiter",
+                })
+              }
+            ></i>
+
+            <i
               className="fa-solid fa-trash"
-              style={{ cursor: "pointer", marginLeft: "10px" }}
+              title="Delete"
+              style={{ cursor: "pointer" }}
               onClick={handleDelete}
             ></i>
           </div>
@@ -465,7 +516,7 @@ function ManageUsers() {
       Cell: ({ row }) => (
         <img
           crossOrigin="anonymous"
-          src={getImageUrl(row.original.companyId?.logo)}
+          src={getImageUrl(row.original?.companyId?.logo)}
           alt="candidate"
           width={30}
           height={30}
@@ -480,14 +531,14 @@ function ManageUsers() {
     {
       id: "name",
       Header: "Company Name",
-      accessor: (row) => (row.companyId?.brandName || "").toLowerCase(),
+      accessor: (row) => (row?.companyId?.brandName || "").toLowerCase(),
       Cell: ({ row }) => row.original?.companyId?.brandName || "Not Provided",
     },
     {
       id: "email",
       Header: "Email",
-      accessor: (row) => (row.email || "").toLowerCase(),
-      Cell: ({ row }) => row.original.email || "Not Provided",
+      accessor: (row) => (row?.email || "").toLowerCase(),
+      Cell: ({ row }) => row.original?.email || "Not Provided",
     },
     {
       id: "industry",
@@ -524,9 +575,29 @@ function ManageUsers() {
             state={{
               companyProfileId: row.original?.companyId?._id,
             }}
+            title="View Details"
           >
             <i className="fa-solid fa-eye"></i>
           </Link>
+
+          <i
+            className="fa-solid fa-key"
+            title="Change Password"
+            style={{
+              cursor: "pointer",
+              marginLeft: "8px",
+              marginRight: "8px",
+              color: "#2563eb",
+            }}
+            onClick={() =>
+              setPasswordModalUser({
+                _id: row.original._id,
+                name: row.original?.companyId?.brandName || "Company",
+                email: row.original.email,
+                role: "Employer / Recruiter",
+              })
+            }
+          ></i>
 
           <i
             className="fa-solid fa-trash"
@@ -1045,33 +1116,41 @@ function ManageUsers() {
   // ];
 
   // ------------------------------------------------------
-  // EXPORT ALL COMPANIES (DYNAMIC PAGINATION)
+  // EXPORT ALL COMPANIES (DYNAMIC PAGINATION + DATE FILTERS)
   // ------------------------------------------------------
   const exportAllCompanies = async (type = "all") => {
     try {
-      const params =
-        type === "new" ? { status: "new", page: 1, limit } : { page: 1, limit };
+      const baseParams =
+        type === "new"
+          ? {
+              status: "new",
+              limit,
+              ...(debouncedNewSearch ? { search: debouncedNewSearch } : {}),
+              ...(newStartDate ? { startDate: newStartDate } : {}),
+              ...(newEndDate ? { endDate: newEndDate } : {}),
+            }
+          : {
+              limit,
+              ...(debouncedSearch ? { search: debouncedSearch } : {}),
+              ...(startDate ? { startDate } : {}),
+              ...(endDate ? { endDate } : {}),
+            };
 
       // 1️⃣ First call → get totalPages
       const firstCall = await axios.get(`${API_BASE_URL}admin/companies`, {
-        params,
+        params: { ...baseParams, page: 1 },
       });
 
       const totalPagesData = firstCall.data.totalPages || 1;
-      let allData = [...firstCall.data.data];
+      let allData = [...(firstCall.data.data || [])];
 
       // 2️⃣ Loop all pages dynamically
       for (let p = 2; p <= totalPagesData; p++) {
-        const nextParams =
-          type === "new"
-            ? { status: "new", page: p, limit }
-            : { page: p, limit };
-
         const response = await axios.get(`${API_BASE_URL}admin/companies`, {
-          params: nextParams,
+          params: { ...baseParams, page: p },
         });
 
-        allData = [...allData, ...response.data.data];
+        allData = [...allData, ...(response.data.data || [])];
       }
 
       if (!allData.length) {
@@ -1086,6 +1165,7 @@ function ManageUsers() {
         Email: item?.email || "",
         Industry: item?.companyId?.industry?.name || "",
         Verified: item?.verifiedByAdmin ? "Verified" : "Not Verified",
+        Registered_At: item?.createdAt ? new Date(item.createdAt).toLocaleDateString() : "",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
@@ -1096,9 +1176,13 @@ function ManageUsers() {
         type === "new" ? "New Companies" : "All Companies",
       );
 
+      const dateSuffix = type === "new"
+        ? `${newStartDate || "all"}_to_${newEndDate || "now"}`
+        : `${startDate || "all"}_to_${endDate || "now"}`;
+
       XLSX.writeFile(
         workbook,
-        type === "new" ? "new_companies.xlsx" : "all_companies.xlsx",
+        type === "new" ? `new_companies_${dateSuffix}.xlsx` : `all_companies_${dateSuffix}.xlsx`,
       );
 
       toast.success("Export successful!");
@@ -1148,13 +1232,46 @@ function ManageUsers() {
           {/* TAB 1 - ALL COMPANIES */}
           <div id="All-Companies" className="tab-pane fade show active">
             <div className="Recruiter-analytics-table2">
-              <div className="data-export-btn-info">
-                <button
-                  className="data-export-btn"
-                  onClick={() => exportAllCompanies("all")}
-                >
-                  Export Data
-                </button>
+              {/* All Companies Date-Range Filter Toolbar */}
+              <div className="admin-filter-toolbar">
+                <div className="admin-filter-item">
+                  <label>Start Date:</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                  />
+                </div>
+
+                <div className="admin-filter-item">
+                  <label>End Date:</label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+
+                {(startDate || endDate || search) && (
+                  <button
+                    className="btn-filter-clear"
+                    onClick={handleClearAllFilters}
+                    title="Reset date filters"
+                  >
+                    <i className="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+                  </button>
+                )}
+
+                <div className="admin-filter-actions">
+                  <button
+                    className="data-export-btn"
+                    onClick={() => exportAllCompanies("all")}
+                  >
+                    <i className="fa-solid fa-file-excel me-1"></i> Export Data
+                  </button>
+                </div>
               </div>
 
               {loadingAll && (
@@ -1179,20 +1296,51 @@ function ManageUsers() {
                   setSearch(val || "");
                 }}
               />
-
-              {/* Pagination */}
             </div>
           </div>
 
           {/* TAB 2 - NEW COMPANIES */}
           <div id="New-Companies" className="tab-pane fade">
-            <div className="data-export-btn-info">
-              <button
-                className="data-export-btn"
-                onClick={() => exportAllCompanies("new")}
-              >
-                Export Data
-              </button>
+            {/* New Companies Date-Range Filter Toolbar */}
+            <div className="admin-filter-toolbar">
+              <div className="admin-filter-item">
+                <label>Start Date:</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={newStartDate}
+                  onChange={(e) => setNewStartDate(e.target.value)}
+                />
+              </div>
+
+              <div className="admin-filter-item">
+                <label>End Date:</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={newEndDate}
+                  onChange={(e) => setNewEndDate(e.target.value)}
+                />
+              </div>
+
+              {(newStartDate || newEndDate || newSearch) && (
+                <button
+                  className="btn-filter-clear"
+                  onClick={handleClearNewFilters}
+                  title="Reset all filters"
+                >
+                  <i className="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+                </button>
+              )}
+
+              <div className="admin-filter-actions">
+                <button
+                  className="data-export-btn"
+                  onClick={() => exportAllCompanies("new")}
+                >
+                  <i className="fa-solid fa-file-excel me-1"></i> Export Data
+                </button>
+              </div>
             </div>
 
             {loadingNew && (
@@ -1217,13 +1365,18 @@ function ManageUsers() {
                 setNewSearch(val || "");
               }}
             />
-
-            {/* Pagination */}
           </div>
         </div>
       </div>
+
+      <AdminChangePasswordModal
+        isOpen={Boolean(passwordModalUser)}
+        user={passwordModalUser}
+        onClose={() => setPasswordModalUser(null)}
+      />
     </section>
   );
 }
 
 export default ManageUsers;
+

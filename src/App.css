@@ -1028,3 +1028,92 @@ Completer Company Details
   cursor: pointer;
   border-radius: 4px;
 }
+
+/* Admin Date-Range Filter Toolbar */
+.admin-filter-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 14px 18px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 18px;
+}
+
+.admin-filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-filter-item label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+  margin-bottom: 0;
+}
+
+.admin-filter-item .form-control,
+.admin-filter-item .form-select {
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #fff;
+  min-width: 140px;
+  height: 38px;
+  color: #1e293b;
+}
+
+.admin-filter-item .form-control:focus,
+.admin-filter-item .form-select:focus {
+  border-color: var(--colorBlue);
+  box-shadow: 0 0 0 2px rgba(24, 104, 202, 0.15);
+  outline: none;
+}
+
+.admin-filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.btn-filter-clear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  height: 38px;
+  transition: all 0.2s ease;
+}
+
+.btn-filter-clear:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+.admin-filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid #bfdbfe;
+  font-weight: 500;
+}

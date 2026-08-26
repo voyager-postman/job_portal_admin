@@ -8,10 +8,14 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Swal from "sweetalert2";
 import { useDebounce } from "../hooks/useDebounce";
+import AdminChangePasswordModal from "../components/AdminChangePasswordModal";
 
 function ManageCandidates() {
   const [jobSeeker, setJobSeeker] = useState([]);
+  const [passwordModalUser, setPasswordModalUser] = useState(null);
   const [search, setSearch] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const debouncedSearch = useDebounce(search.trim(), 400);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -198,13 +202,37 @@ function ManageCandidates() {
               state={{
                 candidateProfileId: row.original.candidateProfile?.userId,
               }}
+              title="View Details"
             >
               <i className="fa-solid fa-eye"></i>
             </Link>
 
             <i
+              className="fa-solid fa-key"
+              title="Change Password"
+              style={{
+                cursor: "pointer",
+                marginLeft: "8px",
+                marginRight: "8px",
+                color: "#2563eb",
+              }}
+              onClick={() =>
+                setPasswordModalUser({
+                  _id: row.original._id,
+                  name:
+                    `${row.original.first_name || ""} ${
+                      row.original.last_name || ""
+                    }`.trim() || "Candidate",
+                  email: row.original.email,
+                  role: "Candidate",
+                })
+              }
+            ></i>
+
+            <i
               className="fa-solid fa-trash"
-              style={{ cursor: "pointer", marginLeft: "10px" }}
+              title="Delete"
+              style={{ cursor: "pointer" }}
               onClick={handleDelete}
             ></i>
           </div>
@@ -388,16 +416,20 @@ function ManageCandidates() {
   //   },
   // ];
 
-  // Fetch Data with page + limit
+  // Fetch Data with page + limit + date range
   const fetchCandidates = async () => {
     try {
       setLoading(true);
+      const params = {
+        page,
+        limit,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      };
+
       const response = await axios.get(`${API_BASE_URL}admin/jobseekers`, {
-        params: {
-          page,
-          limit,
-          ...(debouncedSearch ? { search: debouncedSearch } : {}),
-        },
+        params,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -411,41 +443,59 @@ function ManageCandidates() {
       setLoading(false);
     }
   };
+
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, startDate, endDate]);
+
   useEffect(() => {
     fetchCandidates();
-  }, [page, limit, debouncedSearch]);
+  }, [page, limit, debouncedSearch, startDate, endDate]);
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+  };
 
   // Export Excel
   const exportAllCandidates = async () => {
     try {
+      const baseParams = {
+        limit,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+        ...(startDate ? { startDate } : {}),
+        ...(endDate ? { endDate } : {}),
+      };
+
       // 1️⃣ First call → get pagination info
       const firstCall = await axios.get(
-        `${API_BASE_URL}admin/jobseekers?page=1&limit=${limit}`,
+        `${API_BASE_URL}admin/jobseekers`,
         {
+          params: { ...baseParams, page: 1 },
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         },
       );
 
-      const totalPages = firstCall.data.totalPages;
-      let allCandidates = [...firstCall.data.data];
+      const totalPages = firstCall.data.totalPages || 1;
+      let allCandidates = [...(firstCall.data.data || [])];
 
       // 2️⃣ Fetch remaining pages dynamically
       for (let p = 2; p <= totalPages; p++) {
         const res = await axios.get(
-          `${API_BASE_URL}admin/jobseekers?page=${p}&limit=${limit}`,
+          `${API_BASE_URL}admin/jobseekers`,
           {
+            params: { ...baseParams, page: p },
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           },
         );
 
-        allCandidates = [...allCandidates, ...res.data.data];
+        allCandidates = [...allCandidates, ...(res.data.data || [])];
       }
 
       if (!allCandidates.length) {
@@ -462,12 +512,13 @@ function ManageCandidates() {
         Phone: item.phone || "",
         Country: item.Nationality || "",
         Status: item.status || "",
+        Registered_At: item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "",
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "All Candidates");
-      XLSX.writeFile(workbook, "all_candidates.xlsx");
+      XLSX.writeFile(workbook, `all_candidates_${startDate || "all"}_to_${endDate || "now"}.xlsx`);
 
       toast.success("All candidates exported successfully!");
     } catch (error) {
@@ -493,17 +544,41 @@ function ManageCandidates() {
         </div>
 
         <div className="super-admin-manage-candidate-list super-admin-white-bg">
-          <div
-            className="common-fillter-select-area"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-            }}
-          >
-            <div className="data-export-btn-info">
+          {/* Admin Date-Range Filter Toolbar */}
+          <div className="admin-filter-toolbar">
+            <div className="admin-filter-item">
+              <label>Start Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="admin-filter-item">
+              <label>End Date:</label>
+              <input
+                type="date"
+                className="form-control"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+
+            {(startDate || endDate || search) && (
+              <button
+                className="btn-filter-clear"
+                onClick={handleClearFilters}
+                title="Reset date filters"
+              >
+                <i className="fa-solid fa-arrow-rotate-left"></i> Reset Filters
+              </button>
+            )}
+
+            <div className="admin-filter-actions">
               <button className="data-export-btn" onClick={exportAllCandidates}>
-                Export Data
+                <i className="fa-solid fa-file-excel me-1"></i> Export Data
               </button>
             </div>
           </div>
@@ -533,6 +608,12 @@ function ManageCandidates() {
             />
           </div>
         </div>
+
+        <AdminChangePasswordModal
+          isOpen={Boolean(passwordModalUser)}
+          user={passwordModalUser}
+          onClose={() => setPasswordModalUser(null)}
+        />
       </section>
     </>
   );
